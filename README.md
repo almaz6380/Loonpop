@@ -51,3 +51,5 @@ npm run build    # bauen
 
 Muster für M4–M7 liegen in `almaz6380/anigosha` (`src/lib/ads.ts`,
 `src/lib/purchases.ts`, `.github/workflows/`, `docs/release-ci.md`).
+
+<!-- Prueft die Git-Anbindung: dieser Push muss von allein deployen. -->

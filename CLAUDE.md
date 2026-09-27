@@ -60,7 +60,15 @@ TypeScript. Nur so ist er testbar — und nur so bleibt er deterministisch.
    stehen in `physik.ts` und werden von `zeichnen.ts` importiert — nie
    duplizieren. Ein Spiel, das anders aussieht, als es rechnet, ist unfair: Der
    Spieler zielt nach dem Bild und trifft daneben.
-8. **Ein Tutorial-Level lehrt EINE Sache nach der anderen.** Level 1: erste
+8. **Vercel prueft den COMMIT-AUTOR.** Deploys werden abgelehnt, wenn die
+   E-Mail des Commit-Autors nicht Mitglied des Vercel-Teams ist — die Meldung
+   lautet „the commit author doesn't have permission" bzw. „they're not a
+   member of the team", und Josef bekommt je Versuch eine Mail. Richtig ist
+   **`63almaz80@gmail.com`**; am 27.09.2026 stand dort eine andere Adresse aus
+   dem Sitzungskontext, und zwei Deploys scheiterten daran. Ein Deploy aus
+   einem Ordner OHNE `.git` umgeht die Pruefung — das ist der Notausgang,
+   nicht die Loesung.
+9. **Ein Tutorial-Level lehrt EINE Sache nach der anderen.** Level 1: erste
    Lücke mittig über dem Start (halten hebt), zweite seitlich (versetzt lenkt).
    Zwischendurch stand die erste Nadel direkt über dem Start — man platzte,
    bevor man irgendetwas verstanden hatte.

@@ -124,8 +124,22 @@ export function strahlKraft(
 /** Wie viel Schwung eine Wand zurueckgibt. 0 = klebt, 1 = springt ungebremst. */
 const WAND_ABPRALL = 0.35;
 
-/** Wo eine Pendel-Nadel zum Zeitpunkt t steht. */
-export function nadelJetzt(nadel: Nadel, zeit: number): { von: Punkt; bis: Punkt } {
+/** Wo eine bewegte Nadel zum Zeitpunkt t steht. */
+export function nadelJetzt(nadel: Nadel, zeit: number, levelHoehe = 1280): { von: Punkt; bis: Punkt } {
+  if (nadel.faellt) {
+    // Faellt von ueber dem oberen Rand bis unter den unteren und beginnt von
+    // vorn. Die Nadel wird dabei NICHT fortgeschrieben, sondern aus der Zeit
+    // gerechnet — sonst waere der Lauf nicht mehr reproduzierbar.
+    const laenge = Math.abs(nadel.bis.y - nadel.von.y);
+    const strecke = levelHoehe + laenge * 2;
+    const p = (((zeit + nadel.faellt.versatz) % nadel.faellt.takt) + nadel.faellt.takt)
+      % nadel.faellt.takt / nadel.faellt.takt;
+    const oben = -laenge + p * strecke;
+    return {
+      von: { x: nadel.von.x, y: oben },
+      bis: { x: nadel.bis.x, y: oben + laenge },
+    };
+  }
   if (!nadel.pendel) return { von: nadel.von, bis: nadel.bis };
   // Dreieckschwingung statt Sinus: Die Nadel laeuft mit gleichmaessigem Tempo
   // hin und her. Ein Sinus wuerde an den Umkehrpunkten verharren — dort steht
@@ -215,7 +229,7 @@ export function schritt(welt: Welt): void {
   // --- Nadeln -------------------------------------------------------------
   // Ueber den zurueckgelegten WEG geprueft, nicht ueber die Endposition.
   for (const nadel of level.nadeln) {
-    const n = nadelJetzt(nadel, welt.zeit);
+    const n = nadelJetzt(nadel, welt.zeit, level.groesse.hoehe);
     if (streckeTrifftNadel(ballon.vorher, ballon.pos, r, n.von, n.bis)) {
       welt.ausgang = 'geplatzt';
       return;

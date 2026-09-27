@@ -13,6 +13,15 @@ export type Nadel = {
   bis: Punkt;
   /** Bewegte Nadeln: Weg und Tempo. Fehlt das Feld, steht sie still. */
   pendel?: { weg: Punkt; dauer: number };
+  /**
+   * Fallende Nadel: faellt oben herein, verschwindet unten und faengt von
+   * vorn an. `takt` ist die Dauer eines Durchlaufs in Sekunden, `versatz`
+   * verschiebt den Start — sonst fielen alle im Gleichschritt.
+   *
+   * ⚠ Aus der ZEIT gerechnet, nicht fortgeschrieben: Nur so bleibt der Lauf
+   * deterministisch und ein Seed nachspielbar (siehe physik.ts).
+   */
+  faellt?: { takt: number; versatz: number };
 };
 
 /** Ein Bereich, der dauerhaft schiebt — Aufwind, Seitenwind, Fallschacht. */

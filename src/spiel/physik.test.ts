@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { DT, schritt, strahlKraft, DUESE_HOEHE, bodenHoehe } from './physik.ts';
+import { DT, schritt, strahlKraft, DUESE_HOEHE, bodenHoehe, nadelJetzt } from './physik.ts';
 import { neueWelt } from './welt.ts';
 import { streckeTrifftNadel } from './kollision.ts';
 import { mulberry32, saat } from './zufall.ts';
@@ -166,6 +166,32 @@ test('ohne Grundwind treibt nichts zur Seite', () => {
   const start = w.ballon.pos.x;
   for (let i = 0; i < 240; i++) schritt(w);
   assert.equal(w.ballon.pos.x, start);
+});
+
+test('eine fallende Nadel faellt und faengt von vorn an', () => {
+  const n = { von: { x: 300, y: 0 }, bis: { x: 300, y: 150 }, faellt: { takt: 2, versatz: 0 } };
+  const a = nadelJetzt(n, 0.0, 1280).von.y;
+  const b = nadelJetzt(n, 0.9, 1280).von.y;
+  assert.ok(b > a, 'sie faellt nicht');
+  // Nach einem vollen Takt steht sie wieder genau dort.
+  assert.ok(Math.abs(nadelJetzt(n, 2.0, 1280).von.y - a) < 0.001, 'der Takt wiederholt sich nicht');
+  // ⚠ Aus der ZEIT gerechnet, nicht fortgeschrieben: Nur so bleibt ein Lauf
+  // reproduzierbar. Derselbe Zeitpunkt muss dieselbe Stellung ergeben.
+  assert.equal(nadelJetzt(n, 1.37, 1280).von.y, nadelJetzt(n, 1.37, 1280).von.y);
+  // Sie bleibt genauso lang, wie sie ist.
+  const jetzt = nadelJetzt(n, 1.1, 1280);
+  assert.ok(Math.abs((jetzt.bis.y - jetzt.von.y) - 150) < 0.001);
+});
+
+test('eine fallende Nadel laesst den Ballon platzen, wenn sie ihn trifft', () => {
+  const level: Level = {
+    ...testLevel(),
+    start: { x: 360, y: 640 },
+    nadeln: [{ von: { x: 360, y: 0 }, bis: { x: 360, y: 200 }, faellt: { takt: 3, versatz: 0 } }],
+  };
+  const w = neueWelt(level);
+  for (let i = 0; i < 120 * 3 && w.ausgang === 'laeuft'; i++) schritt(w);
+  assert.equal(w.ausgang, 'geplatzt');
 });
 
 test('derselbe Seed ergibt dieselbe Zufallsfolge', () => {

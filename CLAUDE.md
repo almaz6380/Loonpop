@@ -52,6 +52,30 @@ lenkst; durch Versetzen beschleunigst du oder bremst.
 gescrollt würde, hinge sonst vom Gerät ab — dasselbe Level wäre auf einem
 breiten Schirm ein anderes Spiel.
 
+## Nadeln
+
+Drei Sorten, alle über `Nadel` in `typen.ts`:
+
+| | |
+|---|---|
+| **fest** | steht still |
+| **pendel** | fährt einen Weg hin und her |
+| **faellt** | fällt oben herein, verschwindet unten, fängt von vorn an |
+
+⚠ **Bewegte Nadeln werden aus der ZEIT gerechnet, nie fortgeschrieben.**
+`nadelJetzt(nadel, zeit, hoehe)` ist eine reine Funktion. Fortgeschriebene
+Positionen hingen an der Bildrate, und derselbe Lauf liefe auf zwei Geräten
+verschieden — der Endlos-Seed wäre wertlos.
+
+**Nadelfelder statt Balken:** Eine Sperre besteht aus vielen kurzen Stacheln
+nebeneinander, nicht aus einer langen Linie. ⚠ Der Stachel muss **kürzer sein
+als sein Abstand** (34 lang, 46 Abstand), sonst überlappen sie sich und
+verschmelzen optisch zu einem Balken mit roten Perlen. Die 12 px Lücke ist für
+den 52 px breiten Ballon trotzdem dicht — das ist der ganze Trick.
+
+**Fallende Nadeln gehören in die Durchlasslücken**, nicht in ein Stachelfeld:
+Dort, wo der Ballon ohnehin nicht durchkommt, sind sie wirkungslos.
+
 ## Fallen, die schon zugeschnappt sind
 
 1. **Tunneling.** Geprüft wird der **Weg** des Ballons (vorher → jetzt) gegen die
@@ -98,7 +122,14 @@ breiten Schirm ein anderes Spiel.
     Höhe der ersten Nadelspitze: Man flog ohne Vorwarnung hinein.
     `scratchpad/streckenpruefung.mts` prüft beides; es tat das anfangs *nicht*
     und meldete „schaffbar", weil es nur die Nadeln untereinander ansah.
-12. **Ein Tutorial-Level lehrt EINE Sache nach der anderen.** Level 1: erste
+12. **Ein Level prüft man mit einer WEGSUCHE, nicht mit Abstandsregeln.**
+    `scratchpad/streckenpruefung.mts` legt ein Gitter über das Level, sperrt
+    belegte Zellen und flutet von Start zu Ziel. Zwei Heuristiken davor lagen
+    daneben: „Lücke zwischen langen Balken" wurde wertlos, sobald es
+    Stachelfelder gab; „Mindestabstand fallender Nadeln" verbot sie in
+    Hoch-Leveln ganz, obwohl sie dort passen. Die einzige ehrliche Frage
+    lautet: Kommt der Ballon durch?
+13. **Ein Tutorial-Level lehrt EINE Sache nach der anderen.** Level 1: erste
    Lücke mittig über dem Start (halten hebt), zweite seitlich (versetzt lenkt).
    Zwischendurch stand die erste Nadel direkt über dem Start — man platzte,
    bevor man irgendetwas verstanden hatte.

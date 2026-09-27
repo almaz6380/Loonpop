@@ -166,9 +166,29 @@ export function zeichne(
 
   // --- Nadeln -------------------------------------------------------------
   for (const nadel of level.nadeln) {
-    const n = nadelJetzt(nadel, welt.zeit);
+    const n = nadelJetzt(nadel, welt.zeit, hoehe);
+    // ⚠ Fallende Nadeln unterhalb der Wiese nicht mehr zeichnen — sonst sieht
+    // man sie durch den Boden sinken, was wie ein Fehler aussieht. Fuer die
+    // Physik ist das ohne Belang: Der Ballon kommt nie unter bodenY.
+    if (nadel.faellt) {
+      if (Math.min(n.von.y, n.bis.y) > bodenY) continue;
+      n.bis = { ...n.bis, y: Math.min(n.bis.y, bodenY) };
+    }
+    // Fallende Nadeln bekommen einen Schweif — sonst sieht man nicht, dass
+    // sie sich bewegen, und wundert sich, warum man plötzlich platzt.
+    if (nadel.faellt) {
+      const s = ctx.createLinearGradient(n.von.x, n.von.y - 90, n.von.x, n.von.y);
+      s.addColorStop(0, 'rgba(232,236,245,0)');
+      s.addColorStop(1, 'rgba(232,236,245,0.35)');
+      ctx.strokeStyle = s;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(n.von.x, n.von.y - 90);
+      ctx.lineTo(n.von.x, n.von.y);
+      ctx.stroke();
+    }
     ctx.strokeStyle = '#e8ecf5';
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 4;
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(n.von.x, n.von.y);
@@ -177,7 +197,7 @@ export function zeichne(
     // Spitze markieren — sie ist das, was toetet
     ctx.fillStyle = '#ff5d73';
     ctx.beginPath();
-    ctx.arc(n.bis.x, n.bis.y, 7, 0, Math.PI * 2);
+    ctx.arc(n.bis.x, n.bis.y, 5.5, 0, Math.PI * 2);
     ctx.fill();
   }
 

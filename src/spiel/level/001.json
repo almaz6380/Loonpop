@@ -1,0 +1,13 @@
+{
+  "id": 1,
+  "name": "Erste Luft",
+  "groesse": { "breite": 720, "hoehe": 1280 },
+  "start": { "x": 360, "y": 1140 },
+  "ziel": { "pos": { "x": 360, "y": 130 }, "radius": 56 },
+  "nadeln": [
+    { "von": { "x": 300, "y": 800 }, "bis": { "x": 720, "y": 800 } },
+    { "von": { "x": 0, "y": 470 }, "bis": { "x": 420, "y": 470 } }
+  ],
+  "zonen": [],
+  "tempo": { "windKraft": 500, "daempfung": 1.6, "zeitlimit": 0 }
+}

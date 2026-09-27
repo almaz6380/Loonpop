@@ -1,0 +1,22 @@
+{
+  "menue": {
+    "titel": "loonpop",
+    "untertitel": "Tap where the wind should blow. Needles are final.",
+    "level": "Level {{n}}",
+    "hinweis": "The balloon rises on its own and reacts slowly — think one move ahead."
+  },
+  "spiel": {
+    "zurueck": "Back",
+    "zeit": "{{s}} s",
+    "verbleibend": "{{s}} s left",
+    "nochmal": "Again",
+    "levelwahl": "Levels",
+    "gebraucht": "Done in {{s}} seconds.",
+    "trostworte": "The balloon drifts on — start the wind earlier.",
+    "ende": {
+      "geschafft": "Arrived!",
+      "geplatzt": "Popped",
+      "zeit-aus": "Out of time"
+    }
+  }
+}

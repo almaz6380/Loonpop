@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: #0d1330;
+  overscroll-behavior: none;
+  /* Verhindert, dass ein Doppeltipp im Spiel hineinzoomt. */
+  touch-action: manipulation;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}

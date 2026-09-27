@@ -1,0 +1,18 @@
+node_modules
+dist
+dist-ssr
+*.local
+*.log
+
+.env
+.env.*
+.vercel
+.DS_Store
+
+# Capacitor (ab M4)
+ios/App/Pods/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.keystore

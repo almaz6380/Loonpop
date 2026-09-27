@@ -1,6 +1,7 @@
 {
   "id": 2,
   "name": "Enger Hals",
+  "art": "hoch",
   "groesse": {
     "breite": 720,
     "hoehe": 1280

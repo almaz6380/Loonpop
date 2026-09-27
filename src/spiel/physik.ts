@@ -172,6 +172,12 @@ export function schritt(welt: Welt): void {
   ax += strahl.x;
   ay += strahl.y;
 
+  // Grundwind: treibt auf Strecken nach rechts.
+  if (level.grundwind) {
+    ax += level.grundwind.x;
+    ay += level.grundwind.y;
+  }
+
   // Zonen: dauerhafte Kraefte an bestimmten Stellen (Aufwind, Seitenwind).
   for (const z of level.zonen) {
     const b = z.bereich;

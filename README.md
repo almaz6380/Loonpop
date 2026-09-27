@@ -19,7 +19,11 @@ Anigosha waren die Lehre.
 
 ## Stand: M1 — spielbar
 
-Drei handgebaute Level, Gebläsesteuerung, träge Physik. Läuft im Browser.
+Fünf handgebaute Level, Gebläsesteuerung, träge Physik. Läuft im Browser.
+
+- **Hoch-Level (1–3):** Der Ballon muss nach oben, alles ist auf einem Schirm.
+- **Strecken (4–5):** Der Ballon treibt nach rechts, die Kamera läuft mit. Du
+  gehst mit dem Gebläse neben ihm her.
 Noch **nicht** dabei: Endlos-Modus, Konten, Bestenliste, Werbung, Kauf,
 Capacitor, Stores. Reihenfolge siehe unten.
 

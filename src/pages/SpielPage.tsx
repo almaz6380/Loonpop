@@ -10,17 +10,26 @@ import { useTranslation } from 'react-i18next';
 
 import { neueWelt } from '../spiel/welt.ts';
 import { starteSchleife } from '../spiel/schleife.ts';
-import { sichtBerechnen, zuLevel, zeichne, type Sicht } from '../spiel/zeichnen.ts';
+import { sichtBerechnen, kameraFuer, zuLevel, zeichne, type Sicht } from '../spiel/zeichnen.ts';
 import type { Ausgang, Level, Welt } from '../spiel/typen.ts';
 
 export default function SpielPage({ level, zurueck }: { level: Level; zurueck: () => void }) {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const weltRef = useRef<Welt | null>(null);
-  const sichtRef = useRef<Sicht>({ skala: 1, randX: 0, randY: 0, breite: 0, hoehe: 0 });
+  const sichtRef = useRef<Sicht>({ skala: 1, randX: 0, randY: 0, breite: 0, hoehe: 0, kameraX: 0 });
   const [ende, setEnde] = useState<Ausgang | null>(null);
   const [versuch, setVersuch] = useState(0);
   const [zeit, setZeit] = useState(0);
+  /**
+   * Wo der Finger auf dem BILDSCHIRM liegt (CSS-Pixel im Canvas), nicht in der
+   * Welt. ⚠ Das ist der Unterschied, der auf Strecken zaehlt: Die Welt scrollt
+   * unter dem Geblaese weg. Merkte man sich die Weltposition, bliebe das
+   * Geblaese stehen und liefe nach links aus dem Bild, obwohl der Finger
+   * ruhig liegt. Du gehst neben dem Ballon her, also zeigt der Finger, wo auf
+   * dem Schirm du stehst.
+   */
+  const fingerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -41,7 +50,10 @@ export default function SpielPage({ level, zurueck }: { level: Level; zurueck: (
       canvas.width = Math.round(b * dpr);
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      sichtRef.current = sichtBerechnen(b, h, level.groesse.breite, level.groesse.hoehe);
+      sichtRef.current = {
+        ...sichtBerechnen(b, h, level.groesse.breite, level.groesse.hoehe, level.art),
+        kameraX: sichtRef.current.kameraX,
+      };
     };
     anpassen();
     window.addEventListener('resize', anpassen);
@@ -53,6 +65,20 @@ export default function SpielPage({ level, zurueck }: { level: Level; zurueck: (
     const schleife = starteSchleife(
       welt,
       (w, blende) => {
+        // ⚠ Die Kamera wird beim ZEICHNEN nachgefuehrt, nicht in der Physik.
+        // Sonst haenge der Weltzustand vom Bildschirm ab und derselbe Lauf
+        // liefe auf zwei Geraeten verschieden.
+        if (level.art === 'strecke') {
+          const ziel = kameraFuer(sichtRef.current, w.ballon.pos.x, level.groesse.breite);
+          // Weich nachziehen, damit das Bild nicht am Ballon klebt.
+          sichtRef.current.kameraX += (ziel - sichtRef.current.kameraX) * 0.12;
+        }
+        // Geblaese der Kamera nachfuehren — jedes Bild, nicht nur wenn sich der
+        // Finger bewegt.
+        if (fingerRef.current !== null) {
+          const im = zuLevel({ x: fingerRef.current, y: 0 }, sichtRef.current);
+          w.geblaese.x = Math.max(40, Math.min(level.groesse.breite - 40, im.x));
+        }
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         zeichne(ctx, w, blende, sichtRef.current);
@@ -73,13 +99,12 @@ export default function SpielPage({ level, zurueck }: { level: Level; zurueck: (
   // Loslassen stellt es ab — der Strahl klingt dann aus, statt abzureissen
   // (siehe physik.ts).
   const fahren = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const welt = weltRef.current;
     const canvas = canvasRef.current;
-    if (!welt || !canvas) return;
+    if (!canvas) return;
     const kasten = canvas.getBoundingClientRect();
-    const im = zuLevel({ x: e.clientX - kasten.left, y: e.clientY - kasten.top }, sichtRef.current);
-    // In den Levelgrenzen halten, sonst schoebe man es aus dem Bild.
-    welt.geblaese.x = Math.max(40, Math.min(level.groesse.breite - 40, im.x));
+    // Nur die Bildschirmposition merken — umgerechnet wird bei jedem Bild,
+    // weil sich die Kamera zwischendurch bewegt.
+    fingerRef.current = Math.max(0, Math.min(kasten.width, e.clientX - kasten.left));
   };
   const anschalten = (e: React.PointerEvent<HTMLCanvasElement>) => {
     fahren(e);
@@ -87,6 +112,8 @@ export default function SpielPage({ level, zurueck }: { level: Level; zurueck: (
   };
   const loslassen = () => {
     if (weltRef.current) weltRef.current.geblaese.an = false;
+    // Der Finger ist weg — das Geblaese bleibt stehen, wo es zuletzt war.
+    fingerRef.current = null;
   };
 
   const nochmal = () => setVersuch((v) => v + 1);

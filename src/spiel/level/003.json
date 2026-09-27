@@ -1,6 +1,7 @@
 {
   "id": 3,
   "name": "Schere",
+  "art": "hoch",
   "groesse": {
     "breite": 720,
     "hoehe": 1280

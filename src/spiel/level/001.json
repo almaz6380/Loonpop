@@ -1,6 +1,7 @@
 {
   "id": 1,
   "name": "Erste Luft",
+  "art": "hoch",
   "groesse": {
     "breite": 720,
     "hoehe": 1280

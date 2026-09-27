@@ -35,6 +35,23 @@ schoss durchs Level. `blaskraft` ist die Schraube.
 **3. Der Spielkern kennt kein React und keinen Browser.** `src/spiel/` ist reines
 TypeScript. Nur so ist er testbar — und nur so bleibt er deterministisch.
 
+## Zwei Level-Arten
+
+| `art` | Aufgabe | Kamera |
+|---|---|---|
+| `hoch` | Der Ballon muss nach **oben**; das ganze Level passt auf den Schirm | fest |
+| `strecke` | Der Ballon muss nach **rechts**; das Level ist breiter als der Schirm | läuft waagerecht mit |
+
+Auf Strecken treibt ein **Grundwind** (`Level.grundwind`) den Ballon nach rechts.
+⚠ Ohne ihn müsste man ihn über den Strahlrand dorthinschieben — bei 2700 px
+Strecke wären das gut 30 Sekunden Seitwärtsschieben. Mit Grundwind wird daraus,
+was es sein soll: Der Ballon treibt wie ein Blatt, du hältst ihn in der Luft und
+lenkst; durch Versetzen beschleunigst du oder bremst.
+
+⚠ **`art` wird nicht aus der Größe erraten.** Bei welchem Seitenverhältnis
+gescrollt würde, hinge sonst vom Gerät ab — dasselbe Level wäre auf einem
+breiten Schirm ein anderes Spiel.
+
 ## Fallen, die schon zugeschnappt sind
 
 1. **Tunneling.** Geprüft wird der **Weg** des Ballons (vorher → jetzt) gegen die
@@ -68,7 +85,20 @@ TypeScript. Nur so ist er testbar — und nur so bleibt er deterministisch.
    dem Sitzungskontext, und zwei Deploys scheiterten daran. Ein Deploy aus
    einem Ordner OHNE `.git` umgeht die Pruefung — das ist der Notausgang,
    nicht die Loesung.
-9. **Ein Tutorial-Level lehrt EINE Sache nach der anderen.** Level 1: erste
+9. **Auf Strecken zeigt der Finger auf den SCHIRM, nicht in die Welt.** Das
+    Gebläse merkt sich die Bildschirmposition und wird jedes Bild neu
+    umgerechnet. Würde die Weltposition gespeichert, bliebe es stehen, während
+    die Welt darunter wegscrollt — bei ruhigem Finger liefe es nach links aus
+    dem Bild. Du gehst neben dem Ballon her.
+10. **Die Kamera wird beim ZEICHNEN nachgeführt, nie in der Physik.** Sonst
+    hinge der Weltzustand vom Bildschirm ab und derselbe Lauf liefe auf zwei
+    Geräten verschieden.
+11. **Der Start eines Streckenlevels muss im freien Korridor der ersten Nadel
+    liegen** — und weit genug davor. In der ersten Fassung lag er genau auf
+    Höhe der ersten Nadelspitze: Man flog ohne Vorwarnung hinein.
+    `scratchpad/streckenpruefung.mts` prüft beides; es tat das anfangs *nicht*
+    und meldete „schaffbar", weil es nur die Nadeln untereinander ansah.
+12. **Ein Tutorial-Level lehrt EINE Sache nach der anderen.** Level 1: erste
    Lücke mittig über dem Start (halten hebt), zweite seitlich (versetzt lenkt).
    Zwischendurch stand die erste Nadel direkt über dem Start — man platzte,
    bevor man irgendetwas verstanden hatte.

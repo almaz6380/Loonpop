@@ -17,6 +17,7 @@ import type { Level } from './typen.ts';
 const testLevel = (): Level => ({
   id: 0,
   name: 'Pruefstand',
+  art: 'hoch',
   groesse: { breite: 720, hoehe: 1280 },
   start: { x: 360, y: 1050 },
   geblaeseStart: 360,
@@ -145,6 +146,26 @@ test('das Zeitlimit beendet den Lauf', () => {
   for (let i = 0; i < 200 && w.ausgang === 'laeuft'; i++) schritt(w);
   assert.equal(w.ausgang, 'zeit-aus');
   assert.ok(Math.abs(w.zeit - 1) < DT * 2);
+});
+
+test('Grundwind treibt den Ballon zur Seite', () => {
+  // Auf Strecken traegt der Grundwind den Ballon nach rechts. Ohne ihn muesste
+  // man ihn ueber den Strahlrand dorthinschieben — bei 2400 px waere das eine
+  // halbe Minute Seitwaertsschieben.
+  const level: Level = { ...testLevel(), art: 'strecke', grundwind: { x: 210, y: 0 } };
+  const w = neueWelt(level);
+  const start = w.ballon.pos.x;
+  for (let i = 0; i < 120 * 2; i++) schritt(w);
+  const gewandert = w.ballon.pos.x - start;
+  assert.ok(gewandert > 60, `treibt kaum (${gewandert.toFixed(0)} px in 2 s)`);
+  assert.ok(gewandert < 600, `wird fortgerissen (${gewandert.toFixed(0)} px in 2 s)`);
+});
+
+test('ohne Grundwind treibt nichts zur Seite', () => {
+  const w = neueWelt(testLevel());
+  const start = w.ballon.pos.x;
+  for (let i = 0; i < 240; i++) schritt(w);
+  assert.equal(w.ballon.pos.x, start);
 });
 
 test('derselbe Seed ergibt dieselbe Zufallsfolge', () => {

@@ -24,6 +24,16 @@ export type Zone = {
 export type Level = {
   id: number;
   name: string;
+  /**
+   * `hoch`    — das ganze Level passt auf den Schirm, der Ballon muss nach oben.
+   * `strecke` — das Level ist breiter als der Schirm; die Kamera laeuft
+   *             waagerecht mit, und der Ballon muss nach rechts.
+   *
+   * ⚠ Nicht aus der Groesse erraten: Bei welchem Seitenverhaeltnis gescrollt
+   * wird, haengt sonst vom Geraet ab, und dasselbe Level waere auf einem
+   * breiten Schirm ein anderes Spiel.
+   */
+  art: 'hoch' | 'strecke';
   groesse: { breite: number; hoehe: number };
   start: Punkt;
   /** Waagerechte Startposition des Geblaeses. */
@@ -31,6 +41,15 @@ export type Level = {
   ziel: { pos: Punkt; radius: number };
   nadeln: Nadel[];
   zonen: Zone[];
+  /**
+   * Staendiger Wind ueber das ganze Level (px/s²). Auf Strecken treibt er den
+   * Ballon nach rechts — sonst muesste man ihn ueber den Strahlrand
+   * dorthinschieben, und eine Strecke von 2400 px dauerte eine halbe Minute
+   * Seitwaertsschieben. Mit Grundwind wird daraus, was es sein soll: Der
+   * Ballon treibt wie ein Blatt, du haeltst ihn in der Luft und lenkst.
+   * Fehlt das Feld, steht die Luft.
+   */
+  grundwind?: Punkt;
   /**
    * Die Temposchraube. Traegheit ist das Fundament (siehe physik.ts) — schneller
    * wird ein Level NICHT durch andere Physik, sondern durch engere Gassen,

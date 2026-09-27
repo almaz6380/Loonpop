@@ -16,26 +16,53 @@ import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe } from './physik.
 // Spielseite per ctx.setTransform(dpr, …). Wer sie hier noch einmal setzt oder
 // zurueckstellt, zeichnet das ganze Spielfeld in die linke obere Ecke — genau
 // das ist am 27.09.2026 passiert.
-export type Sicht = { skala: number; randX: number; randY: number; breite: number; hoehe: number };
+export type Sicht = {
+  skala: number; randX: number; randY: number; breite: number; hoehe: number;
+  /** Wie weit die Kamera nach rechts gewandert ist (Levelkoordinaten). */
+  kameraX: number;
+};
 
 /** Wie das Level auf diesen Bildschirm passt: ganz sichtbar, mittig. */
 export function sichtBerechnen(
   breite: number, hoehe: number,
   levelBreite: number, levelHoehe: number,
+  art: 'hoch' | 'strecke' = 'hoch',
 ): Sicht {
-  const skala = Math.min(breite / levelBreite, hoehe / levelHoehe);
+  // ⚠ Auf Strecken bestimmt allein die HOEHE die Skala. Wuerde hier wie bei
+  // `hoch` das Minimum genommen, schrumpfte eine 2400 px breite Strecke auf
+  // Briefmarkengroesse.
+  const skala = art === 'strecke'
+    ? hoehe / levelHoehe
+    : Math.min(breite / levelBreite, hoehe / levelHoehe);
   return {
     skala,
-    randX: (breite - levelBreite * skala) / 2,
+    randX: art === 'strecke' ? 0 : (breite - levelBreite * skala) / 2,
     randY: (hoehe - levelHoehe * skala) / 2,
     breite,
     hoehe,
+    kameraX: 0,
   };
+}
+
+/**
+ * Wohin die Kamera auf einer Strecke schauen soll.
+ *
+ * Der Ballon bleibt in der linken Bildhaelfte: So sieht man, was KOMMT, und
+ * nicht, was man hinter sich gelassen hat. Am Levelanfang und -ende laeuft die
+ * Kamera nicht ueber den Rand hinaus — sonst saehe man ins Leere.
+ */
+export function kameraFuer(sicht: Sicht, ballonX: number, levelBreite: number): number {
+  const sichtbar = sicht.breite / sicht.skala;
+  const wunsch = ballonX - sichtbar * 0.38;
+  return Math.max(0, Math.min(levelBreite - sichtbar, wunsch));
 }
 
 /** Bildschirmpunkt → Levelkoordinate. Fuer die Fingereingabe. */
 export function zuLevel(p: Punkt, sicht: Sicht): Punkt {
-  return { x: (p.x - sicht.randX) / sicht.skala, y: (p.y - sicht.randY) / sicht.skala };
+  return {
+    x: (p.x - sicht.randX) / sicht.skala + sicht.kameraX,
+    y: (p.y - sicht.randY) / sicht.skala,
+  };
 }
 
 function zwischen(a: Punkt, b: Punkt, blende: number): Punkt {
@@ -57,6 +84,7 @@ export function zeichne(
   ctx.clearRect(0, 0, sicht.breite, sicht.hoehe);
   ctx.translate(sicht.randX, sicht.randY);
   ctx.scale(sicht.skala, sicht.skala);
+  ctx.translate(-sicht.kameraX, 0);
 
   // --- Himmel -------------------------------------------------------------
   const himmel = ctx.createLinearGradient(0, 0, 0, hoehe);
@@ -65,6 +93,21 @@ export function zeichne(
   himmel.addColorStop(1, '#8fc4e8');
   ctx.fillStyle = himmel;
   ctx.fillRect(0, 0, breite, hoehe);
+
+  // Treibende Blaetter im Hintergrund: Sie zeigen den Grundwind. Ohne das
+  // wirkt es wie ein Fehler, wenn der Ballon von allein nach rechts zieht.
+  if (level.grundwind && level.grundwind.x !== 0) {
+    const richtung = Math.sign(level.grundwind.x);
+    for (let i = 0; i < 26; i++) {
+      const tempo = 40 + (i % 5) * 26;
+      const x = (((i * 317) + welt.zeit * tempo * richtung) % (breite + 200)) - 100;
+      const y = (i * 197) % hoehe;
+      ctx.fillStyle = `rgba(255,255,255,${0.10 + (i % 3) * 0.045})`;
+      ctx.beginPath();
+      ctx.ellipse(x, y, 7, 2.6, Math.sin(welt.zeit + i) * 0.7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
   // --- Wiese -------------------------------------------------------------
   // Der Ballon kommt nie tiefer als knapp ueber die Duese (siehe bodenHoehe).

@@ -109,5 +109,11 @@ export type Welt = {
   geblaese: Geblaese;
   /** Vergangene Spielzeit in Sekunden. Treibt auch die Pendel-Nadeln. */
   zeit: number;
+  /**
+   * Sekunden SEIT dem Ende des Laufs — die Uhr fuer den Nachklang (Platzen,
+   * Ankommen). ⚠ Dafuer taugt `zeit` nicht: Die steht ab dem Ende still, weil
+   * die Physik nicht weiterrechnet.
+   */
+  nachher: number;
   ausgang: Ausgang;
 };

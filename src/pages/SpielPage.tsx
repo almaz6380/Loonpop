@@ -40,6 +40,7 @@ export default function SpielPage({ level, zurueck }: { level: Level; zurueck: (
     const welt = neueWelt(level);
     weltRef.current = welt;
     setEnde(null);
+    let endeUhr = 0;
 
     // ⚠ Auf dem Canvas in GERAETEPIXELN zeichnen, sonst ist auf einem Handy mit
     // doppelter Pixeldichte alles unscharf.
@@ -83,12 +84,16 @@ export default function SpielPage({ level, zurueck }: { level: Level; zurueck: (
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         zeichne(ctx, w, blende, sichtRef.current);
       },
-      (w) => setEnde(w.ausgang),
+      // ⚠ Verzoegert: Der Platz-Effekt dauert knapp eine Sekunde, und ein
+      // Fenster, das sofort darueberfaellt, verdeckt genau den Moment, auf den
+      // man gewartet hat.
+      (w) => { endeUhr = window.setTimeout(() => setEnde(w.ausgang), 800); },
     );
 
     return () => {
       schleife.stopp();
       clearInterval(uhr);
+      clearTimeout(endeUhr);
       window.removeEventListener('resize', anpassen);
     };
   }, [level, versuch]);
@@ -130,36 +135,50 @@ export default function SpielPage({ level, zurueck }: { level: Level; zurueck: (
       />
 
       {/* HUD */}
-      <div className="absolute top-0 inset-x-0 p-4 pt-[max(1rem,env(safe-area-inset-top))]
-                      flex items-center justify-between text-white/90 text-sm font-medium">
-        <button onClick={zurueck} className="px-3 py-1.5 rounded-full bg-black/35 backdrop-blur">
+      <div className="absolute top-0 inset-x-0 p-3.5 pt-[max(0.9rem,env(safe-area-inset-top))]
+                      flex items-center justify-between text-white text-sm font-semibold">
+        <button
+          onClick={zurueck}
+          className="pl-2.5 pr-3.5 py-2 rounded-full bg-black/30 backdrop-blur-md
+                     border border-white/10 flex items-center gap-1.5 active:scale-95 transition"
+        >
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           {t('spiel.zurueck')}
         </button>
-        <span className="px-3 py-1.5 rounded-full bg-black/35 backdrop-blur tabular-nums">
+        <span className="px-3.5 py-2 rounded-full bg-black/30 backdrop-blur-md
+                         border border-white/10 tabular-nums">
           {level.tempo.zeitlimit > 0
             ? t('spiel.verbleibend', { s: Math.max(0, level.tempo.zeitlimit - zeit).toFixed(1) })
             : t('spiel.zeit', { s: zeit.toFixed(1) })}
         </span>
       </div>
 
-      {/* Ende */}
+      {/* Ende — erscheint verzoegert, damit man den Platz-Effekt noch sieht */}
       {ende && ende !== 'laeuft' && (
-        <div className="absolute inset-0 grid place-items-center bg-black/55 backdrop-blur-sm px-8">
+        <div className="absolute inset-0 grid place-items-center px-8
+                        bg-gradient-to-b from-black/45 via-black/60 to-black/75 backdrop-blur-[3px]
+                        animate-[einblenden_240ms_ease-out]">
           <div className="text-center text-white max-w-xs">
-            <p className="text-5xl mb-3">{ende === 'geschafft' ? '🎈' : '💥'}</p>
-            <h2 className="text-2xl font-semibold mb-1">{t(`spiel.ende.${ende}`)}</h2>
-            <p className="text-white/70 mb-6">
+            <p className="text-6xl mb-3 drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)]">
+              {ende === 'geschafft' ? '🎈' : '💥'}
+            </p>
+            <h2 className="text-3xl font-black tracking-tight mb-1.5">{t(`spiel.ende.${ende}`)}</h2>
+            <p className="text-white/75 mb-7 leading-relaxed">
               {ende === 'geschafft'
                 ? t('spiel.gebraucht', { s: zeit.toFixed(1) })
                 : t('spiel.trostworte')}
             </p>
             <div className="flex gap-3 justify-center">
               <button onClick={nochmal}
-                className="px-5 py-3 rounded-2xl bg-white text-[#0d1330] font-semibold">
+                className="px-6 py-3.5 rounded-2xl bg-white text-[#12204f] font-bold
+                           shadow-lg shadow-black/25 active:scale-95 transition">
                 {t('spiel.nochmal')}
               </button>
               <button onClick={zurueck}
-                className="px-5 py-3 rounded-2xl bg-white/15 font-semibold">
+                className="px-6 py-3.5 rounded-2xl bg-white/12 border border-white/20
+                           font-semibold backdrop-blur-sm active:scale-95 transition">
                 {t('spiel.levelwahl')}
               </button>
             </div>

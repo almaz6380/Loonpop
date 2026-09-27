@@ -8,9 +8,9 @@
   },
   "start": {
     "x": 360,
-    "y": 1140
+    "y": 1052
   },
-  "geblaeseStart": 360,
+  "geblaeseStart": 275,
   "ziel": {
     "pos": {
       "x": 590,

@@ -160,7 +160,12 @@ export function nadelJetzt(nadel: Nadel, zeit: number, levelHoehe = 1280): { von
  * Deshalb laesst sie sich ohne Browser testen.
  */
 export function schritt(welt: Welt): void {
-  if (welt.ausgang !== 'laeuft') return;
+  if (welt.ausgang !== 'laeuft') {
+    // Die Physik ruht, aber die Uhr fuer den Nachklang laeuft weiter — das
+    // Zeichnen braucht sie fuer den Platz-Effekt.
+    welt.nachher += DT;
+    return;
+  }
 
   const { ballon, level, geblaese } = welt;
   const { blaskraft, daempfung, zeitlimit } = level.tempo;

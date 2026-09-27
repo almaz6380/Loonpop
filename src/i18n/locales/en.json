@@ -3,7 +3,9 @@
     "titel": "loonpop",
     "untertitel": "Hold the leaf blower under the balloon and press. Needles are final.",
     "level": "Level {{n}}",
-    "hinweis": "Slide the blower sideways, hold to blow. Standing off-centre pushes the balloon sideways."
+    "hinweis": "Slide the blower sideways, hold to blow. Standing off-centre pushes the balloon sideways.",
+    "hoch": "up",
+    "strecke": "course"
   },
   "spiel": {
     "zurueck": "Back",

@@ -7,15 +7,14 @@
 // umgerechnet und danach in Levelkoordinaten gezeichnet. Wer stattdessen
 // ueberall mit Bildschirmpixeln rechnet, bekommt auf jedem Geraet ein anderes
 // Spielfeld — und damit unterschiedlich schwere Level.
+//
+// ⚠ NICHTS hier darf Math.random() benutzen. Jede Streuung wird aus dem Index
+// und der Spielzeit gerechnet, sonst flackert das Bild von Bild zu Bild und
+// ein Screenshot liesse sich nie wiederholen.
 
 import type { Welt, Punkt } from './typen.ts';
 import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe } from './physik.ts';
 
-// ⚠ breite/hoehe sind CSS-Pixel, nicht Geraetepixel. Das Canvas ist bei
-// doppelter Pixeldichte doppelt so gross; die Umrechnung macht EINMAL die
-// Spielseite per ctx.setTransform(dpr, …). Wer sie hier noch einmal setzt oder
-// zurueckstellt, zeichnet das ganze Spielfeld in die linke obere Ecke — genau
-// das ist am 27.09.2026 passiert.
 /**
  * Das Nadelbild. Gezeichnete Striche sahen aus wie Streichhoelzer — einer
  * Nadel fehlten Verjuengung, Oehr und Metallglanz. Das Bild zeigt die Nadel
@@ -90,6 +89,287 @@ function zwischen(a: Punkt, b: Punkt, blende: number): Punkt {
   return { x: a.x + (b.x - a.x) * blende, y: a.y + (b.y - a.y) * blende };
 }
 
+/** Streuung aus einer Zahl — ersetzt Math.random(), bleibt aber wiederholbar. */
+const streu = (n: number) => {
+  const s = Math.sin(n * 127.1) * 43758.5453;
+  return s - Math.floor(s);
+};
+
+// ---------------------------------------------------------------- Hintergrund
+
+/**
+ * Wolken, Huegel und Sonne.
+ *
+ * ⚠ Sie laufen LANGSAMER als das Level (Parallaxe). Das ist der ganze Grund,
+ * warum eine Strecke nach Tiefe aussieht statt nach einer Tapete: Was weit weg
+ * ist, wandert weniger. Ohne das klebt der Himmel am Vordergrund.
+ */
+function hintergrund(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: number) {
+  const { breite, hoehe } = welt.level.groesse;
+  const sichtbar = sicht.breite / sicht.skala;
+
+  // Der Himmel selbst steht fest — er fuellt immer den ganzen Ausschnitt.
+  const himmel = ctx.createLinearGradient(0, 0, 0, hoehe);
+  himmel.addColorStop(0, '#152364');
+  himmel.addColorStop(0.35, '#2f5cb4');
+  himmel.addColorStop(0.7, '#5f9ddb');
+  himmel.addColorStop(1, '#bfe2f2');
+  ctx.fillStyle = himmel;
+  ctx.fillRect(sicht.kameraX - 20, 0, sichtbar + 40, hoehe);
+
+  // Sonne, tief am Horizont — gibt dem Himmel eine Richtung.
+  const sx = sicht.kameraX + sichtbar * 0.76;
+  const sy = hoehe * 0.42;
+  const sonne = ctx.createRadialGradient(sx, sy, 10, sx, sy, hoehe * 0.42);
+  sonne.addColorStop(0, 'rgba(255,240,200,0.55)');
+  sonne.addColorStop(0.25, 'rgba(255,225,160,0.18)');
+  sonne.addColorStop(1, 'rgba(255,220,150,0)');
+  ctx.fillStyle = sonne;
+  ctx.fillRect(sicht.kameraX - 20, 0, sichtbar + 40, hoehe);
+
+  // --- Wolken, drei Schichten ---------------------------------------------
+  const wolke = (x: number, y: number, gr: number, deckung: number) => {
+    ctx.fillStyle = `rgba(255,255,255,${deckung})`;
+    for (const [dx, dy, f] of [[-1, 0.15, 0.62], [-0.35, -0.2, 0.85], [0.4, -0.1, 0.72], [1, 0.2, 0.52]]) {
+      ctx.beginPath();
+      ctx.ellipse(x + dx * gr, y + dy * gr, gr * f, gr * f * 0.66, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  };
+  // ⚠ Der Abstand richtet sich nach dem SICHTBAREN Ausschnitt. Ein fester
+  // Abstand von 2500 px liess auf einem 590 px breiten Handy-Ausschnitt nie
+  // eine Wolke ins Bild — der Himmel blieb leer, und es sah nicht danach aus,
+  // als fehlte etwas, sondern als waere nie etwas da gewesen.
+  for (const [tiefe, gr, deckung] of [[0.25, 58, 0.13], [0.45, 44, 0.17], [0.7, 32, 0.22]]) {
+    const abstand = sichtbar / 1.8;
+    const versatz = sicht.kameraX * tiefe + welt.zeit * 6 * tiefe;
+    const von = Math.floor((sicht.kameraX - versatz - gr * 2) / abstand);
+    const bis = Math.ceil((sicht.kameraX + sichtbar - versatz + gr * 2) / abstand);
+    for (let n = von; n <= bis; n++) {
+      const x = n * abstand + versatz;
+      const y = hoehe * (0.06 + streu(n * 3.7 + tiefe) * 0.32);
+      wolke(x, y, gr * (0.7 + streu(n + tiefe * 9) * 0.6), deckung);
+    }
+  }
+
+  // --- Huegel, zwei Schichten ---------------------------------------------
+  for (const [tiefe, hoehenAnteil, farbe] of [[0.35, 0.16, '#5e86a8'], [0.6, 0.1, '#4a7a6a']] as const) {
+    const versatz = sicht.kameraX * (1 - tiefe);
+    ctx.fillStyle = farbe;
+    ctx.beginPath();
+    ctx.moveTo(sicht.kameraX - 40, bodenY + 10);
+    const kuppe = hoehe * hoehenAnteil;
+    for (let x = sicht.kameraX - 40; x <= sicht.kameraX + sichtbar + 40; x += 18) {
+      const w = (x + versatz) * 0.0042;
+      const y = bodenY - kuppe * (0.55 + 0.45 * Math.sin(w) * Math.cos(w * 0.6 + tiefe * 4));
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(sicht.kameraX + sichtbar + 40, bodenY + 10);
+    ctx.closePath();
+    ctx.fill();
+  }
+  void breite;
+}
+
+/** Wiese mit Halmen und ein paar Blumen. */
+function wiese(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: number) {
+  const { hoehe } = welt.level.groesse;
+  const sichtbar = sicht.breite / sicht.skala;
+  const von = sicht.kameraX - 30;
+  const bis = sicht.kameraX + sichtbar + 30;
+
+  const gras = ctx.createLinearGradient(0, bodenY, 0, hoehe);
+  gras.addColorStop(0, '#7dc25e');
+  gras.addColorStop(0.3, '#5da046');
+  gras.addColorStop(1, '#3d6e30');
+  ctx.fillStyle = gras;
+  ctx.fillRect(von, bodenY, bis - von, hoehe - bodenY);
+
+  // ⚠ Nur den sichtbaren Ausschnitt bestuecken. Ueber eine 3500 px lange
+  // Strecke waeren es sonst hunderte Halme je Bild, von denen 85 % niemand
+  // sieht.
+  const ersteX = Math.floor(von / 15) * 15;
+  for (let x = ersteX; x < bis; x += 15) {
+    const s = streu(x);
+    const h = 10 + s * 16;
+    const neigung = Math.sin(welt.zeit * 1.4 + x * 0.05) * 4;
+    ctx.strokeStyle = s > 0.5 ? 'rgba(138,204,104,0.85)' : 'rgba(96,168,76,0.9)';
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x, bodenY + 3);
+    ctx.quadraticCurveTo(x + neigung * 0.5, bodenY - h * 0.6, x + neigung, bodenY - h);
+    ctx.stroke();
+
+    if (s > 0.955) {
+      ctx.fillStyle = ['#ffd6e7', '#fff2a8', '#d6c9ff'][Math.floor(s * 97) % 3];
+      ctx.beginPath();
+      ctx.arc(x + neigung, bodenY - h - 2, 3.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+// ------------------------------------------------------------------- Figuren
+
+function zeichneGeblaese(ctx: CanvasRenderingContext2D, welt: Welt, gy: number, bodenY: number) {
+  const gx = welt.geblaese.x;
+  const st = welt.geblaese.staerke;
+
+  // Schatten auf der Wiese — ohne ihn schwebt das Geraet ueber dem Gras.
+  ctx.fillStyle = 'rgba(30,60,25,0.22)';
+  ctx.beginPath();
+  ctx.ellipse(gx, bodenY + 62, 46, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.save();
+  ctx.translate(gx, gy);
+
+  // Duese
+  const duese = ctx.createLinearGradient(-30, -14, 30, 6);
+  duese.addColorStop(0, '#3c4a63');
+  duese.addColorStop(1, '#232d40');
+  ctx.fillStyle = duese;
+  ctx.beginPath();
+  ctx.moveTo(-30, 6);
+  ctx.lineTo(-19, -15);
+  ctx.quadraticCurveTo(0, -19, 19, -15);
+  ctx.lineTo(30, 6);
+  ctx.closePath();
+  ctx.fill();
+
+  // Gehaeuse
+  const korpus = ctx.createLinearGradient(-34, 6, 34, 58);
+  korpus.addColorStop(0, '#ffb547');
+  korpus.addColorStop(0.55, '#ff9f1c');
+  korpus.addColorStop(1, '#e07d0a');
+  ctx.fillStyle = korpus;
+  ctx.beginPath();
+  ctx.roundRect(-34, 6, 68, 54, 16);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.28)';
+  ctx.beginPath();
+  ctx.roundRect(-27, 11, 20, 12, 6);
+  ctx.fill();
+
+  // Griff
+  ctx.fillStyle = '#2b3547';
+  ctx.beginPath();
+  ctx.roundRect(-11, 54, 22, 30, 9);
+  ctx.fill();
+
+  // Laufrad: dreht sich nur, wenn geblasen wird
+  ctx.save();
+  ctx.translate(0, 33);
+  ctx.rotate(welt.zeit * 14 * st);
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  for (let i = 0; i < 3; i++) {
+    ctx.rotate((Math.PI * 2) / 3);
+    ctx.beginPath();
+    ctx.ellipse(0, -9, 4.5, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#2b3547';
+  ctx.beginPath();
+  ctx.arc(0, 0, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.restore();
+}
+
+function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bodenY: number) {
+  const { ballon } = welt;
+  const r = ballon.radius;
+  const v = Math.hypot(ballon.geschw.x, ballon.geschw.y);
+
+  // Schatten auf der Wiese: kleiner und blasser, je hoeher der Ballon steht.
+  const hoeheUeber = Math.max(0, bodenY - pos.y);
+  const naehe = Math.max(0, 1 - hoeheUeber / 900);
+  if (naehe > 0.02) {
+    ctx.fillStyle = `rgba(30,60,25,${0.24 * naehe})`;
+    ctx.beginPath();
+    ctx.ellipse(pos.x, bodenY + 58, r * (0.5 + naehe * 0.7), 8 * naehe + 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Schnur, haengt der Bewegung hinterher — verraet die Traegheit aufs Auge
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y + r);
+  ctx.quadraticCurveTo(
+    pos.x - ballon.geschw.x * 0.03, pos.y + r + 20,
+    pos.x - ballon.geschw.x * 0.05, pos.y + r + 38,
+  );
+  ctx.stroke();
+
+  // In Flugrichtung leicht gestreckt. Ein starrer Kreis wirkt tot; zu viel
+  // Verformung sieht nach Gummiball aus. 12 % bei vollem Tempo reichen.
+  ctx.save();
+  ctx.translate(pos.x, pos.y);
+  if (v > 8) {
+    ctx.rotate(Math.atan2(ballon.geschw.y, ballon.geschw.x) + Math.PI / 2);
+    const dehnung = 1 + Math.min(0.12, v / 3200);
+    ctx.scale(1 / dehnung, dehnung);
+  }
+  const haut = ctx.createRadialGradient(-r * 0.32, -r * 0.38, r * 0.12, 0, 0, r * 1.15);
+  haut.addColorStop(0, '#ff8d9e');
+  haut.addColorStop(0.55, '#f94d67');
+  haut.addColorStop(1, '#c62d47');
+  ctx.fillStyle = haut;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r * 0.92, r, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-5, r - 1);
+  ctx.lineTo(5, r - 1);
+  ctx.lineTo(0, r + 8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.3, -r * 0.35, r * 0.2, r * 0.3, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/** Der Nachklang: Fetzen beim Platzen, Funken beim Ankommen. */
+function nachklang(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt) {
+  const t = welt.nachher;
+  if (t > 1.2) return;
+  const r = welt.ballon.radius;
+
+  if (welt.ausgang === 'geplatzt') {
+    for (let i = 0; i < 14; i++) {
+      const w = (i / 14) * Math.PI * 2 + streu(i) * 0.6;
+      const tempo = 180 + streu(i * 5) * 260;
+      const x = pos.x + Math.cos(w) * tempo * t;
+      const y = pos.y + Math.sin(w) * tempo * t + 420 * t * t;
+      ctx.fillStyle = `rgba(230,60,88,${Math.max(0, 1 - t / 1.2)})`;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(w + t * 7);
+      ctx.beginPath();
+      ctx.moveTo(-6, -4); ctx.lineTo(7, 0); ctx.lineTo(-4, 6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+  } else if (welt.ausgang === 'geschafft') {
+    for (let i = 0; i < 16; i++) {
+      const w = (i / 16) * Math.PI * 2;
+      const d = r + t * 200;
+      ctx.fillStyle = `rgba(255,226,120,${Math.max(0, 1 - t / 1.2)})`;
+      ctx.beginPath();
+      ctx.arc(pos.x + Math.cos(w) * d, pos.y + Math.sin(w) * d, 4 - t * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+// ---------------------------------------------------------------------- Bild
+
 export function zeichne(
   ctx: CanvasRenderingContext2D,
   welt: Welt,
@@ -97,7 +377,8 @@ export function zeichne(
   sicht: Sicht,
 ): void {
   const { level, ballon } = welt;
-  const { breite, hoehe } = level.groesse;
+  const { hoehe } = level.groesse;
+  const bodenY = bodenHoehe(hoehe);
 
   // Kein setTransform hier: Die Pixeldichte steckt bereits im Transform, den
   // die Spielseite gesetzt hat. Gerechnet wird ab hier in CSS-Pixeln.
@@ -107,83 +388,78 @@ export function zeichne(
   ctx.scale(sicht.skala, sicht.skala);
   ctx.translate(-sicht.kameraX, 0);
 
-  // --- Himmel -------------------------------------------------------------
-  const himmel = ctx.createLinearGradient(0, 0, 0, hoehe);
-  himmel.addColorStop(0, '#1b2a6b');
-  himmel.addColorStop(0.55, '#3f6bc4');
-  himmel.addColorStop(1, '#8fc4e8');
-  ctx.fillStyle = himmel;
-  ctx.fillRect(0, 0, breite, hoehe);
+  hintergrund(ctx, welt, sicht, bodenY);
 
-  // Treibende Blaetter im Hintergrund: Sie zeigen den Grundwind. Ohne das
-  // wirkt es wie ein Fehler, wenn der Ballon von allein nach rechts zieht.
+  // Treibende Blaetter: Sie zeigen den Grundwind. Ohne das wirkt es wie ein
+  // Fehler, wenn der Ballon von allein nach rechts zieht.
   if (level.grundwind && level.grundwind.x !== 0) {
     const richtung = Math.sign(level.grundwind.x);
-    for (let i = 0; i < 26; i++) {
-      const tempo = 40 + (i % 5) * 26;
-      const x = (((i * 317) + welt.zeit * tempo * richtung) % (breite + 200)) - 100;
+    const sichtbar = sicht.breite / sicht.skala;
+    for (let i = 0; i < 22; i++) {
+      const tempo = 45 + (i % 5) * 28;
+      const spanne = sichtbar + 220;
+      const x = sicht.kameraX - 110
+        + (((i * 317) + welt.zeit * tempo * richtung) % spanne + spanne) % spanne;
       const y = (i * 197) % hoehe;
-      ctx.fillStyle = `rgba(255,255,255,${0.10 + (i % 3) * 0.045})`;
+      ctx.fillStyle = `rgba(255,252,230,${0.14 + (i % 3) * 0.05})`;
       ctx.beginPath();
       ctx.ellipse(x, y, 7, 2.6, Math.sin(welt.zeit + i) * 0.7, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
-  // --- Wiese -------------------------------------------------------------
-  // Der Ballon kommt nie tiefer als knapp ueber die Duese (siehe bodenHoehe).
-  // Ohne sichtbaren Boden haelt er an einer unsichtbaren Linie an und das wirkt
-  // wie ein Fehler.
-  const bodenY = bodenHoehe(hoehe);
-  const wiese = ctx.createLinearGradient(0, bodenY, 0, hoehe);
-  wiese.addColorStop(0, 'rgba(126,196,120,0.35)');
-  wiese.addColorStop(0.35, '#6aa84f');
-  wiese.addColorStop(1, '#4b7a38');
-  ctx.fillStyle = wiese;
-  ctx.fillRect(0, bodenY, breite, hoehe - bodenY);
+  wiese(ctx, welt, sicht, bodenY);
 
   // --- Zonen: sichtbar, sonst wirkt ihre Kraft wie ein Fehler -------------
   for (const z of level.zonen) {
     const b = z.bereich;
-    ctx.fillStyle = 'rgba(255,255,255,0.10)';
-    ctx.fillRect(b.x, b.y, b.breite, b.hoehe);
-    ctx.strokeStyle = 'rgba(255,255,255,0.28)';
-    ctx.setLineDash([10, 10]);
-    ctx.lineWidth = 2;
-    ctx.strokeRect(b.x, b.y, b.breite, b.hoehe);
-    ctx.setLineDash([]);
-    // Pfeilchen in Kraftrichtung
-    const mx = b.x + b.breite / 2;
-    const my = b.y + b.hoehe / 2;
     const d = Math.hypot(z.kraft.x, z.kraft.y) || 1;
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(mx - (z.kraft.x / d) * 26, my - (z.kraft.y / d) * 26);
-    ctx.lineTo(mx + (z.kraft.x / d) * 26, my + (z.kraft.y / d) * 26);
-    ctx.stroke();
+    const fluss = ctx.createLinearGradient(b.x, b.y + b.hoehe, b.x, b.y);
+    fluss.addColorStop(0, 'rgba(198,235,255,0.05)');
+    fluss.addColorStop(1, 'rgba(198,235,255,0.22)');
+    ctx.fillStyle = fluss;
+    ctx.fillRect(b.x, b.y, b.breite, b.hoehe);
+    // Statt eines Pfeils: Teilchen, die in Kraftrichtung wandern. Man sieht
+    // sofort, wohin es einen zieht.
+    for (let i = 0; i < 9; i++) {
+      const p = ((welt.zeit * 0.55 + i / 9) % 1);
+      const x = b.x + (0.12 + streu(i) * 0.76) * b.breite + (z.kraft.x / d) * p * 40;
+      const y = b.y + b.hoehe - p * b.hoehe;
+      ctx.fillStyle = `rgba(226,246,255,${0.5 * Math.sin(p * Math.PI)})`;
+      ctx.beginPath();
+      ctx.ellipse(x, y, 2.6, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   // --- Ziel ---------------------------------------------------------------
   const z = level.ziel;
   const puls = 1 + Math.sin(welt.zeit * 3) * 0.05;
-  ctx.strokeStyle = '#ffe06a';
-  ctx.lineWidth = 6;
-  ctx.beginPath();
-  ctx.arc(z.pos.x, z.pos.y, z.radius * puls, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillStyle = 'rgba(255,224,106,0.30)';
-  ctx.fill();
-  // Schein aussen herum — oben ist der Himmel dunkel, ein duenner Ring geht
-  // dort sonst unter, und ein Ziel, das man sucht, ist kein Ziel.
-  const schein = ctx.createRadialGradient(z.pos.x, z.pos.y, z.radius * 0.6,
-                                          z.pos.x, z.pos.y, z.radius * 2.1);
-  schein.addColorStop(0, 'rgba(255,224,106,0.34)');
-  schein.addColorStop(1, 'rgba(255,224,106,0)');
+  const schein = ctx.createRadialGradient(z.pos.x, z.pos.y, z.radius * 0.35,
+                                          z.pos.x, z.pos.y, z.radius * 2.3);
+  schein.addColorStop(0, 'rgba(255,228,130,0.42)');
+  schein.addColorStop(0.55, 'rgba(255,214,96,0.16)');
+  schein.addColorStop(1, 'rgba(255,214,96,0)');
   ctx.fillStyle = schein;
   ctx.beginPath();
-  ctx.arc(z.pos.x, z.pos.y, z.radius * 2.1, 0, Math.PI * 2);
+  ctx.arc(z.pos.x, z.pos.y, z.radius * 2.3, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = 'rgba(255,236,168,0.22)';
+  ctx.beginPath();
+  ctx.arc(z.pos.x, z.pos.y, z.radius * puls, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#ffe06a';
+  ctx.lineWidth = 5;
+  ctx.stroke();
+  // Funken, die den Ring umkreisen
+  for (let i = 0; i < 7; i++) {
+    const w = welt.zeit * 0.9 + (i / 7) * Math.PI * 2;
+    ctx.fillStyle = 'rgba(255,245,200,0.75)';
+    ctx.beginPath();
+    ctx.arc(z.pos.x + Math.cos(w) * z.radius * 1.28,
+            z.pos.y + Math.sin(w) * z.radius * 1.28, 2.6, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // --- Nadeln -------------------------------------------------------------
   for (const nadel of level.nadeln) {
@@ -194,17 +470,15 @@ export function zeichne(
     if (nadel.faellt) {
       if (Math.min(n.von.y, n.bis.y) > bodenY) continue;
       n.bis = { ...n.bis, y: Math.min(n.bis.y, bodenY) };
-    }
-    // Fallende Nadeln bekommen einen Schweif — sonst sieht man nicht, dass
-    // sie sich bewegen, und wundert sich, warum man plötzlich platzt.
-    if (nadel.faellt) {
-      const s = ctx.createLinearGradient(n.von.x, n.von.y - 90, n.von.x, n.von.y);
+      // Schweif — sonst sieht man nicht, dass sie sich bewegt, und wundert
+      // sich, warum man ploetzlich platzt.
+      const s = ctx.createLinearGradient(n.von.x, n.von.y - 110, n.von.x, n.von.y);
       s.addColorStop(0, 'rgba(232,236,245,0)');
-      s.addColorStop(1, 'rgba(232,236,245,0.35)');
+      s.addColorStop(1, 'rgba(232,236,245,0.4)');
       ctx.strokeStyle = s;
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(n.von.x, n.von.y - 90);
+      ctx.moveTo(n.von.x, n.von.y - 110);
       ctx.lineTo(n.von.x, n.von.y);
       ctx.stroke();
     }
@@ -218,6 +492,9 @@ export function zeichne(
       ctx.translate(n.von.x, n.von.y);
       ctx.rotate(Math.atan2(dy, dx) - Math.PI / 2);
       const breite = laenge * (nadelBild.naturalWidth / nadelBild.naturalHeight) * NADEL_BREITER;
+      ctx.shadowColor = 'rgba(10,20,45,0.35)';
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetY = 2;
       ctx.drawImage(nadelBild, -breite / 2, 0, breite, laenge);
       ctx.restore();
     } else {
@@ -246,8 +523,9 @@ export function zeichne(
   const st = welt.geblaese.staerke;
   if (st > 0.02) {
     const kegel = ctx.createLinearGradient(0, gy, 0, 0);
-    kegel.addColorStop(0, `rgba(255,255,255,${0.42 * st})`);
-    kegel.addColorStop(1, 'rgba(255,255,255,0)');
+    kegel.addColorStop(0, `rgba(255,255,255,${0.4 * st})`);
+    kegel.addColorStop(0.5, `rgba(226,244,255,${0.17 * st})`);
+    kegel.addColorStop(1, 'rgba(226,244,255,0)');
     ctx.fillStyle = kegel;
     ctx.beginPath();
     ctx.moveTo(gx - MUND, gy);
@@ -259,82 +537,24 @@ export function zeichne(
 
     // Mitgerissene Blaetter: machen die Stroemung sichtbar und verraten, wo
     // der Strahl noch traegt.
-    for (let i = 0; i < 14; i++) {
-      const p = ((welt.zeit * (0.55 + (i % 4) * 0.12) + i / 14) % 1);
+    for (let i = 0; i < 16; i++) {
+      const p = ((welt.zeit * (0.55 + (i % 4) * 0.12) + i / 16) % 1);
       const y = gy - p * gy;
-      const streu = Math.sin(i * 12.9898 + welt.zeit * 0.8) * (MUND + (gy - y) * AUFWEITUNG) * 0.7;
-      ctx.fillStyle = `rgba(255,245,210,${(1 - p) * 0.75 * st})`;
+      const seit = Math.sin(i * 12.9898 + welt.zeit * 0.8) * (MUND + (gy - y) * AUFWEITUNG) * 0.7;
+      ctx.fillStyle = `rgba(255,248,214,${(1 - p) * 0.8 * st})`;
       ctx.beginPath();
-      ctx.ellipse(gx + streu, y, 5, 3, p * 9, 0, Math.PI * 2);
+      ctx.ellipse(gx + seit, y, 5, 3, p * 9, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
-  // --- Das Geblaese -------------------------------------------------------
-  ctx.save();
-  ctx.translate(gx, gy);
-  // Duese
-  ctx.fillStyle = '#2f3b52';
-  ctx.beginPath();
-  ctx.moveTo(-30, 6);
-  ctx.lineTo(-19, -14);
-  ctx.lineTo(19, -14);
-  ctx.lineTo(30, 6);
-  ctx.closePath();
-  ctx.fill();
-  // Gehaeuse
-  ctx.fillStyle = '#ff9f1c';
-  ctx.beginPath();
-  ctx.roundRect(-34, 6, 68, 52, 14);
-  ctx.fill();
-  // Griff
-  ctx.fillStyle = '#2f3b52';
-  ctx.beginPath();
-  ctx.roundRect(-10, 52, 20, 30, 8);
-  ctx.fill();
-  // Laufrad: dreht sich nur, wenn geblasen wird
-  ctx.strokeStyle = 'rgba(255,255,255,0.75)';
-  ctx.lineWidth = 3;
-  const dreh = welt.zeit * 14 * st;
-  for (let i = 0; i < 3; i++) {
-    const w = dreh + (i * Math.PI * 2) / 3;
-    ctx.beginPath();
-    ctx.moveTo(0, 32);
-    ctx.lineTo(Math.cos(w) * 15, 32 + Math.sin(w) * 15);
-    ctx.stroke();
-  }
-  ctx.restore();
+  zeichneGeblaese(ctx, welt, gy, bodenY);
 
-  // --- Ballon -------------------------------------------------------------
   const pos = zwischen(ballon.vorher, ballon.pos, blende);
-  const r = ballon.radius;
-  // Schnur, haengt der Bewegung hinterher — verraet die Traegheit aufs Auge
-  ctx.strokeStyle = 'rgba(255,255,255,0.65)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(pos.x, pos.y + r);
-  ctx.quadraticCurveTo(
-    pos.x - ballon.geschw.x * 0.03, pos.y + r + 20,
-    pos.x - ballon.geschw.x * 0.05, pos.y + r + 38,
-  );
-  ctx.stroke();
-
-  ctx.fillStyle = '#ff5d73';
-  ctx.beginPath();
-  ctx.ellipse(pos.x, pos.y, r * 0.92, r, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Knoten
-  ctx.beginPath();
-  ctx.moveTo(pos.x - 5, pos.y + r);
-  ctx.lineTo(pos.x + 5, pos.y + r);
-  ctx.lineTo(pos.x, pos.y + r + 8);
-  ctx.closePath();
-  ctx.fill();
-  // Glanzlicht
-  ctx.fillStyle = 'rgba(255,255,255,0.45)';
-  ctx.beginPath();
-  ctx.ellipse(pos.x - r * 0.3, pos.y - r * 0.35, r * 0.22, r * 0.3, -0.4, 0, Math.PI * 2);
-  ctx.fill();
+  if (welt.ausgang === 'laeuft' || welt.nachher < 0.06) {
+    zeichneBallon(ctx, welt, pos, bodenY);
+  }
+  nachklang(ctx, welt, pos);
 
   ctx.restore();
 }

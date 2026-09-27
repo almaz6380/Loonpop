@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Das Ende-Fenster faellt nicht ins Bild, es blendet auf. */
+@keyframes einblenden {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
 html, body, #root { height: 100%; }
 body {
   margin: 0;

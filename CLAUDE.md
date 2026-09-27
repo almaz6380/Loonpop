@@ -52,6 +52,30 @@ lenkst; durch Versetzen beschleunigst du oder bremst.
 gescrollt würde, hinge sonst vom Gerät ab — dasselbe Level wäre auf einem
 breiten Schirm ein anderes Spiel.
 
+## Wie das Spiel aussehen soll
+
+Freundlich und ruhig: heller Himmel, Wiese, klare Silhouetten. Alles wird im
+Canvas gezeichnet (`zeichnen.ts`), nur die Nadel ist ein Bild.
+
+**Tiefe kommt aus Parallaxe.** Wolken (drei Schichten) und Hügel (zwei) wandern
+langsamer als das Level. ⚠ Ihr Abstand richtet sich nach dem **sichtbaren
+Ausschnitt** — ein fester Abstand von 2500 px ließ auf einem 590 px breiten
+Handy-Ausschnitt nie eine Wolke ins Bild, und der Himmel blieb einfach leer.
+
+⚠ **Kein `Math.random()` im Zeichnen.** Jede Streuung (Grashalme, Wolken,
+Blätter) kommt aus `streu(n)` — einer reinen Funktion über Index und Zeit.
+Sonst flackert das Bild von Bild zu Bild und ein Screenshot ließe sich nie
+wiederholen.
+
+⚠ **Nur den sichtbaren Ausschnitt bestücken.** Über eine 3500 px lange Strecke
+wären es sonst hunderte Grashalme je Bild, von denen 85 % niemand sieht.
+
+**Der Nachklang** (Fetzen beim Platzen, Funken beim Ankommen) hängt an
+`welt.nachher`, einer eigenen Uhr. ⚠ `welt.zeit` taugt dafür nicht: Die steht ab
+dem Ende still, weil die Physik nicht weiterrechnet. Das Ende-Fenster erscheint
+mit 800 ms Verzögerung — sonst fällt es genau über den Moment, auf den man
+gewartet hat.
+
 ## Nadeln
 
 Gezeichnet werden sie aus **einem Bild**: `public/nadel.png`, senkrecht mit der

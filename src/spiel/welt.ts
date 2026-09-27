@@ -16,6 +16,7 @@ export function neueWelt(level: Level): Welt {
     },
     geblaese: { x: level.geblaeseStart, an: false, staerke: 0 },
     zeit: 0,
+    nachher: 0,
     ausgang: 'laeuft',
   };
 }

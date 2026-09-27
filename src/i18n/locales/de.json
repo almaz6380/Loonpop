@@ -3,7 +3,9 @@
     "titel": "loonpop",
     "untertitel": "Halte das Laubgebläse unter den Ballon und drücke. Nadeln sind endgültig.",
     "level": "Level {{n}}",
-    "hinweis": "Schiebe das Gebläse seitwärts, halte zum Blasen. Versetzt stehen lenkt den Ballon zur Seite."
+    "hinweis": "Schiebe das Gebläse seitwärts, halte zum Blasen. Versetzt stehen lenkt den Ballon zur Seite.",
+    "hoch": "hoch",
+    "strecke": "Strecke"
   },
   "spiel": {
     "zurueck": "Zurück",

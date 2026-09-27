@@ -14,8 +14,7 @@ export function neueWelt(level: Level): Welt {
       geschw: { x: 0, y: 0 },
       radius: BALLON_RADIUS,
     },
-    windZiel: null,
-    windStaerke: 0,
+    geblaese: { x: level.geblaeseStart, an: false, staerke: 0 },
     zeit: 0,
     ausgang: 'laeuft',
   };

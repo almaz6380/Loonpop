@@ -26,6 +26,8 @@ export type Level = {
   name: string;
   groesse: { breite: number; hoehe: number };
   start: Punkt;
+  /** Waagerechte Startposition des Geblaeses. */
+  geblaeseStart: number;
   ziel: { pos: Punkt; radius: number };
   nadeln: Nadel[];
   zonen: Zone[];
@@ -36,13 +38,31 @@ export type Level = {
    * sich beide nur halb gut anfuehlen.
    */
   tempo: {
-    /** Wie kraeftig das Geblaese schiebt (px/s²). */
-    windKraft: number;
+    /** Wie kraeftig der Luftstrahl direkt an der Duese schiebt (px/s²). */
+    blaskraft: number;
     /** Luftwiderstand (1/s). Hoeher = zaeher, traeger, verzeihender. */
     daempfung: number;
     /** Sekunden, 0 = ohne Limit. */
     zeitlimit: number;
   };
+};
+
+/**
+ * Das Laubgeblaese — die Spielfigur. Es steht am unteren Rand, faehrt mit dem
+ * Finger waagerecht mit und blaest SENKRECHT nach oben. Drehen laesst es sich
+ * nicht: Seitlich gesteuert wird, indem man sich versetzt hinstellt (siehe
+ * physik.ts, Strahlmodell).
+ */
+export type Geblaese = {
+  /** Waagerechte Position der Duese in Levelkoordinaten. */
+  x: number;
+  /** Haelt der Finger gerade? */
+  an: boolean;
+  /**
+   * 0…1. Laeuft schnell an und langsam aus — das Nachtreiben des Ballons nach
+   * dem Loslassen ist das Spielgefuehl, kein Fehler.
+   */
+  staerke: number;
 };
 
 export type Ballon = {
@@ -58,13 +78,7 @@ export type Ausgang = 'laeuft' | 'geschafft' | 'geplatzt' | 'zeit-aus';
 export type Welt = {
   level: Level;
   ballon: Ballon;
-  /** Wohin der Finger zeigt. null = niemand tippt. */
-  windZiel: Punkt | null;
-  /**
-   * 0…1. Steigt beim Tippen schnell an und faellt beim Loslassen langsam ab —
-   * das Nachtreiben ist das Spielgefuehl, kein Fehler. Siehe physik.ts.
-   */
-  windStaerke: number;
+  geblaese: Geblaese;
   /** Vergangene Spielzeit in Sekunden. Treibt auch die Pendel-Nadeln. */
   zeit: number;
   ausgang: Ausgang;

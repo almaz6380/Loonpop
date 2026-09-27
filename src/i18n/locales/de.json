@@ -1,9 +1,9 @@
 {
   "menue": {
     "titel": "loonpop",
-    "untertitel": "Tippe, wohin der Wind blasen soll. Nadeln sind endgültig.",
+    "untertitel": "Halte das Laubgebläse unter den Ballon und drücke. Nadeln sind endgültig.",
     "level": "Level {{n}}",
-    "hinweis": "Der Ballon steigt von allein und reagiert träge — denke einen Zug voraus."
+    "hinweis": "Schiebe das Gebläse seitwärts, halte zum Blasen. Versetzt stehen lenkt den Ballon zur Seite."
   },
   "spiel": {
     "zurueck": "Zurück",
@@ -12,7 +12,7 @@
     "nochmal": "Nochmal",
     "levelwahl": "Level",
     "gebraucht": "Geschafft in {{s}} Sekunden.",
-    "trostworte": "Der Ballon treibt nach — plane den Wind früher.",
+    "trostworte": "Der Ballon treibt nach — blase früher.",
     "ende": {
       "geschafft": "Angekommen!",
       "geplatzt": "Geplatzt",

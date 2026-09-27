@@ -1,9 +1,9 @@
 {
   "menue": {
     "titel": "loonpop",
-    "untertitel": "Tap where the wind should blow. Needles are final.",
+    "untertitel": "Hold the leaf blower under the balloon and press. Needles are final.",
     "level": "Level {{n}}",
-    "hinweis": "The balloon rises on its own and reacts slowly — think one move ahead."
+    "hinweis": "Slide the blower sideways, hold to blow. Standing off-centre pushes the balloon sideways."
   },
   "spiel": {
     "zurueck": "Back",
@@ -12,7 +12,7 @@
     "nochmal": "Again",
     "levelwahl": "Levels",
     "gebraucht": "Done in {{s}} seconds.",
-    "trostworte": "The balloon drifts on — start the wind earlier.",
+    "trostworte": "The balloon drifts on — blow earlier.",
     "ende": {
       "geschafft": "Arrived!",
       "geplatzt": "Popped",

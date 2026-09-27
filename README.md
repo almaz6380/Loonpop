@@ -1,7 +1,16 @@
 # loonpop
 
-Ein Ballon, ein Windgebläse, Nadeln. Du tippst, wohin der Wind blasen soll —
-der Ballon reagiert träge und treibt nach. Das Vorausdenken ist die Aufgabe.
+Ein Ballon, ein **Laubgebläse**, Nadeln. Das Gebläse ist deine Figur am unteren
+Rand: Du schiebst es mit dem Finger seitwärts und hältst gedrückt, damit es bläst.
+
+**Der Trick:** Der Strahl geht senkrecht nach oben und wird mit der Entfernung
+breiter und schwächer. Drehen lässt sich das Gebläse nicht — **seitlich lenkst
+du, indem du dich versetzt hinstellst.** Trifft der Strahl den Ballon am Rand,
+drückt er ihn zur Seite; mittig getroffen steigt er gerade. Nah am Boden fein,
+weiter oben grob.
+
+Der Ballon sinkt von allein langsam und treibt nach dem Loslassen weiter. Das
+Vorausdenken ist die Aufgabe.
 
 **Arbeitstitel.** „Balloon Popop" und ein Dutzend „Balloon Pop"-Varianten stehen
 bereits in den Stores; vor dem ersten Store-Eintrag gehört der Name durch TMview
@@ -10,7 +19,7 @@ Anigosha waren die Lehre.
 
 ## Stand: M1 — spielbar
 
-Drei handgebaute Level, Tippsteuerung, träge Physik. Läuft im Browser.
+Drei handgebaute Level, Gebläsesteuerung, träge Physik. Läuft im Browser.
 Noch **nicht** dabei: Endlos-Modus, Konten, Bestenliste, Werbung, Kauf,
 Capacitor, Stores. Reihenfolge siehe unten.
 

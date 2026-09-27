@@ -2,8 +2,9 @@
 
 ## In einem Satz
 
-Ein Ballon schwebt durch ein Level, der Spieler **tippt** auf eine Stelle und Wind
-bläst ihn dorthin; **Nadeln** lassen ihn platzen. Die sechste App von Josef.
+Ein Ballon schwebt durch ein Level; der Spieler bedient ein **Laubgebläse** am
+unteren Rand, das den Ballon nach oben bläst. **Nadeln** lassen ihn platzen.
+Die sechste App von Josef.
 
 **Repository:** https://github.com/almaz6380/loonpop (privat)
 **Stand:** M1 — spielbar, drei Level. Siehe README für die Reihenfolge bis zum Store.
@@ -16,13 +17,20 @@ Löschen ohne ausdrückliches „ja" im Chat.
 nach dem Loslassen weiter. Wer das „schwammig" findet und die Dämpfung hochdreht,
 baut ein anderes Spiel — das Vorausdenken IST die Aufgabe.
 
+**1a. Das Gebläse lässt sich NICHT drehen.** Es bläst senkrecht nach oben; der
+Strahl wird nach oben breiter und schwächer. Seitlich gesteuert wird über die
+**eigene Position**: Am Strahlrand getroffen, wird der Ballon zur Seite gedrückt.
+⚠ Wer hier eine Neigung einbaut, nimmt dem Spiel seine einzige Idee. Die
+Steuerung war bis zum 27.09.2026 falsch gebaut (tippen, wohin der Wind soll) —
+das war ein anderes Spiel.
+
 **2. Tempo kommt über den Level, nie über die Physik.** Schneller wird ein Level
 durch engere Gassen, stärkeren Wind (`tempo.windKraft`) und Zeitlimits. Ein
 zweiter Physik-Modus wären zwei Spiele, die sich beide nur halb gut anfühlen.
-⚠ Faustregel: **Endgeschwindigkeit = windKraft ÷ dämpfung.** Bei 1500 ÷ 1,6 ≈ 940 px/s
-durchquert der Ballon das 1280 hohe Level in 1,4 Sekunden — genau so war es am
-27.09.2026 zuerst gebaut, und es fühlte sich nach allem an, nur nicht nach Ballon.
-Jetzt: 4,1 s (Level 1) → 2,9 s (Level 3).
+⚠ Nachmessen statt raten: `scratchpad/balance.mts` simuliert einen Steigflug ohne
+Browser und sagt, wie viele Pixel der Ballon in der ersten Sekunde steigt.
+Richtwert **rund 150 px** — bei den ersten Werten waren es 504, und der Ballon
+schoss durchs Level. `blaskraft` ist die Schraube.
 
 **3. Der Spielkern kennt kein React und keinen Browser.** `src/spiel/` ist reines
 TypeScript. Nur so ist er testbar — und nur so bleibt er deterministisch.
@@ -48,6 +56,14 @@ TypeScript. Nur so ist er testbar — und nur so bleibt er deterministisch.
    Lücken gehören versetzt.
 6. **Vorschau serviert `dist/`.** Nach einer Änderung an einem Level (JSON wird
    ins Bundle eingebacken) erst `npm run build`, sonst prüft man den alten Stand.
+7. **Der gezeichnete Kegel MUSS der gerechnete sein.** `MUND` und `AUFWEITUNG`
+   stehen in `physik.ts` und werden von `zeichnen.ts` importiert — nie
+   duplizieren. Ein Spiel, das anders aussieht, als es rechnet, ist unfair: Der
+   Spieler zielt nach dem Bild und trifft daneben.
+8. **Ein Tutorial-Level lehrt EINE Sache nach der anderen.** Level 1: erste
+   Lücke mittig über dem Start (halten hebt), zweite seitlich (versetzt lenkt).
+   Zwischendurch stand die erste Nadel direkt über dem Start — man platzte,
+   bevor man irgendetwas verstanden hatte.
 
 ## Konventionen
 

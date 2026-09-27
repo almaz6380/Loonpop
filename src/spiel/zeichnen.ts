@@ -9,7 +9,7 @@
 // Spielfeld — und damit unterschiedlich schwere Level.
 
 import type { Welt, Punkt } from './typen.ts';
-import { nadelJetzt } from './physik.ts';
+import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe } from './physik.ts';
 
 // ⚠ breite/hoehe sind CSS-Pixel, nicht Geraetepixel. Das Canvas ist bei
 // doppelter Pixeldichte doppelt so gross; die Umrechnung macht EINMAL die
@@ -66,6 +66,18 @@ export function zeichne(
   ctx.fillStyle = himmel;
   ctx.fillRect(0, 0, breite, hoehe);
 
+  // --- Wiese -------------------------------------------------------------
+  // Der Ballon kommt nie tiefer als knapp ueber die Duese (siehe bodenHoehe).
+  // Ohne sichtbaren Boden haelt er an einer unsichtbaren Linie an und das wirkt
+  // wie ein Fehler.
+  const bodenY = bodenHoehe(hoehe);
+  const wiese = ctx.createLinearGradient(0, bodenY, 0, hoehe);
+  wiese.addColorStop(0, 'rgba(126,196,120,0.35)');
+  wiese.addColorStop(0.35, '#6aa84f');
+  wiese.addColorStop(1, '#4b7a38');
+  ctx.fillStyle = wiese;
+  ctx.fillRect(0, bodenY, breite, hoehe - bodenY);
+
   // --- Zonen: sichtbar, sonst wirkt ihre Kraft wie ein Fehler -------------
   for (const z of level.zonen) {
     const b = z.bereich;
@@ -96,7 +108,17 @@ export function zeichne(
   ctx.beginPath();
   ctx.arc(z.pos.x, z.pos.y, z.radius * puls, 0, Math.PI * 2);
   ctx.stroke();
-  ctx.fillStyle = 'rgba(255,224,106,0.18)';
+  ctx.fillStyle = 'rgba(255,224,106,0.30)';
+  ctx.fill();
+  // Schein aussen herum — oben ist der Himmel dunkel, ein duenner Ring geht
+  // dort sonst unter, und ein Ziel, das man sucht, ist kein Ziel.
+  const schein = ctx.createRadialGradient(z.pos.x, z.pos.y, z.radius * 0.6,
+                                          z.pos.x, z.pos.y, z.radius * 2.1);
+  schein.addColorStop(0, 'rgba(255,224,106,0.34)');
+  schein.addColorStop(1, 'rgba(255,224,106,0)');
+  ctx.fillStyle = schein;
+  ctx.beginPath();
+  ctx.arc(z.pos.x, z.pos.y, z.radius * 2.1, 0, Math.PI * 2);
   ctx.fill();
 
   // --- Nadeln -------------------------------------------------------------
@@ -116,25 +138,77 @@ export function zeichne(
     ctx.fill();
   }
 
-  // --- Wind: zeigen, wohin geblasen wird ----------------------------------
-  const pos = zwischen(ballon.vorher, ballon.pos, blende);
-  if (welt.windZiel && welt.windStaerke > 0.02) {
-    ctx.strokeStyle = `rgba(255,255,255,${0.10 + welt.windStaerke * 0.35})`;
-    ctx.lineWidth = 3;
-    ctx.setLineDash([12, 12]);
+  // --- Luftstrahl ---------------------------------------------------------
+  // Der Kegel wird nach oben breiter und blasser — genau so, wie er auch wirkt
+  // (siehe strahlKraft in physik.ts). Wer den Strahl anders zeichnet, als er
+  // rechnet, baut eine Luege ins Spiel: Der Spieler zielt dann nach dem Bild
+  // und trifft daneben.
+  const gx = welt.geblaese.x;
+  const gy = hoehe - DUESE_HOEHE;
+  const st = welt.geblaese.staerke;
+  if (st > 0.02) {
+    const kegel = ctx.createLinearGradient(0, gy, 0, 0);
+    kegel.addColorStop(0, `rgba(255,255,255,${0.42 * st})`);
+    kegel.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = kegel;
     ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
-    ctx.lineTo(welt.windZiel.x, welt.windZiel.y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.strokeStyle = `rgba(255,255,255,${0.25 + welt.windStaerke * 0.5})`;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(welt.windZiel.x, welt.windZiel.y, 20 + welt.windStaerke * 8, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.moveTo(gx - MUND, gy);
+    ctx.lineTo(gx - (MUND + gy * AUFWEITUNG), 0);
+    ctx.lineTo(gx + (MUND + gy * AUFWEITUNG), 0);
+    ctx.lineTo(gx + MUND, gy);
+    ctx.closePath();
+    ctx.fill();
+
+    // Mitgerissene Blaetter: machen die Stroemung sichtbar und verraten, wo
+    // der Strahl noch traegt.
+    for (let i = 0; i < 14; i++) {
+      const p = ((welt.zeit * (0.55 + (i % 4) * 0.12) + i / 14) % 1);
+      const y = gy - p * gy;
+      const streu = Math.sin(i * 12.9898 + welt.zeit * 0.8) * (MUND + (gy - y) * AUFWEITUNG) * 0.7;
+      ctx.fillStyle = `rgba(255,245,210,${(1 - p) * 0.75 * st})`;
+      ctx.beginPath();
+      ctx.ellipse(gx + streu, y, 5, 3, p * 9, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
+  // --- Das Geblaese -------------------------------------------------------
+  ctx.save();
+  ctx.translate(gx, gy);
+  // Duese
+  ctx.fillStyle = '#2f3b52';
+  ctx.beginPath();
+  ctx.moveTo(-30, 6);
+  ctx.lineTo(-19, -14);
+  ctx.lineTo(19, -14);
+  ctx.lineTo(30, 6);
+  ctx.closePath();
+  ctx.fill();
+  // Gehaeuse
+  ctx.fillStyle = '#ff9f1c';
+  ctx.beginPath();
+  ctx.roundRect(-34, 6, 68, 52, 14);
+  ctx.fill();
+  // Griff
+  ctx.fillStyle = '#2f3b52';
+  ctx.beginPath();
+  ctx.roundRect(-10, 52, 20, 30, 8);
+  ctx.fill();
+  // Laufrad: dreht sich nur, wenn geblasen wird
+  ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+  ctx.lineWidth = 3;
+  const dreh = welt.zeit * 14 * st;
+  for (let i = 0; i < 3; i++) {
+    const w = dreh + (i * Math.PI * 2) / 3;
+    ctx.beginPath();
+    ctx.moveTo(0, 32);
+    ctx.lineTo(Math.cos(w) * 15, 32 + Math.sin(w) * 15);
+    ctx.stroke();
+  }
+  ctx.restore();
+
   // --- Ballon -------------------------------------------------------------
+  const pos = zwischen(ballon.vorher, ballon.pos, blende);
   const r = ballon.radius;
   // Schnur, haengt der Bewegung hinterher — verraet die Traegheit aufs Auge
   ctx.strokeStyle = 'rgba(255,255,255,0.65)';

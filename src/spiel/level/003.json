@@ -1,21 +1,95 @@
 {
   "id": 3,
   "name": "Schere",
-  "groesse": { "breite": 720, "hoehe": 1280 },
-  "start": { "x": 360, "y": 1160 },
-  "ziel": { "pos": { "x": 360, "y": 120 }, "radius": 50 },
+  "groesse": {
+    "breite": 720,
+    "hoehe": 1280
+  },
+  "start": {
+    "x": 360,
+    "y": 1050
+  },
+  "geblaeseStart": 360,
+  "ziel": {
+    "pos": {
+      "x": 360,
+      "y": 130
+    },
+    "radius": 52
+  },
   "nadeln": [
-    { "von": { "x": 0, "y": 960 }, "bis": { "x": 240, "y": 960 },
-      "pendel": { "weg": { "x": 240, "y": 0 }, "dauer": 3.2 } },
-    { "von": { "x": 480, "y": 700 }, "bis": { "x": 720, "y": 700 },
-      "pendel": { "weg": { "x": -250, "y": 0 }, "dauer": 3.8 } },
-    { "von": { "x": 0, "y": 460 }, "bis": { "x": 210, "y": 460 } },
-    { "von": { "x": 510, "y": 460 }, "bis": { "x": 720, "y": 460 } },
-    { "von": { "x": 300, "y": 250 }, "bis": { "x": 420, "y": 250 },
-      "pendel": { "weg": { "x": 0, "y": 120 }, "dauer": 2.6 } }
+    {
+      "von": {
+        "x": 0,
+        "y": 880
+      },
+      "bis": {
+        "x": 230,
+        "y": 880
+      },
+      "pendel": {
+        "weg": {
+          "x": 250,
+          "y": 0
+        },
+        "dauer": 3.6
+      }
+    },
+    {
+      "von": {
+        "x": 490,
+        "y": 640
+      },
+      "bis": {
+        "x": 720,
+        "y": 640
+      },
+      "pendel": {
+        "weg": {
+          "x": -260,
+          "y": 0
+        },
+        "dauer": 4.2
+      }
+    },
+    {
+      "von": {
+        "x": 0,
+        "y": 400
+      },
+      "bis": {
+        "x": 220,
+        "y": 400
+      }
+    },
+    {
+      "von": {
+        "x": 500,
+        "y": 400
+      },
+      "bis": {
+        "x": 720,
+        "y": 400
+      }
+    }
   ],
   "zonen": [
-    { "bereich": { "x": 260, "y": 480, "breite": 200, "hoehe": 220 }, "kraft": { "x": 0, "y": -300 } }
+    {
+      "bereich": {
+        "x": 270,
+        "y": 420,
+        "breite": 180,
+        "hoehe": 200
+      },
+      "kraft": {
+        "x": 0,
+        "y": -220
+      }
+    }
   ],
-  "tempo": { "windKraft": 620, "daempfung": 1.4, "zeitlimit": 60 }
+  "tempo": {
+    "blaskraft": 780,
+    "daempfung": 1.4,
+    "zeitlimit": 75
+  }
 }

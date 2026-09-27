@@ -68,20 +68,25 @@ export default function SpielPage({ level, zurueck }: { level: Level; zurueck: (
   }, [level, versuch]);
 
   // --- Finger -------------------------------------------------------------
-  // Tippen setzt das Windziel, Ziehen verschiebt es, Loslassen laesst den Wind
-  // auslaufen (nicht abreissen — siehe physik.ts).
-  const zeigen = (e: React.PointerEvent<HTMLCanvasElement>) => {
+  // Der Finger schiebt das Geblaese WAAGERECHT; die Hoehe des Fingers ist
+  // bedeutungslos, das Geblaese steht am Boden. Druecken laesst es blasen,
+  // Loslassen stellt es ab — der Strahl klingt dann aus, statt abzureissen
+  // (siehe physik.ts).
+  const fahren = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const welt = weltRef.current;
     const canvas = canvasRef.current;
     if (!welt || !canvas) return;
     const kasten = canvas.getBoundingClientRect();
-    welt.windZiel = zuLevel(
-      { x: e.clientX - kasten.left, y: e.clientY - kasten.top },
-      sichtRef.current,
-    );
+    const im = zuLevel({ x: e.clientX - kasten.left, y: e.clientY - kasten.top }, sichtRef.current);
+    // In den Levelgrenzen halten, sonst schoebe man es aus dem Bild.
+    welt.geblaese.x = Math.max(40, Math.min(level.groesse.breite - 40, im.x));
+  };
+  const anschalten = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    fahren(e);
+    if (weltRef.current) weltRef.current.geblaese.an = true;
   };
   const loslassen = () => {
-    if (weltRef.current) weltRef.current.windZiel = null;
+    if (weltRef.current) weltRef.current.geblaese.an = false;
   };
 
   const nochmal = () => setVersuch((v) => v + 1);
@@ -91,8 +96,8 @@ export default function SpielPage({ level, zurueck }: { level: Level; zurueck: (
       <canvas
         ref={canvasRef}
         className="w-full h-full touch-none"
-        onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); zeigen(e); }}
-        onPointerMove={(e) => { if (e.buttons > 0 || e.pointerType === 'touch') zeigen(e); }}
+        onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); anschalten(e); }}
+        onPointerMove={(e) => { if (e.buttons > 0 || e.pointerType === 'touch') fahren(e); }}
         onPointerUp={loslassen}
         onPointerCancel={loslassen}
       />

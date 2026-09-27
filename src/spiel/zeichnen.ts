@@ -16,6 +16,27 @@ import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe } from './physik.
 // Spielseite per ctx.setTransform(dpr, …). Wer sie hier noch einmal setzt oder
 // zurueckstellt, zeichnet das ganze Spielfeld in die linke obere Ecke — genau
 // das ist am 27.09.2026 passiert.
+/**
+ * Das Nadelbild. Gezeichnete Striche sahen aus wie Streichhoelzer — einer
+ * Nadel fehlten Verjuengung, Oehr und Metallglanz. Das Bild zeigt die Nadel
+ * SENKRECHT MIT DER SPITZE NACH UNTEN; daraus folgt der Drehwinkel unten.
+ *
+ * Herkunft: mit Gemini erzeugt, freigestellt von scripts/nadel-freistellen.py.
+ */
+const nadelBild = new Image();
+nadelBild.src = '/nadel.png';
+
+/** Erst wenn das Bild wirklich da ist — sonst bliebe das Level kurz leer. */
+const nadelBereit = () => nadelBild.complete && nadelBild.naturalWidth > 0;
+
+/**
+ * Wie viel breiter als massstabsgetreu die Nadel gezeichnet wird.
+ * ⚠ Massstabsgetreu (1:12) waere sie bei 60 px Laenge fuenf Pixel breit und auf
+ * einem Handy kaum zu sehen. Leicht gestaucht faellt nicht auf, macht sie aber
+ * lesbar.
+ */
+const NADEL_BREITER = 1.5;
+
 export type Sicht = {
   skala: number; randX: number; randY: number; breite: number; hoehe: number;
   /** Wie weit die Kamera nach rechts gewandert ist (Levelkoordinaten). */
@@ -187,18 +208,32 @@ export function zeichne(
       ctx.lineTo(n.von.x, n.von.y);
       ctx.stroke();
     }
-    ctx.strokeStyle = '#e8ecf5';
-    ctx.lineWidth = 4;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(n.von.x, n.von.y);
-    ctx.lineTo(n.bis.x, n.bis.y);
-    ctx.stroke();
-    // Spitze markieren — sie ist das, was toetet
-    ctx.fillStyle = '#ff5d73';
-    ctx.beginPath();
-    ctx.arc(n.bis.x, n.bis.y, 5.5, 0, Math.PI * 2);
-    ctx.fill();
+    const dx = n.bis.x - n.von.x;
+    const dy = n.bis.y - n.von.y;
+    const laenge = Math.hypot(dx, dy);
+
+    if (nadelBereit() && laenge > 1) {
+      // Das Bild zeigt nach unten (+y), also entspricht es dem Winkel π/2.
+      ctx.save();
+      ctx.translate(n.von.x, n.von.y);
+      ctx.rotate(Math.atan2(dy, dx) - Math.PI / 2);
+      const breite = laenge * (nadelBild.naturalWidth / nadelBild.naturalHeight) * NADEL_BREITER;
+      ctx.drawImage(nadelBild, -breite / 2, 0, breite, laenge);
+      ctx.restore();
+    } else {
+      // Rueckfall, solange das Bild laedt.
+      ctx.strokeStyle = '#e8ecf5';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(n.von.x, n.von.y);
+      ctx.lineTo(n.bis.x, n.bis.y);
+      ctx.stroke();
+      ctx.fillStyle = '#ff5d73';
+      ctx.beginPath();
+      ctx.arc(n.bis.x, n.bis.y, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   // --- Luftstrahl ---------------------------------------------------------

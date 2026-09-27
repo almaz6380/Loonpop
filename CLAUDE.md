@@ -54,6 +54,25 @@ breiten Schirm ein anderes Spiel.
 
 ## Nadeln
 
+Gezeichnet werden sie aus **einem Bild**: `public/nadel.png`, senkrecht mit der
+Spitze nach unten. `zeichnen.ts` stempelt es gedreht an jede Nadelposition.
+Vorher waren es Striche mit rotem Punkt — die Silhouette eines Streichholzes.
+
+⚠ **Das Bild kam als JPG** (mit Gemini erzeugt, 27.09.2026). Der
+Schachbrett-Hintergrund, der Durchsichtigkeit andeuten soll, war als graue Karos
+**eingebrannt**. `scripts/nadel-freistellen.py` stellt es frei; Quelle liegt als
+`scripts/nadel-quelle.jpg` daneben. Die Falle darin: **Helles Silber liegt nah
+am hellen Karo-Ton** — 62 % der Nadelfläche treffen ihn. Wer nur nach dem
+Karo-Anteil aussortiert, schneidet die Nadel selbst heraus. Deshalb gilt: das
+größte eingeschlossene Gebiet ist die Nadel, kleinere mit hohem Karo-Anteil sind
+Löcher (das Öhr).
+
+⚠ **Rückfall auf den Strich, solange das Bild lädt** — sonst ist das Level in
+den ersten Bildern leer, und das sieht aus wie ein Fehler.
+
+⚠ Die Nadel wird **1,5-fach breiter** als maßstabsgetreu gezeichnet: Bei 1:12
+wäre sie auf 60 px Länge fünf Pixel breit und am Handy kaum zu sehen.
+
 Drei Sorten, alle über `Nadel` in `typen.ts`:
 
 | | |
@@ -67,11 +86,11 @@ Drei Sorten, alle über `Nadel` in `typen.ts`:
 Positionen hingen an der Bildrate, und derselbe Lauf liefe auf zwei Geräten
 verschieden — der Endlos-Seed wäre wertlos.
 
-**Nadelfelder statt Balken:** Eine Sperre besteht aus vielen kurzen Stacheln
-nebeneinander, nicht aus einer langen Linie. ⚠ Der Stachel muss **kürzer sein
-als sein Abstand** (34 lang, 46 Abstand), sonst überlappen sie sich und
-verschmelzen optisch zu einem Balken mit roten Perlen. Die 12 px Lücke ist für
-den 52 px breiten Ballon trotzdem dicht — das ist der ganze Trick.
+**Nadelfelder statt Balken:** Eine Sperre besteht aus vielen einzelnen Nadeln
+nebeneinander, nicht aus einer langen Linie. ⚠ Die Nadel muss **kürzer sein als
+ihr Abstand** (60 lang, 70 Abstand), sonst überlappen sie sich und verschmelzen
+optisch wieder zu einem Balken. Die 10 px Lücke ist für den 52 px breiten Ballon
+trotzdem dicht — das ist der ganze Trick.
 
 **Fallende Nadeln gehören in die Durchlasslücken**, nicht in ein Stachelfeld:
 Dort, wo der Ballon ohnehin nicht durchkommt, sind sie wirkungslos.

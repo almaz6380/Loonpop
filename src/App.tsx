@@ -6,6 +6,9 @@ import { useTranslation } from 'react-i18next';
 
 import { LEVEL } from './spiel/level/index.ts';
 import SpielPage from './pages/SpielPage.tsx';
+import { lade, offen } from './lib/fortschritt.ts';
+
+const IDS = LEVEL.map((l) => l.id);
 
 /** Der Ballon im Menue — dasselbe Motiv wie im Spiel, damit es zusammenpasst. */
 function MenueBallon() {
@@ -29,9 +32,17 @@ function MenueBallon() {
 export default function App() {
   const { t } = useTranslation();
   const [gewaehlt, setGewaehlt] = useState<number | null>(null);
+  const [fortschritt, setFortschritt] = useState(lade);
 
   if (gewaehlt !== null) {
-    return <SpielPage level={LEVEL[gewaehlt]} zurueck={() => setGewaehlt(null)} />;
+    return (
+      <SpielPage
+        level={LEVEL[gewaehlt]}
+        // Neu laden: Die Spielseite hat inzwischen vielleicht einen Sieg gespeichert.
+        zurueck={() => { setFortschritt(lade()); setGewaehlt(null); }}
+        weiter={gewaehlt + 1 < LEVEL.length ? () => setGewaehlt(gewaehlt + 1) : undefined}
+      />
+    );
   }
 
   return (
@@ -55,27 +66,51 @@ export default function App() {
           </h1>
           <p className="mt-3 text-white/85 leading-relaxed">{t('menue.untertitel')}</p>
 
-          <div className="mt-8 grid gap-2.5">
-            {LEVEL.map((lvl, i) => (
-              <button
-                key={lvl.id}
-                onClick={() => setGewaehlt(i)}
-                className="group w-full pl-4 pr-5 py-3.5 rounded-2xl text-left
-                           bg-white/12 hover:bg-white/20 backdrop-blur-sm
-                           border border-white/15 shadow-lg shadow-black/10
-                           flex items-center gap-3.5 active:scale-[0.98] transition"
-              >
-                <span className="shrink-0 w-9 h-9 rounded-xl bg-white/20 border border-white/20
-                                 grid place-items-center font-bold tabular-nums">
-                  {lvl.id}
-                </span>
-                <span className="flex-1 font-semibold">{lvl.name}</span>
-                {/* Strecken kennzeichnen — sie spielen sich spuerbar anders. */}
-                <span className="text-xs text-white/60 shrink-0">
-                  {lvl.art === 'strecke' ? t('menue.strecke') : t('menue.hoch')}
-                </span>
-              </button>
-            ))}
+          <div className="mt-8 grid gap-2">
+            {LEVEL.map((lvl, i) => {
+              const frei = offen(fortschritt, IDS, i);
+              const bestzeit = fortschritt.bestzeit[lvl.id];
+              return (
+                <button
+                  key={lvl.id}
+                  disabled={!frei}
+                  onClick={() => setGewaehlt(i)}
+                  aria-label={frei ? undefined : `${lvl.name} (${t('menue.gesperrt')})`}
+                  className="group w-full pl-3.5 pr-4 py-2.5 rounded-2xl text-left
+                             bg-white/12 enabled:hover:bg-white/20 backdrop-blur-sm
+                             border border-white/15 shadow-lg shadow-black/10
+                             flex items-center gap-3.5 enabled:active:scale-[0.98] transition
+                             disabled:opacity-45"
+                >
+                  <span className="shrink-0 w-9 h-9 rounded-xl bg-white/20 border border-white/20
+                                   grid place-items-center font-bold tabular-nums">
+                    {lvl.id}
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block font-semibold truncate">{lvl.name}</span>
+                    {/* Strecken kennzeichnen — sie spielen sich spuerbar anders. */}
+                    <span className="block text-xs text-white/60">
+                      {lvl.art === 'strecke' ? t('menue.strecke') : t('menue.hoch')}
+                    </span>
+                  </span>
+                  {bestzeit !== undefined && (
+                    <span className="shrink-0 flex items-center gap-1.5 text-sm font-semibold tabular-nums text-[#ffe48a]">
+                      {t('menue.bestzeit', { s: bestzeit.toFixed(1) })}
+                      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3">
+                        <path d="M5 12.5l4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                  )}
+                  {!frei && (
+                    <svg viewBox="0 0 24 24" className="shrink-0 w-5 h-5 text-white/80" fill="none"
+                         stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                      <rect x="5" y="11" width="14" height="10" rx="2.5" />
+                      <path d="M8 11V8a4 4 0 0 1 8 0v3" strokeLinecap="round" />
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <p className="mt-8 text-sm text-white/65 leading-relaxed">{t('menue.hinweis')}</p>

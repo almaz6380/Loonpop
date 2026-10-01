@@ -7,7 +7,7 @@ unteren Rand, das den Ballon nach oben bläst. **Nadeln** lassen ihn platzen.
 Die sechste App von Josef.
 
 **Repository:** https://github.com/almaz6380/loonpop (privat)
-**Stand:** M2 in Arbeit — zwölf Level. Siehe README für die Reihenfolge bis zum Store.
+**Stand:** M2 in Arbeit — zwölf Level und Fortschritt auf dem Gerät; es fehlt der Endlos-Modus. Siehe README für die Reihenfolge bis zum Store.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
 Löschen ohne ausdrückliches „ja" im Chat.
 **Testversion im Browser:** https://loonpop.almaz6380.workers.dev (seit 01.10.2026,
@@ -204,6 +204,15 @@ Dort, wo der Ballon ohnehin nicht durchkommt, sind sie wirkungslos.
 15. **Zonen zeigen ihre Richtung.** Die Teilchen wandern in Kraftrichtung. Bis
     zum 01.10.2026 stiegen sie immer auf, und eine Fallwind-Zone hätte das
     Gegenteil dessen gezeigt, was sie tut (siehe Falle 7).
+
+## Fortschritt
+
+`src/lib/fortschritt.ts` speichert die Bestzeit je Level im `localStorage`, ein
+Level ist frei, sobald das davor geschafft ist. ⚠ Schlüssel sind die
+**Level-IDs**, nicht die Positionen: Wird später ein Level eingeschoben, bleibt
+der Fortschritt beim richtigen Level. ⚠ Gespeichert wird im Moment des
+Ankommens, nicht erst mit dem Ende-Fenster (800 ms später). Sonst ginge ein
+Sieg verloren, wenn jemand sofort zurücktippt.
 
 ## Konventionen
 

@@ -20,6 +20,8 @@ Anigosha waren die Lehre.
 ## Stand: M2 in Arbeit
 
 Zwölf handgebaute Level, Gebläsesteuerung, träge Physik. Läuft im Browser.
+Der Fortschritt bleibt auf dem Gerät: Jedes Level schaltet das nächste frei,
+und das Menü zeigt die Bestzeit.
 
 - **Hoch-Level (1–3, 6, 8, 10):** Der Ballon muss nach oben, alles ist auf
   einem Schirm.
@@ -48,12 +50,13 @@ npm run build    # bauen
 | `src/spiel/` | Der Spielkern: **reines TypeScript, kein React**, ohne Browser testbar |
 | `src/spiel/level/*.json` | Je Level eine Datei — in zwei Minuten änderbar, ohne Code anzufassen |
 | `src/pages/SpielPage.tsx` | Canvas, Finger, Ende-Fenster |
+| `src/lib/fortschritt.ts` | Freigeschaltete Level und Bestzeiten, im `localStorage` |
 | `src/i18n/` | Alle Texte, DE und EN |
 
 ## Die Reihenfolge
 
 - **M1 ✅** Spielbar im Browser
-- **M2** 10–15 Level, Endlos-Modus, Fortschritt auf dem Gerät
+- **M2** 10–15 Level ✅, Fortschritt auf dem Gerät ✅, Endlos-Modus
 - **M3** Routing, Einstellungen, Rechtstexte
 - **M4** Capacitor (`at.gallab.loonpop`), Icons, Splash
 - **M5** Supabase: Konten und Online-Bestenliste

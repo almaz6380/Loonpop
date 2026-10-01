@@ -12,8 +12,17 @@ import { neueWelt } from '../spiel/welt.ts';
 import { starteSchleife } from '../spiel/schleife.ts';
 import { sichtBerechnen, kameraFuer, zuLevel, zeichne, type Sicht } from '../spiel/zeichnen.ts';
 import type { Ausgang, Level, Welt } from '../spiel/typen.ts';
+import { lade, speichere, mitSieg } from '../lib/fortschritt.ts';
 
-export default function SpielPage({ level, zurueck }: { level: Level; zurueck: () => void }) {
+/** Wie der Lauf zur bisherigen Bestzeit steht — fuers Ende-Fenster. */
+type Rekord = { neu: boolean; bestzeit: number | null };
+
+export default function SpielPage({ level, zurueck, weiter }: {
+  level: Level;
+  zurueck: () => void;
+  /** Fehlt beim letzten Level. */
+  weiter?: () => void;
+}) {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const weltRef = useRef<Welt | null>(null);
@@ -21,6 +30,7 @@ export default function SpielPage({ level, zurueck }: { level: Level; zurueck: (
   const [ende, setEnde] = useState<Ausgang | null>(null);
   const [versuch, setVersuch] = useState(0);
   const [zeit, setZeit] = useState(0);
+  const [rekord, setRekord] = useState<Rekord | null>(null);
   /**
    * Wo der Finger auf dem BILDSCHIRM liegt (CSS-Pixel im Canvas), nicht in der
    * Welt. ⚠ Das ist der Unterschied, der auf Strecken zaehlt: Die Welt scrollt
@@ -40,6 +50,7 @@ export default function SpielPage({ level, zurueck }: { level: Level; zurueck: (
     const welt = neueWelt(level);
     weltRef.current = welt;
     setEnde(null);
+    setRekord(null);
     let endeUhr = 0;
 
     // ⚠ Auf dem Canvas in GERAETEPIXELN zeichnen, sonst ist auf einem Handy mit
@@ -87,7 +98,21 @@ export default function SpielPage({ level, zurueck }: { level: Level; zurueck: (
       // ⚠ Verzoegert: Der Platz-Effekt dauert knapp eine Sekunde, und ein
       // Fenster, das sofort darueberfaellt, verdeckt genau den Moment, auf den
       // man gewartet hat.
-      (w) => { endeUhr = window.setTimeout(() => setEnde(w.ausgang), 800); },
+      (w) => {
+        // Sofort speichern, nicht erst mit dem Fenster: Wer gleich nach dem
+        // Ankommen zurueck tippt, soll den Sieg trotzdem behalten.
+        if (w.ausgang === 'geschafft') {
+          const vorher = lade();
+          const { f, neu } = mitSieg(vorher, level.id, w.zeit);
+          speichere(f);
+          const alt = vorher.bestzeit[level.id];
+          setRekord({ neu: neu && alt !== undefined, bestzeit: alt ?? null });
+        }
+        // Die Uhr im HUD laeuft nur alle 200 ms nach — fuers Ende-Fenster
+        // zaehlt die genaue Zeit, sonst passt sie nicht zur Bestzeit.
+        setZeit(w.zeit);
+        endeUhr = window.setTimeout(() => setEnde(w.ausgang), 800);
+      },
     );
 
     return () => {
@@ -165,11 +190,26 @@ export default function SpielPage({ level, zurueck }: { level: Level; zurueck: (
               {ende === 'geschafft' ? '🎈' : '💥'}
             </p>
             <h2 className="text-3xl font-black tracking-tight mb-1.5">{t(`spiel.ende.${ende}`)}</h2>
-            <p className="text-white/75 mb-7 leading-relaxed">
+            <p className="text-white/75 leading-relaxed">
               {ende === 'geschafft'
                 ? t('spiel.gebraucht', { s: zeit.toFixed(1) })
                 : t('spiel.trostworte')}
             </p>
+            {ende === 'geschafft' && rekord && (
+              <p className="mt-1 text-sm font-semibold text-[#ffe48a]">
+                {rekord.neu
+                  ? t('spiel.neueBestzeit')
+                  : rekord.bestzeit !== null && t('spiel.bestzeit', { s: rekord.bestzeit.toFixed(1) })}
+              </p>
+            )}
+            <div className="mb-7" />
+            {ende === 'geschafft' && weiter && (
+              <button onClick={weiter}
+                className="w-full mb-3 px-6 py-3.5 rounded-2xl bg-[#ffd75e] text-[#12204f] font-bold
+                           shadow-lg shadow-black/25 active:scale-95 transition">
+                {t('spiel.weiter')}
+              </button>
+            )}
             <div className="flex gap-3 justify-center">
               <button onClick={nochmal}
                 className="px-6 py-3.5 rounded-2xl bg-white text-[#12204f] font-bold

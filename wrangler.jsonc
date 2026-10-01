@@ -1,0 +1,13 @@
+// Testversion im Browser auf Cloudflare Workers (seit 01.10.2026; vorher Vercel,
+// das den Account pausiert hat). Nur statische Dateien aus dist/ – kein Worker-Code.
+// Cloudflare baut selbst aus dem Repo (Workers Builds): Build `npm run build`,
+// Deploy `npx wrangler deploy`. Jeder Push auf main geht live.
+{
+  "name": "loonpop",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    // Alles, was keine Datei ist, bekommt index.html (frueher vercel.json).
+    "not_found_handling": "single-page-application"
+  }
+}

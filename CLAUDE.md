@@ -10,6 +10,12 @@ Die sechste App von Josef.
 **Stand:** M1 — spielbar, drei Level. Siehe README für die Reihenfolge bis zum Store.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
 Löschen ohne ausdrückliches „ja" im Chat.
+**Testversion im Browser:** https://loonpop.almaz6380.workers.dev (seit 01.10.2026,
+vorher `loonpop-rust.vercel.app`, bis Vercel den Account pausiert hat). Cloudflare
+Workers baut selbst aus `main` (`wrangler.jsonc`, nur `dist/`). Josef hat am
+01.10.2026 auf die Frage im Chat mit „ja" geantwortet: Jede nach `main` übernommene
+Änderung darf diese Testversion automatisch veröffentlichen. Für Store-Releases gilt
+weiter das ausdrückliche „ja".
 
 ## Die drei Regeln, an denen das Spiel hängt
 

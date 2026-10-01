@@ -17,23 +17,27 @@ bereits in den Stores; vor dem ersten Store-Eintrag gehört der Name durch TMvie
 (Klassen 9 und 41). Eine Websuche ersetzt das nicht — vier verworfene Namen bei
 Anigosha waren die Lehre.
 
-## Stand: M1 — spielbar
+## Stand: M2 in Arbeit
 
-Fünf handgebaute Level, Gebläsesteuerung, träge Physik. Läuft im Browser.
+Zwölf handgebaute Level, Gebläsesteuerung, träge Physik. Läuft im Browser.
 
-- **Hoch-Level (1–3):** Der Ballon muss nach oben, alles ist auf einem Schirm.
-- **Strecken (4–5):** Der Ballon treibt nach rechts, die Kamera läuft mit. Du
-  gehst mit dem Gebläse neben ihm her.
+- **Hoch-Level (1–3, 6, 8, 10):** Der Ballon muss nach oben, alles ist auf
+  einem Schirm.
+- **Strecken (4, 5, 7, 9, 11, 12):** Der Ballon treibt nach rechts, die Kamera
+  läuft mit. Du gehst mit dem Gebläse neben ihm her.
 
-Hindernisse sind **Nadelfelder** aus vielen kurzen Stacheln; dazu **fallende
-Nadeln**, die oben hereinkommen und unten in der Wiese verschwinden.
+Hindernisse sind **Nadelfelder** aus vielen kurzen Stacheln; dazu **fallende**
+und **pendelnde Nadeln**, **Windzonen** (Aufwind, Fallwind) und Zeitlimits.
 Noch **nicht** dabei: Endlos-Modus, Konten, Bestenliste, Werbung, Kauf,
 Capacitor, Stores. Reihenfolge siehe unten.
 
 ```bash
 npm install
 npm run dev      # entwickeln
-npm test         # Physik, Kollision, Determinismus
+npm test         # Physik, Kollision, Determinismus, Wegsuche über jedes Level
+npm run pruefen  # Zahlen je Level: Steigflug, Vorlauf, Zeitfenster
+npm run bot      # ein Bot spielt jedes Level mit der echten Physik (~2 min)
+npm run nadelfeld -- reihe 600 0 300   # Nadelfeld als JSON für ein Level
 npm run build    # bauen
 ```
 

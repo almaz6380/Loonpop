@@ -10,6 +10,7 @@
     "lint": "oxlint",
     "test": "node --experimental-strip-types --test src/spiel/*.test.ts",
     "pruefen": "node --experimental-strip-types scripts/pruefen.ts",
+    "bot": "node --experimental-strip-types scripts/bot.ts",
     "nadelfeld": "node --experimental-strip-types scripts/nadelfeld.ts"
   },
   "dependencies": {

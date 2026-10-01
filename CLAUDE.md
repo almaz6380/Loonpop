@@ -7,7 +7,7 @@ unteren Rand, das den Ballon nach oben bläst. **Nadeln** lassen ihn platzen.
 Die sechste App von Josef.
 
 **Repository:** https://github.com/almaz6380/loonpop (privat)
-**Stand:** M1 — spielbar, fünf Level; M2 in Arbeit. Siehe README für die Reihenfolge bis zum Store.
+**Stand:** M2 in Arbeit — zwölf Level. Siehe README für die Reihenfolge bis zum Store.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
 Löschen ohne ausdrückliches „ja" im Chat.
 **Testversion im Browser:** https://loonpop.almaz6380.workers.dev (seit 01.10.2026,
@@ -192,6 +192,18 @@ Dort, wo der Ballon ohnehin nicht durchkommt, sind sie wirkungslos.
    Lücke mittig über dem Start (halten hebt), zweite seitlich (versetzt lenkt).
    Zwischendurch stand die erste Nadel direkt über dem Start — man platzte,
    bevor man irgendetwas verstanden hatte.
+14. **Die Wegsuche sieht nur die Geometrie, nicht die Physik.** Am 01.10.2026
+    meldete sie Level 5 als schaffbar, und es war es nicht: Die Aufwindzone
+    (Kraft 240) hob den Ballon um rund 100 px, und bis zur nächsten Spalte
+    konnte er nicht wieder sinken. Ohne Gebläse sinkt er höchstens ~40 px/s.
+    Keiner von 30.000 Zufallsversuchen kam durch. Die Zone stammte aus der
+    ersten Fassung mit langen Balken und passte nach dem Umbau auf Nadelfelder
+    nicht mehr; jetzt hat sie Kraft 80. Deshalb gilt: Nach jeder Level-Änderung
+    auch `npm run bot`. Der Bot wartet nicht auf bewegte Nadeln, „0 von N“
+    heißt also: selbst nachspielen.
+15. **Zonen zeigen ihre Richtung.** Die Teilchen wandern in Kraftrichtung. Bis
+    zum 01.10.2026 stiegen sie immer auf, und eine Fallwind-Zone hätte das
+    Gegenteil dessen gezeigt, was sie tut (siehe Falle 7).
 
 ## Konventionen
 

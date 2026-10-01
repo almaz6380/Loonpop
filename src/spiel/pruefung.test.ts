@@ -110,3 +110,21 @@ test('durch eine Nadelspalte schluepft der Ballon nirgends hindurch', () => {
     assert.equal(w.ausgang, 'geplatzt', `bei y = ${y} durchgekommen`);
   }
 });
+
+test('eine Pendelnadel in der Luecke sperrt sie nicht — man kann warten', () => {
+  // ⚠ Die erste Fassung sperrte die ganze ueberstrichene Flaeche. Dann machte
+  // jede Pendelnadel ihre Luecke zu, obwohl man in der Luft warten kann.
+  const pendel: Nadel = { von: { x: 290, y: 450 }, bis: { x: 290, y: 510 }, pendel: { weg: { x: 200, y: 0 }, dauer: 3.6 } };
+  const b = pruefeLevel(probe([...reihe(600, 0, 280), ...reihe(600, 490, 720), pendel]));
+  assert.equal(b.schaffbar, true);
+});
+
+test('eine Pendelnadel, die nie lange genug wegbleibt, sperrt', () => {
+  // Fuenf schnelle Pendel nebeneinander, jedes ueber eine kurze Strecke: Jede
+  // Stelle der Luecke ist hoechstens Sekundenbruchteile frei.
+  const pendel: Nadel[] = [290, 330, 370, 410, 450].map((x) => ({
+    von: { x, y: 450 }, bis: { x, y: 510 }, pendel: { weg: { x: 40, y: 0 }, dauer: 0.4 },
+  }));
+  const b = pruefeLevel(probe([...reihe(480, 0, 280), ...reihe(480, 490, 720), ...pendel]));
+  assert.equal(b.schaffbar, false);
+});

@@ -20,10 +20,10 @@ import { neueWelt, BALLON_RADIUS } from './welt.ts';
 const ZELLE = 10;
 
 /**
- * Wie lange eine fallende Nadel den Weg mindestens freigeben muss (s).
- * Der Ballon ist traege; er braucht Zeit, um durch die Spalte zu treiben.
+ * Wie lange eine bewegte Nadel eine Stelle mindestens am Stueck freigeben
+ * muss (s). Der Ballon ist traege; er braucht Zeit, um hindurchzutreiben.
  */
-export const FALL_FENSTER_MIN = 0.6;
+export const FENSTER_MIN = 0.6;
 
 /** Mindestvorlauf vom Start bis zur ersten Nadelreihe auf Strecken (px). */
 export const VORLAUF_MIN = 400;
@@ -58,19 +58,50 @@ export function steigflug(level: Level): number {
   return level.start.y - w.ballon.pos.y;
 }
 
+/** Proben je Umlauf einer bewegten Nadel. */
+const PROBEN = 96;
+
+/** Wie lange eine bewegte Nadel fuer ihren ganzen Umlauf braucht (s). */
+const umlauf = (n: Nadel) => n.faellt?.takt ?? n.pendel?.dauer ?? 0;
+
 /**
- * Wo eine Nadel im Lauf ueberall stehen kann. Pendelnde Nadeln werden
- * abgetastet und als Ganzes gesperrt — lieber einmal zu oft "nicht schaffbar"
- * als ein falsches "schaffbar". Fallende Nadeln stehen NICHT hier, sie
- * sperren nur zeitweise (siehe `fallFenster`).
+ * Sperrt die Zellen, die eine BEWEGTE Nadel nie lange genug freigibt.
+ *
+ * ⚠ Die ganze ueberstrichene Flaeche zu sperren war zu streng: Jede Pendelnadel
+ * in einer Luecke machte sie zu, obwohl man in der Luft warten kann, bis die
+ * Nadel weg ist. Gesperrt ist deshalb nur, was nie FENSTER_MIN am Stueck frei
+ * ist — fuer fallende wie fuer pendelnde Nadeln dieselbe Regel.
  */
-function sperrstrecken(nadel: Nadel, hoehe: number): { von: Punkt; bis: Punkt }[] {
-  if (nadel.faellt) return [];
-  if (!nadel.pendel) return [{ von: nadel.von, bis: nadel.bis }];
-  const proben = 24;
-  const teile = [];
-  for (let i = 0; i <= proben; i++) teile.push(nadelJetzt(nadel, (nadel.pendel.dauer / 2) * (i / proben), hoehe));
-  return teile;
+function bewegteSperren(
+  frei: Uint8Array, spalten: number, zeilen: number, nadel: Nadel, hoehe: number,
+): void {
+  const r = BALLON_RADIUS;
+  const dauer = umlauf(nadel);
+  const lagen = Array.from({ length: PROBEN }, (_, k) => nadelJetzt(nadel, (dauer * k) / PROBEN, hoehe));
+  const xs = lagen.flatMap((l) => [l.von.x, l.bis.x]);
+  const ys = lagen.flatMap((l) => [l.von.y, l.bis.y]);
+  const sx0 = Math.max(0, Math.floor((Math.min(...xs) - r) / ZELLE));
+  const sx1 = Math.min(spalten - 1, Math.ceil((Math.max(...xs) + r) / ZELLE));
+  const sy0 = Math.max(0, Math.floor((Math.min(...ys) - r) / ZELLE));
+  const sy1 = Math.min(zeilen - 1, Math.ceil((Math.max(...ys) + r) / ZELLE));
+  const noetig = Math.ceil((FENSTER_MIN / dauer) * PROBEN);
+  for (let sy = sy0; sy <= sy1; sy++) {
+    for (let sx = sx0; sx <= sx1; sx++) {
+      const i = sy * spalten + sx;
+      if (!frei[i]) continue;
+      const p = { x: (sx + 0.5) * ZELLE, y: (sy + 0.5) * ZELLE };
+      const belegt = lagen.map((l) => abstandPunktStrecke(p, l.von, l.bis) < r);
+      if (!belegt.some(Boolean)) continue;
+      // Laengste freie Strecke im Kreis herum — die Nadel kommt ja wieder.
+      let laengste = 0;
+      let lauf = 0;
+      for (let k = 0; k < PROBEN * 2; k++) {
+        lauf = belegt[k % PROBEN] ? 0 : lauf + 1;
+        laengste = Math.max(laengste, Math.min(lauf, PROBEN));
+      }
+      if (laengste < noetig) frei[i] = 0;
+    }
+  }
 }
 
 /**
@@ -124,7 +155,8 @@ export type Befund = {
 /**
  * Die Wegsuche: Ein Gitter ueber das Level, belegte Zellen gesperrt, dann
  * vom Start aus geflutet. Gesperrt ist eine Zelle, wenn der Ballon dort eine
- * Nadel beruehren wuerde oder nicht hinpasst.
+ * feste Nadel beruehren wuerde, nicht hinpasst oder eine bewegte Nadel ihm
+ * nie lange genug Zeit laesst (siehe `bewegteSperren`).
  */
 function wegFrei(level: Level): boolean {
   const { breite, hoehe } = level.groesse;
@@ -132,7 +164,7 @@ function wegFrei(level: Level): boolean {
   const spalten = Math.ceil(breite / ZELLE);
   const zeilen = Math.ceil(hoehe / ZELLE);
   const boden = bodenHoehe(hoehe);
-  const strecken = level.nadeln.flatMap((n) => sperrstrecken(n, hoehe));
+  const strecken = level.nadeln.filter((n) => !n.faellt && !n.pendel);
 
   const mitte = (i: number) => (i + 0.5) * ZELLE;
   const frei = new Uint8Array(spalten * zeilen);
@@ -149,6 +181,9 @@ function wegFrei(level: Level): boolean {
         abstandPunktStrecke(p, s.von, s.bis) < r);
       if (!getroffen) frei[sy * spalten + sx] = 1;
     }
+  }
+  for (const n of level.nadeln) {
+    if (n.faellt || n.pendel) bewegteSperren(frei, spalten, zeilen, n, hoehe);
   }
 
   const zelle = (p: Punkt) => {
@@ -245,7 +280,7 @@ export function pruefeLevel(level: Level): Befund {
   }
 
   const fenster = Math.min(...level.nadeln.map((n) => fallFenster(n, hoehe)));
-  if (fenster < FALL_FENSTER_MIN) {
+  if (fenster < FENSTER_MIN) {
     maengel.push(`fallende Nadel laesst nur ${fenster.toFixed(2)} s Zeit`);
   }
 

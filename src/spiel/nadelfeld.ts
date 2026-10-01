@@ -21,11 +21,22 @@ export const SPALTEN_TAKT = 70;
 /** Groesster Abstand nebeneinanderstehender Nadeln — knapp unter dem Durchmesser. */
 export const REIHEN_TAKT_MAX = 2 * BALLON_RADIUS - 4;
 
-/** Senkrechte Nadeln hintereinander von `vonY` bis `bisY` (Spitze unten). */
-export function spalte(x: number, vonY: number, bisY: number): Nadel[] {
+/**
+ * Senkrechte Nadeln hintereinander von `vonY` bis `bisY`. Die Spitze zeigt
+ * zum offenen Ende: Haengt die Spalte von oben, nach unten — steht sie am
+ * Boden (`spitze: 'oben'`), nach oben. Begonnen wird an der Wand, damit die
+ * Spitze genau dort sitzt, wo der Korridor anfaengt.
+ */
+export function spalte(x: number, vonY: number, bisY: number, spitze: 'oben' | 'unten' = 'unten'): Nadel[] {
   const n: Nadel[] = [];
-  for (let y = vonY; y + NADEL_LAENGE <= bisY + 0.5; y += SPALTEN_TAKT) {
-    n.push({ von: { x, y }, bis: { x, y: y + NADEL_LAENGE } });
+  if (spitze === 'unten') {
+    for (let y = vonY; y + NADEL_LAENGE <= bisY + 0.5; y += SPALTEN_TAKT) {
+      n.push({ von: { x, y }, bis: { x, y: y + NADEL_LAENGE } });
+    }
+  } else {
+    for (let y = bisY; y - NADEL_LAENGE >= vonY - 0.5; y -= SPALTEN_TAKT) {
+      n.push({ von: { x, y }, bis: { x, y: y - NADEL_LAENGE } });
+    }
   }
   return n;
 }

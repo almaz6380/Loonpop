@@ -82,6 +82,28 @@ dem Ende still, weil die Physik nicht weiterrechnet. Das Ende-Fenster erscheint
 mit 800 ms Verzögerung — sonst fällt es genau über den Moment, auf den man
 gewartet hat.
 
+## Bilder
+
+Himmel, Wolken, Hügel, Wiese und Ballon kommen seit dem 02.10.2026 aus Gemini
+(`public/bilder/`, Quellen in `scripts/bild-quellen/`). Freigestellt werden sie
+mit `python3 scripts/bilder-freistellen.py` (braucht Pillow und NumPy).
+
+- ⚠ **Bestellt auf EINER glatten Farbe:** Grün #00FF00 für Ballon und Gebläse,
+  Magenta #FF00FF für die Natur. Gemini liefert JPG ohne Durchsichtigkeit, und
+  ein „durchsichtiger“ Hintergrund kommt als eingebranntes Schachbrett (siehe Nadel).
+  Die Durchsichtigkeit wird aus dem Abstand zur Schlüsselfarbe gerechnet, die
+  Kantenfarbe zurückgerechnet. Sonst bleibt ein grüner bzw. pinker Saum.
+- ⚠ **Kacheln werden gespiegelt, nicht überblendet.** Gemini hält „seamlessly
+  tileable“ nicht ein. Ein Überblenden der Ränder gab doppelte, halb
+  durchsichtige Hügelkanten. Jede zweite Kachel gespiegelt (`kacheln()` in
+  `zeichnen.ts`) passt immer.
+- ⚠ **Der Ballon wird so groß gezeichnet, wie er rechnet:** von −r bis zur
+  Knotenspitze, Seitenverhältnis `BALLON_BILD_SEITEN`. Neues Bild → neu messen
+  (der Test in `ballonform.test.ts` schlägt sonst an).
+- Jedes Bild hat seinen gemalten Rückfall, solange es lädt (`bild()` liefert
+  dann `null`).
+- Das Gebläse ist noch gemalt: Das erste Gemini-Bild sah aus wie eine Flasche.
+
 ## Nadeln
 
 Gezeichnet werden sie aus **einem Bild**: `public/nadel.png`, senkrecht mit der

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { ballonform, NEIGUNG_MAX, KNOTEN } from './ballonform.ts';
+import { ballonform, NEIGUNG_MAX, KNOTEN, BALLON_BILD_SEITEN } from './ballonform.ts';
 
 const pos = { x: 300, y: 500 };
 const R = 26;
@@ -34,4 +34,12 @@ test('die Schnur beginnt dort, wo der gezeichnete Knoten sitzt', () => {
   };
   assert.ok(Math.abs(welt.x - f.knoten.x) < 1e-9);
   assert.ok(Math.abs(welt.y - f.knoten.y) < 1e-9);
+});
+
+test('das Ballonbild ist so breit wie der Ballon, der gerechnet wird', () => {
+  // Falle 7: Ein Ballon, der breiter oder schmaler aussieht, als er rechnet,
+  // ist unfair — man zielt nach dem Bild. Gezeichnet wird er von −r bis zur
+  // Knotenspitze; seine Breite muss beim Kollisionsdurchmesser liegen.
+  const breite = (2 * R + KNOTEN) * BALLON_BILD_SEITEN;
+  assert.ok(Math.abs(breite - 2 * R) / (2 * R) < 0.15, `Bild ${breite.toFixed(1)} px, Ballon ${2 * R} px`);
 });

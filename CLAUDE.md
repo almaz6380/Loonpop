@@ -204,6 +204,13 @@ Dort, wo der Ballon ohnehin nicht durchkommt, sind sie wirkungslos.
 15. **Zonen zeigen ihre Richtung.** Die Teilchen wandern in Kraftrichtung. Bis
     zum 01.10.2026 stiegen sie immer auf, und eine Fallwind-Zone hätte das
     Gegenteil dessen gezeigt, was sie tut (siehe Falle 7).
+16. **Cloudflare hat ZWEI Build-Einstellungen.** Production (`main`) und die
+    Vorschauen für alle anderen Branches („Previews Base“) werden getrennt
+    eingestellt. Am 01.10.2026 hatte nur Production einen Build-Befehl. Der
+    erste Vorschau-Build (PR #2) brach ab: `wrangler preview` verlangt einen
+    `"previews": {}`-Block, und ohne Build-Befehl gäbe es kein `dist/` (steht
+    nicht im Repo). Seitdem baut `wrangler.jsonc` selbst (`build.command`) und
+    hängt an keiner Dashboard-Einstellung mehr.
 
 ## Fortschritt
 

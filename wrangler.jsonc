@@ -1,13 +1,23 @@
 // Testversion im Browser auf Cloudflare Workers (seit 01.10.2026; vorher Vercel,
 // das den Account pausiert hat). Nur statische Dateien aus dist/ – kein Worker-Code.
-// Cloudflare baut selbst aus dem Repo (Workers Builds): Build `npm run build`,
-// Deploy `npx wrangler deploy`. Jeder Push auf main geht live.
+// Cloudflare baut selbst aus dem Repo (Workers Builds). Jeder Push auf main geht
+// live (`npx wrangler deploy`), jeder andere Branch bekommt eine Vorschau
+// (`npx wrangler preview`).
 {
   "name": "loonpop",
   "compatibility_date": "2026-09-01",
+  // ⚠ Gebaut wird HIER, nicht nur im Dashboard. Am 01.10.2026 hatten die
+  // Vorschau-Builds („Previews Base“) keinen Build-Befehl. dist/ steht nicht im
+  // Repo, also gab es nichts auszuliefern. Production hatte ihn, die Vorschau
+  // nicht. So haengt es an keiner Einstellung mehr.
+  "build": { "command": "npm run build" },
   "assets": {
     "directory": "./dist",
     // Alles, was keine Datei ist, bekommt index.html (frueher vercel.json).
     "not_found_handling": "single-page-application"
-  }
+  },
+  // ⚠ Ohne diesen Block bricht `wrangler preview` (Beta) sofort ab: „Your
+  // Wrangler configuration is missing a 'previews' block“. Genau so scheiterte
+  // am 01.10.2026 der erste Vorschau-Build (PR #2).
+  "previews": {}
 }

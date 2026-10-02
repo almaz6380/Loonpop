@@ -12,7 +12,9 @@
     "endlosHoch": "Ever upwards",
     "endlosStrecke": "Ever onwards",
     "bestweite": "{{m}} m",
-    "sprache": "Language"
+    "sprache": "Language",
+    "datenschutz": "Privacy",
+    "impressum": "Legal notice"
   },
   "spiel": {
     "zurueck": "Back",

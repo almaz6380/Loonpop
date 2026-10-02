@@ -1,0 +1,57 @@
+# App Store Connect ueber die API (scripts/asc.py). Laeuft auf Linux — die
+# ASC-API braucht keinen Mac. Nur von Hand, Trockenlauf ist Vorgabe.
+#
+#   status          liest nur
+#   texte           Name, Untertitel, Beschreibung, Stichworte … in allen 13 Sprachen
+#   screenshots     iPhone-Bilder je Sprache ersetzen (store-assets/ios/<code>)
+#   build           Build <nummer> der offenen Version zuweisen
+#   pflicht         Exportfrage + Inhaberrechte + Alterseinstufung
+#   einreichen      Version zur Pruefung schicken
+#   aufraeumen      festhaengende Einreichung zurueckziehen
+name: App Store
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Was getan wird'
+        type: choice
+        options: [status, texte, screenshots, build, pflicht, einreichen, aufraeumen]
+        default: status
+      nummer:
+        description: 'Build-Nummer (nur fuer build)'
+        type: string
+        default: '1'
+      dry_run:
+        description: 'Trockenlauf (nur anzeigen, nichts aendern)'
+        type: boolean
+        default: true
+
+jobs:
+  asc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Abhaengigkeiten
+        run: pip3 install --quiet pyjwt cryptography
+
+      - name: App Store Connect
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          MODE: ${{ inputs.mode }}
+          NUMMER: ${{ inputs.nummer }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          # Der Schluessel bleibt eine Umgebungsvariable, nie eine Datei.
+          export ASC_KEY_P8="$(printf '%s' "$ASC_KEY_P8_BASE64" | tr -cd 'A-Za-z0-9+/=' | base64 -d)"
+          TROCKEN=()
+          [ "$DRY_RUN" = "true" ] && [ "$MODE" != "status" ] && TROCKEN=(--dry-run)
+          case "$MODE" in
+            build)   python3 scripts/asc.py --build "$NUMMER" "${TROCKEN[@]}" ;;
+            pflicht) python3 scripts/asc.py --exportfrage --inhaberrechte --alter-setzen "${TROCKEN[@]}" ;;
+            *)       python3 scripts/asc.py "--$MODE" "${TROCKEN[@]}" ;;
+          esac

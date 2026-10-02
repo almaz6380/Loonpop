@@ -192,8 +192,9 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
         onPointerCancel={loslassen}
       />
 
-      {/* HUD */}
-      <div className="absolute top-0 inset-x-0 p-3.5 pt-[max(0.9rem,env(safe-area-inset-top))]
+      {/* HUD. ⚠ Auf Android (ab 15 randlos) meldet Capacitor die Statusleiste
+          nicht ueber env(), sondern als --safe-area-inset-top (SystemBars). */}
+      <div className="absolute top-0 inset-x-0 p-3.5 pt-[max(0.9rem,env(safe-area-inset-top),var(--safe-area-inset-top,0px))]
                       flex items-center justify-between text-white text-sm font-semibold">
         <button
           onClick={zurueck}

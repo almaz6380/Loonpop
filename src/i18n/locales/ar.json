@@ -12,7 +12,9 @@
     "endlosHoch": "إلى الأعلى دائمًا",
     "endlosStrecke": "إلى الأمام دائمًا",
     "bestweite": "{{m}} م",
-    "sprache": "اللغة"
+    "sprache": "اللغة",
+    "datenschutz": "الخصوصية",
+    "impressum": "إشعار قانوني"
   },
   "spiel": {
     "zurueck": "رجوع",

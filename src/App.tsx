@@ -176,6 +176,13 @@ export default function App() {
               ))}
             </select>
           </label>
+
+          {/* Statische Seiten (scripts/rechtstexte.py): Die Stores verlangen
+              sie ohne App erreichbar, im App-Paket liegen sie trotzdem. */}
+          <p className="mt-4 flex justify-center gap-4 text-xs text-white/60">
+            <a href="datenschutz.html" className="underline underline-offset-2">{t('menue.datenschutz')}</a>
+            <a href="impressum.html" className="underline underline-offset-2">{t('menue.impressum')}</a>
+          </p>
         </div>
       </div>
     </div>

@@ -1,0 +1,22 @@
+{
+  "storeCodes": {
+    "play": [
+      "fr-FR"
+    ],
+    "appstore": [
+      "fr-FR"
+    ]
+  },
+  "play": {
+    "title": "loonpop : l’aventure ballon",
+    "shortDescription": "Garde le ballon en l’air avec un souffleur de feuilles et évite les aiguilles !",
+    "fullDescription": "Un ballon, un souffleur de feuilles et des aiguilles à foison.\n\nDans loonpop, tu gardes un ballon en l’air avec un souffleur de feuilles et tu le guides vers le haut à travers des rangées d’aiguilles. Le souffleur souffle toujours verticalement. Pour diriger, tu te places légèrement à côté du ballon : le bord du jet d’air le pousse sur le côté. Facile ? Le ballon a de l’inertie : il réagit avec un temps de retard et continue de dériver quand tu lâches. Celui qui anticipe gagne.\n\nDOUZE NIVEAUX FAITS MAIN\nDu premier souffle jusqu’au sommet : vent de côté, courants descendants, aiguilles qui se balancent ou qui tombent, couloirs en zigzag et courses contre la montre. Chaque niveau apporte quelque chose de nouveau.\n\nMODE INFINI\nToujours plus haut, aussi loin que possible. Ça va de plus en plus vite, et des passages étroits qui brillent en rouge reviennent sans cesse. Combien de mètres feras-tu ?\n\nET AUSSI\n• Un seul doigt suffit : glisser et maintenir\n• Meilleurs temps et meilleure distance enregistrés\n• 13 langues\n• Se joue hors ligne, sans connexion internet\n• Sans publicité, sans achats intégrés, sans compte\n• Aucune collecte de données"
+  },
+  "appstore": {
+    "name": "loonpop : l’aventure ballon",
+    "subtitle": "Souffle, guide, n’éclate pas",
+    "keywords": "ballon,souffleur,aiguilles,adresse,physique,infini,arcade,vent,réflexes,casual,hors ligne",
+    "promotionalText": "Douze niveaux et un mode infini qui va toujours plus vite. Jusqu’où monteras-tu ?",
+    "description": "Un ballon, un souffleur de feuilles et des aiguilles à foison.\n\nDans loonpop, tu gardes un ballon en l’air avec un souffleur de feuilles et tu le guides vers le haut à travers des rangées d’aiguilles. Le souffleur souffle toujours verticalement. Pour diriger, tu te places légèrement à côté du ballon : le bord du jet d’air le pousse sur le côté. Facile ? Le ballon a de l’inertie : il réagit avec un temps de retard et continue de dériver quand tu lâches. Celui qui anticipe gagne.\n\nDOUZE NIVEAUX FAITS MAIN\nDu premier souffle jusqu’au sommet : vent de côté, courants descendants, aiguilles qui se balancent ou qui tombent, couloirs en zigzag et courses contre la montre. Chaque niveau apporte quelque chose de nouveau.\n\nMODE INFINI\nToujours plus haut, aussi loin que possible. Ça va de plus en plus vite, et des passages étroits qui brillent en rouge reviennent sans cesse. Combien de mètres feras-tu ?\n\nET AUSSI\n• Un seul doigt suffit : glisser et maintenir\n• Meilleurs temps et meilleure distance enregistrés\n• 13 langues\n• Se joue hors ligne, sans connexion internet\n• Sans publicité, sans achats intégrés, sans compte\n• Aucune collecte de données"
+  }
+}

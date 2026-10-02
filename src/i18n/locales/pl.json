@@ -12,7 +12,9 @@
     "endlosHoch": "Coraz wyżej",
     "endlosStrecke": "Coraz dalej",
     "bestweite": "{{m}} m",
-    "sprache": "Język"
+    "sprache": "Język",
+    "datenschutz": "Prywatność",
+    "impressum": "Nota prawna"
   },
   "spiel": {
     "zurueck": "Wstecz",

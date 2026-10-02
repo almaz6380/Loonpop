@@ -1,0 +1,84 @@
+# Play-Store-Eintrag pflegen: Texte, Screenshots, Icon + Vorstellungsgrafik.
+# Nur von Hand, Trockenlauf ist Vorgabe. Quelle: store-assets/ (docs/store.md).
+#
+# sprache = alle  → jede Sprache aus store-assets/texte/*.json, mit all ihren
+#                   Play-Codes (es → es-ES und es-419 usw.)
+# ⚠ Neue Sprachen muessen in der Play Console EINMAL als Uebersetzung angelegt
+# sein, sonst antwortet die API mit 404 fuer diese Sprache.
+name: Play-Eintrag
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Was aktualisiert wird'
+        type: choice
+        options: [texte, screenshots, grafiken]
+        default: texte
+      sprache:
+        description: 'alle, oder ein Play-Code wie de-DE'
+        default: 'alle'
+        required: true
+      dry_run:
+        description: 'Trockenlauf (nur anzeigen, nichts aendern)'
+        type: boolean
+        default: true
+
+jobs:
+  eintrag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Abhaengigkeiten
+        run: pip3 install --quiet pyjwt cryptography
+
+      - name: Play-Eintrag
+        env:
+          PLAY_KEY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          MODE: ${{ inputs.mode }}
+          SPRACHE: ${{ inputs.sprache }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PLAY_KEY_JSON:-}" ]; then
+            echo "Secret PLAY_SERVICE_ACCOUNT_JSON fehlt im Repository." >&2
+            exit 1
+          fi
+          mkdir -p ~/.config/play-publisher
+          printf '%s' "$PLAY_KEY_JSON" > ~/.config/play-publisher/key.json
+          TROCKEN=()
+          [ "$DRY_RUN" = "true" ] && TROCKEN=(--dry-run) && echo "::notice::Trockenlauf"
+
+          # Paare "Play-Code Sprachdatei" aus den Texten lesen.
+          python3 - > paare.txt <<'EOP'
+          import glob, json, os
+          for p in sorted(glob.glob('store-assets/texte/*.json')):
+              for lc in json.load(open(p))['storeCodes']['play']:
+                  print(lc, os.path.basename(p)[:-5])
+          EOP
+          if [ "$SPRACHE" != "alle" ]; then
+            grep "^$SPRACHE " paare.txt > p2.txt || { echo "Unbekannte Sprache $SPRACHE"; exit 1; }
+            mv p2.txt paare.txt
+          fi
+
+          if [ "$MODE" = "grafiken" ]; then
+            while read -r LC CODE; do
+              echo "── $LC"
+              python3 scripts/play-upload.py --icon store-assets/icon/icon-512.png --lang "$LC" "${TROCKEN[@]}"
+              python3 scripts/play-upload.py --feature store-assets/play/feature.png --lang "$LC" "${TROCKEN[@]}"
+            done < paare.txt
+            exit 0
+          fi
+
+          while read -r LC CODE; do
+            echo "── $LC ($CODE)"
+            case "$MODE" in
+              texte)       python3 scripts/play-upload.py --listing "store-assets/texte/$CODE.json" --lang "$LC" "${TROCKEN[@]}" ;;
+              screenshots) python3 scripts/play-upload.py --screenshots "store-assets/play/$CODE" --lang "$LC" "${TROCKEN[@]}" ;;
+            esac
+          done < paare.txt
+
+      - name: Schluessel entfernen
+        if: always()
+        run: rm -f ~/.config/play-publisher/key.json

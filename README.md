@@ -60,11 +60,11 @@ npm run build    # bauen
 
 - **M1 ✅** Spielbar im Browser
 - **M2 ✅** 12 Level, Fortschritt auf dem Gerät, Endlos-Modus (↑ und →)
-- **M3** Routing, Einstellungen, Rechtstexte
-- **M4** Capacitor (`at.gallab.loonpop`), Icons, Splash
+- **M3 ✅** Rechtstexte, Sprachwahl (13 Sprachen)
+- **M4 ✅** Capacitor (`at.gallab.loonpop`), Icons, Splash, Store-Texte und -Bilder. Was noch fehlt, steht in `docs/store.md`
 - **M5** Supabase: Konten und Online-Bestenliste
 - **M6** AdMob + Kauf „Werbung entfernen"
-- **M7** Release-Workflows, Play Console, App Store Connect
+- **M7** Release-Workflows ✅ (`.github/workflows/`), Play Console und App Store Connect: `docs/store.md`
 
 Muster für M4–M7 liegen in `almaz6380/anigosha` (`src/lib/ads.ts`,
 `src/lib/purchases.ts`, `.github/workflows/`, `docs/release-ci.md`).

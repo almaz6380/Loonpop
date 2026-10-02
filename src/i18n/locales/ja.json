@@ -12,7 +12,9 @@
     "endlosHoch": "どこまでも上へ",
     "endlosStrecke": "どこまでも先へ",
     "bestweite": "{{m}} m",
-    "sprache": "言語"
+    "sprache": "言語",
+    "datenschutz": "プライバシー",
+    "impressum": "運営者情報"
   },
   "spiel": {
     "zurueck": "戻る",

@@ -12,7 +12,9 @@
     "endlosHoch": "Toujours plus haut",
     "endlosStrecke": "Toujours plus loin",
     "bestweite": "{{m}} m",
-    "sprache": "Langue"
+    "sprache": "Langue",
+    "datenschutz": "Confidentialité",
+    "impressum": "Mentions légales"
   },
   "spiel": {
     "zurueck": "Retour",

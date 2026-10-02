@@ -12,7 +12,9 @@
     "endlosHoch": "끝없이 위로",
     "endlosStrecke": "끝없이 앞으로",
     "bestweite": "{{m}}m",
-    "sprache": "언어"
+    "sprache": "언어",
+    "datenschutz": "개인정보 처리방침",
+    "impressum": "법적 고지"
   },
   "spiel": {
     "zurueck": "뒤로",

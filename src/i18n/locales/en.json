@@ -7,7 +7,11 @@
     "hoch": "up",
     "strecke": "course",
     "gesperrt": "locked",
-    "bestzeit": "{{s}} s"
+    "bestzeit": "{{s}} s",
+    "endlos": "Endless",
+    "endlosHoch": "Ever upwards",
+    "endlosStrecke": "Ever onwards",
+    "bestweite": "{{m}} m"
   },
   "spiel": {
     "zurueck": "Back",
@@ -24,6 +28,10 @@
     },
     "weiter": "Next",
     "neueBestzeit": "New best time!",
-    "bestzeit": "Best: {{s}} s"
+    "bestzeit": "Best: {{s}} s",
+    "meter": "{{m}} m",
+    "weit": "You made it {{m}} metres.",
+    "neueBestweite": "New record!",
+    "bestweite": "Record: {{m}} m"
   }
 }

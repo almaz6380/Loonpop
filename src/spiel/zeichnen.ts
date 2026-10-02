@@ -14,6 +14,7 @@
 
 import type { Welt, Punkt } from './typen.ts';
 import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe } from './physik.ts';
+import { nadelnIn, meter } from './endlos.ts';
 import { ballonform, KNOTEN } from './ballonform.ts';
 
 /**
@@ -41,7 +42,34 @@ export type Sicht = {
   skala: number; randX: number; randY: number; breite: number; hoehe: number;
   /** Wie weit die Kamera nach rechts gewandert ist (Levelkoordinaten). */
   kameraX: number;
+  /**
+   * Wie weit die Kamera nach oben gewandert ist (Levelkoordinaten, negativ =
+   * hoeher). Nur im Endlos-Lauf nach oben, sonst 0.
+   */
+  kameraY?: number;
 };
+
+/**
+ * Die Sicht fuer den Endlos-Lauf nach oben: volle Breite, und senkrecht so
+ * viel, wie der Schirm hergibt — kein Rand oben und unten.
+ */
+export function sichtEndlosHoch(breite: number, hoehe: number, levelBreite: number): Sicht {
+  // Auf einem Querformat nicht so weit hineinzoomen, dass man nichts sieht.
+  const skala = Math.min(breite / levelBreite, hoehe / 900);
+  return {
+    skala, randX: (breite - levelBreite * skala) / 2, randY: 0,
+    breite, hoehe, kameraX: 0, kameraY: 0,
+  };
+}
+
+/**
+ * Wohin die Kamera im Endlos-Lauf nach oben schaut: Der Boden sitzt am
+ * unteren Bildrand. ⚠ Sie folgt dem Boden, den die PHYSIK fuehrt, und fuehrt
+ * selbst nichts (Falle 10).
+ */
+export function kameraYFuer(sicht: Sicht, boden: number): number {
+  return boden - sicht.hoehe / sicht.skala;
+}
 
 /** Wie das Level auf diesen Bildschirm passt: ganz sichtbar, mittig. */
 export function sichtBerechnen(
@@ -82,7 +110,7 @@ export function kameraFuer(sicht: Sicht, ballonX: number, levelBreite: number): 
 export function zuLevel(p: Punkt, sicht: Sicht): Punkt {
   return {
     x: (p.x - sicht.randX) / sicht.skala + sicht.kameraX,
-    y: (p.y - sicht.randY) / sicht.skala,
+    y: (p.y - sicht.randY) / sicht.skala + (sicht.kameraY ?? 0),
   };
 }
 
@@ -105,28 +133,37 @@ const streu = (n: number) => {
  * warum eine Strecke nach Tiefe aussieht statt nach einer Tapete: Was weit weg
  * ist, wandert weniger. Ohne das klebt der Himmel am Vordergrund.
  */
-function hintergrund(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: number) {
-  const { breite, hoehe } = welt.level.groesse;
+function hintergrund(
+  ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: number, oben: number, hoehe: number,
+) {
   const sichtbar = sicht.breite / sicht.skala;
 
   // Der Himmel selbst steht fest — er fuellt immer den ganzen Ausschnitt.
-  const himmel = ctx.createLinearGradient(0, 0, 0, hoehe);
+  const himmel = ctx.createLinearGradient(0, oben, 0, oben + hoehe);
   himmel.addColorStop(0, '#152364');
   himmel.addColorStop(0.35, '#2f5cb4');
   himmel.addColorStop(0.7, '#5f9ddb');
   himmel.addColorStop(1, '#bfe2f2');
   ctx.fillStyle = himmel;
-  ctx.fillRect(sicht.kameraX - 20, 0, sichtbar + 40, hoehe);
+  ctx.fillRect(sicht.kameraX - 20, oben, sichtbar + 40, hoehe);
+
+  // Endlos nach oben wird der Himmel mit der Hoehe dunkler — man sieht, dass
+  // man weit gekommen ist, auch ohne auf die Meter zu schauen.
+  if (welt.endlos?.art === 'hoch') {
+    const nacht = Math.min(0.62, meter(welt) / 900);
+    ctx.fillStyle = `rgba(6,10,38,${nacht})`;
+    ctx.fillRect(sicht.kameraX - 20, oben, sichtbar + 40, hoehe);
+  }
 
   // Sonne, tief am Horizont — gibt dem Himmel eine Richtung.
   const sx = sicht.kameraX + sichtbar * 0.76;
-  const sy = hoehe * 0.42;
+  const sy = oben + hoehe * 0.42;
   const sonne = ctx.createRadialGradient(sx, sy, 10, sx, sy, hoehe * 0.42);
   sonne.addColorStop(0, 'rgba(255,240,200,0.55)');
   sonne.addColorStop(0.25, 'rgba(255,225,160,0.18)');
   sonne.addColorStop(1, 'rgba(255,220,150,0)');
   ctx.fillStyle = sonne;
-  ctx.fillRect(sicht.kameraX - 20, 0, sichtbar + 40, hoehe);
+  ctx.fillRect(sicht.kameraX - 20, oben, sichtbar + 40, hoehe);
 
   // --- Wolken, drei Schichten ---------------------------------------------
   const wolke = (x: number, y: number, gr: number, deckung: number) => {
@@ -146,10 +183,28 @@ function hintergrund(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bo
     const versatz = sicht.kameraX * tiefe + welt.zeit * 6 * tiefe;
     const von = Math.floor((sicht.kameraX - versatz - gr * 2) / abstand);
     const bis = Math.ceil((sicht.kameraX + sichtbar - versatz + gr * 2) / abstand);
-    for (let n = von; n <= bis; n++) {
-      const x = n * abstand + versatz;
-      const y = hoehe * (0.06 + streu(n * 3.7 + tiefe) * 0.32);
-      wolke(x, y, gr * (0.7 + streu(n + tiefe * 9) * 0.6), deckung);
+    if (welt.endlos?.art !== 'hoch') {
+      for (let n = von; n <= bis; n++) {
+        const x = n * abstand + versatz;
+        const y = hoehe * (0.06 + streu(n * 3.7 + tiefe) * 0.32);
+        wolke(x, y, gr * (0.7 + streu(n + tiefe * 9) * 0.6), deckung);
+      }
+      continue;
+    }
+    // Endlos nach oben: Wolken auch uebereinander, und sie wandern senkrecht
+    // langsamer als der Boden — dieselbe Parallaxe wie auf Strecken, nur
+    // um 90 Grad gedreht. ⚠ Auch hier nur der sichtbare Ausschnitt.
+    const abstandY = hoehe / 2.2;
+    const versatzY = oben * tiefe;
+    const vonY = Math.floor((oben - versatzY - gr * 2) / abstandY);
+    const bisY = Math.ceil((oben + hoehe - versatzY + gr * 2) / abstandY);
+    for (let m = vonY; m <= bisY; m++) {
+      for (let n = von; n <= bis; n++) {
+        if (streu(n * 7.1 + m * 3.3 + tiefe) < 0.35) continue;
+        const x = n * abstand + versatz + (streu(m * 1.7 + n) - 0.5) * abstand * 0.6;
+        const y = m * abstandY + versatzY + streu(n * 3.7 + m + tiefe) * abstandY * 0.6;
+        wolke(x, y, gr * (0.7 + streu(n + m * 5 + tiefe * 9) * 0.6), deckung);
+      }
     }
   }
 
@@ -159,7 +214,7 @@ function hintergrund(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bo
     ctx.fillStyle = farbe;
     ctx.beginPath();
     ctx.moveTo(sicht.kameraX - 40, bodenY + 10);
-    const kuppe = hoehe * hoehenAnteil;
+    const kuppe = 1280 * hoehenAnteil;
     for (let x = sicht.kameraX - 40; x <= sicht.kameraX + sichtbar + 40; x += 18) {
       const w = (x + versatz) * 0.0042;
       const y = bodenY - kuppe * (0.55 + 0.45 * Math.sin(w) * Math.cos(w * 0.6 + tiefe * 4));
@@ -169,12 +224,11 @@ function hintergrund(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bo
     ctx.closePath();
     ctx.fill();
   }
-  void breite;
 }
 
 /** Wiese mit Halmen und ein paar Blumen. */
-function wiese(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: number) {
-  const { hoehe } = welt.level.groesse;
+function wiese(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: number, unten: number) {
+  const hoehe = unten > bodenY ? unten : bodenY + 120;
   const sichtbar = sicht.breite / sicht.skala;
   const von = sicht.kameraX - 30;
   const bis = sicht.kameraX + sichtbar + 30;
@@ -377,7 +431,14 @@ export function zeichne(
 ): void {
   const { level, ballon } = welt;
   const { hoehe } = level.groesse;
-  const bodenY = bodenHoehe(hoehe);
+  const bodenY = bodenHoehe(welt.boden);
+  // Der sichtbare Ausschnitt senkrecht. In den Leveln das ganze Level; im
+  // Endlos-Lauf nach oben, was der Schirm zeigt.
+  const kameraY = sicht.kameraY ?? 0;
+  const endlosHoch = welt.endlos?.art === 'hoch';
+  const oben = endlosHoch ? kameraY : 0;
+  const sichtHoehe = endlosHoch ? sicht.hoehe / sicht.skala : hoehe;
+  const sichtbar = sicht.breite / sicht.skala;
 
   // Kein setTransform hier: Die Pixeldichte steckt bereits im Transform, den
   // die Spielseite gesetzt hat. Gerechnet wird ab hier in CSS-Pixeln.
@@ -385,15 +446,14 @@ export function zeichne(
   ctx.clearRect(0, 0, sicht.breite, sicht.hoehe);
   ctx.translate(sicht.randX, sicht.randY);
   ctx.scale(sicht.skala, sicht.skala);
-  ctx.translate(-sicht.kameraX, 0);
+  ctx.translate(-sicht.kameraX, -kameraY);
 
-  hintergrund(ctx, welt, sicht, bodenY);
+  hintergrund(ctx, welt, sicht, bodenY, oben, sichtHoehe);
 
   // Treibende Blaetter: Sie zeigen den Grundwind. Ohne das wirkt es wie ein
   // Fehler, wenn der Ballon von allein nach rechts zieht.
   if (level.grundwind && level.grundwind.x !== 0) {
     const richtung = Math.sign(level.grundwind.x);
-    const sichtbar = sicht.breite / sicht.skala;
     for (let i = 0; i < 22; i++) {
       const tempo = 45 + (i % 5) * 28;
       const spanne = sichtbar + 220;
@@ -407,7 +467,7 @@ export function zeichne(
     }
   }
 
-  wiese(ctx, welt, sicht, bodenY);
+  wiese(ctx, welt, sicht, bodenY, oben + sichtHoehe);
 
   // --- Zonen: sichtbar, sonst wirkt ihre Kraft wie ein Fehler -------------
   for (const z of level.zonen) {
@@ -439,7 +499,9 @@ export function zeichne(
   }
 
   // --- Ziel ---------------------------------------------------------------
+  // Endlos gibt es keins.
   const z = level.ziel;
+  if (!welt.endlos) {
   const puls = 1 + Math.sin(welt.zeit * 3) * 0.05;
   const schein = ctx.createRadialGradient(z.pos.x, z.pos.y, z.radius * 0.35,
                                           z.pos.x, z.pos.y, z.radius * 2.3);
@@ -466,9 +528,15 @@ export function zeichne(
             z.pos.y + Math.sin(w) * z.radius * 1.28, 2.6, 0, Math.PI * 2);
     ctx.fill();
   }
+  }
 
   // --- Nadeln -------------------------------------------------------------
-  for (const nadel of level.nadeln) {
+  // Im Endlos-Lauf nur die im Bild — es gibt unendlich viele.
+  const nadeln = !welt.endlos ? level.nadeln
+    : endlosHoch
+      ? nadelnIn(welt, oben - 100, oben + sichtHoehe + 100, bodenY)
+      : nadelnIn(welt, sicht.kameraX - 100, sicht.kameraX + sichtbar + 100, bodenY);
+  for (const nadel of nadeln) {
     const n = nadelJetzt(nadel, welt.zeit, hoehe);
     // ⚠ Fallende Nadeln unterhalb der Wiese nicht mehr zeichnen — sonst sieht
     // man sie durch den Boden sinken, was wie ein Fehler aussieht. Fuer die
@@ -525,18 +593,18 @@ export function zeichne(
   // rechnet, baut eine Luege ins Spiel: Der Spieler zielt dann nach dem Bild
   // und trifft daneben.
   const gx = welt.geblaese.x;
-  const gy = hoehe - DUESE_HOEHE;
+  const gy = welt.boden - DUESE_HOEHE;
   const st = welt.geblaese.staerke;
   if (st > 0.02) {
-    const kegel = ctx.createLinearGradient(0, gy, 0, 0);
+    const kegel = ctx.createLinearGradient(0, gy, 0, oben);
     kegel.addColorStop(0, `rgba(255,255,255,${0.4 * st})`);
     kegel.addColorStop(0.5, `rgba(226,244,255,${0.17 * st})`);
     kegel.addColorStop(1, 'rgba(226,244,255,0)');
     ctx.fillStyle = kegel;
     ctx.beginPath();
     ctx.moveTo(gx - MUND, gy);
-    ctx.lineTo(gx - (MUND + gy * AUFWEITUNG), 0);
-    ctx.lineTo(gx + (MUND + gy * AUFWEITUNG), 0);
+    ctx.lineTo(gx - (MUND + (gy - oben) * AUFWEITUNG), oben);
+    ctx.lineTo(gx + (MUND + (gy - oben) * AUFWEITUNG), oben);
     ctx.lineTo(gx + MUND, gy);
     ctx.closePath();
     ctx.fill();
@@ -545,7 +613,7 @@ export function zeichne(
     // der Strahl noch traegt.
     for (let i = 0; i < 16; i++) {
       const p = ((welt.zeit * (0.55 + (i % 4) * 0.12) + i / 16) % 1);
-      const y = gy - p * gy;
+      const y = gy - p * (gy - oben);
       const seit = Math.sin(i * 12.9898 + welt.zeit * 0.8) * (MUND + (gy - y) * AUFWEITUNG) * 0.7;
       ctx.fillStyle = `rgba(255,248,214,${(1 - p) * 0.8 * st})`;
       ctx.beginPath();

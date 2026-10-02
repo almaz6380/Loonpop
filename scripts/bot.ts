@@ -2,6 +2,7 @@
 //
 //   npm run bot           alle Level
 //   npm run bot -- 5 7    nur diese
+//   npm run bot -- endlos die Endlos-Laeufe, je 12 Seeds: wie viele Meter?
 //
 // ⚠ Die Wegsuche (src/spiel/pruefung.ts) sieht nur die Geometrie. Am
 // 01.10.2026 meldete sie Level 5 als schaffbar, und es war es nicht: Eine
@@ -23,6 +24,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 
 import { neueWelt, BALLON_RADIUS } from '../src/spiel/welt.ts';
+import { neueEndlosWelt, abschnitt, meter } from '../src/spiel/endlos.ts';
+import type { EndlosArt } from '../src/spiel/typen.ts';
 import { schritt, bodenHoehe, DUESE_HOEHE } from '../src/spiel/physik.ts';
 import { abstandPunktStrecke } from '../src/spiel/kollision.ts';
 import type { Level, Punkt } from '../src/spiel/typen.ts';
@@ -165,6 +168,72 @@ function raster(level: Level): Regler[] {
         for (const ky of [0.8, 1.2, 2])
           for (const versatz of strecke ? [0] : [25, 40, 60]) r.push({ polster, voraus, kx, ky, versatz });
   return r;
+}
+
+/**
+ * Ein Endlos-Lauf mit derselben Steuerung wie in den Leveln. Bewegte Nadeln
+ * nimmt er heraus (er wartet nicht), den Nadelboden nicht: Wer zu langsam
+ * steigt, platzt auch hier.
+ */
+function spieleEndlos(art: EndlosArt, seed: number): { meter: number; ausgang: string; zeit: number } {
+  const w = neueEndlosWelt(art, seed);
+  const e = w.endlos!;
+  for (let i = 0; i < 600; i++) {
+    const a = abschnitt(e, i);
+    a.nadeln = a.nadeln.filter((n) => !n.faellt && !n.pendel);
+  }
+  // Der Weg: durch jede Luecke senkrecht hindurch.
+  const punkte: Punkt[] = [];
+  if (art === 'hoch') {
+    let p = { ...w.ballon.pos };
+    for (const a of e.abschnitte) {
+      for (const q of [{ x: a.mitte, y: a.lage + 150 }, { x: a.mitte, y: a.lage - 40 }]) {
+        const n = Math.ceil(Math.hypot(q.x - p.x, q.y - p.y) / ZELLE);
+        for (let k = 1; k <= n; k++) punkte.push({ x: p.x + ((q.x - p.x) * k) / n, y: p.y + ((q.y - p.y) * k) / n });
+        p = q;
+      }
+    }
+  }
+  const regler: Regler = { polster: 0, voraus: 30, kx: 0.9, ky: 2, versatz: 25 };
+  let k = 0;
+  for (let i = 0; i < 120 * 600 && w.ausgang === 'laeuft'; i++) {
+    const b = w.ballon;
+    if (art === 'strecke') {
+      // Hoehe halten auf die Mitte der naechsten Saeule.
+      const naechste = e.abschnitte.find((a) => a.lage > b.pos.x - 10)!;
+      w.geblaese.x = b.pos.x;
+      w.geblaese.an = b.pos.y + b.geschw.y * 0.4 > naechste.mitte;
+    } else {
+      let beste = k;
+      let abstand = Infinity;
+      for (let j = k; j < Math.min(punkte.length, k + 60); j++) {
+        const d = Math.hypot(punkte[j].x - b.pos.x, punkte[j].y - b.pos.y);
+        if (d < abstand) { abstand = d; beste = j; }
+      }
+      k = beste;
+      const ziel = punkte[Math.min(punkte.length - 1, k + regler.voraus)];
+      const wunschVx = Math.max(-160, Math.min(160, (ziel.x - b.pos.x) * regler.kx));
+      const wunschVy = Math.max(-160, Math.min(120, (ziel.y - b.pos.y) * regler.ky));
+      const fehlerVx = wunschVx - b.geschw.x;
+      const hoeheUeberDuese = w.boden - DUESE_HOEHE - b.pos.y;
+      const daneben = Math.max(-1, Math.min(1, fehlerVx / 80)) * regler.versatz * (1 + (hoeheUeberDuese * 0.22) / 60);
+      w.geblaese.x = Math.max(40, Math.min(w.level.groesse.breite - 40, b.pos.x - daneben));
+      w.geblaese.an = b.geschw.y > wunschVy || Math.abs(fehlerVx) > 60;
+    }
+    schritt(w);
+  }
+  return { meter: meter(w), ausgang: w.ausgang, zeit: w.zeit };
+}
+
+if (process.argv[2] === 'endlos') {
+  for (const art of ['hoch', 'strecke'] as EndlosArt[]) {
+    const laeufe = Array.from({ length: 12 }, (_, s) => spieleEndlos(art, 500 + s * 104729));
+    const m = laeufe.map((l) => Math.round(l.meter)).sort((a, b) => a - b);
+    const offen = laeufe.filter((l) => l.ausgang === 'laeuft').length;
+    console.log(`Endlos ${art === 'hoch' ? '↑' : '→'}: ${m.join(' ')} m` +
+      ` (Mitte ${m[6]} m${offen ? `, ${offen}× nach 10 min noch unterwegs` : ''})`);
+  }
+  process.exit(0);
 }
 
 const ordner = new URL('../src/spiel/level/', import.meta.url);

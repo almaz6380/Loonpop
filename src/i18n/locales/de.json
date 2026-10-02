@@ -7,7 +7,11 @@
     "hoch": "hoch",
     "strecke": "Strecke",
     "gesperrt": "gesperrt",
-    "bestzeit": "{{s}} s"
+    "bestzeit": "{{s}} s",
+    "endlos": "Endlos",
+    "endlosHoch": "Immer weiter rauf",
+    "endlosStrecke": "Immer weiter nach rechts",
+    "bestweite": "{{m}} m"
   },
   "spiel": {
     "zurueck": "Zurück",
@@ -24,6 +28,10 @@
     },
     "weiter": "Weiter",
     "neueBestzeit": "Neue Bestzeit!",
-    "bestzeit": "Bestzeit: {{s}} s"
+    "bestzeit": "Bestzeit: {{s}} s",
+    "meter": "{{m}} m",
+    "weit": "{{m}} Meter weit gekommen.",
+    "neueBestweite": "Neue Bestweite!",
+    "bestweite": "Bestweite: {{m}} m"
   }
 }

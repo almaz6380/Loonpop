@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { mitSieg, offen, type Fortschritt } from './fortschritt.ts';
+import { mitSieg, mitWeite, offen, type Fortschritt } from './fortschritt.ts';
 
 const leer = (): Fortschritt => ({ v: 1, bestzeit: {} });
 
@@ -32,4 +32,16 @@ test('der Fortschritt haengt an der Level-ID, nicht an der Position', () => {
   assert.equal(offen(f, [1, 2, 3], 2), true);
   assert.equal(offen(f, [1, 9, 2, 3], 2), false);
   assert.equal(offen(f, [1, 9, 2, 3], 3), true);
+});
+
+test('nur eine groessere Weite ersetzt die Bestweite, je Richtung', () => {
+  let r = mitWeite(leer(), 'hoch', 120);
+  assert.equal(r.neu, true);
+  r = mitWeite(r.f, 'hoch', 80);
+  assert.equal(r.neu, false);
+  r = mitWeite(r.f, 'strecke', 40);
+  assert.equal(r.neu, true);
+  assert.deepEqual(r.f.endlos, { hoch: 120, strecke: 40 });
+  // Die Level bleiben davon unberuehrt.
+  assert.deepEqual(r.f.bestzeit, {});
 });

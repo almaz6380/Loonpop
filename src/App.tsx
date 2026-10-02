@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { LEVEL } from './spiel/level/index.ts';
 import SpielPage from './pages/SpielPage.tsx';
 import { lade, offen } from './lib/fortschritt.ts';
+import type { EndlosArt } from './spiel/typen.ts';
 
 const IDS = LEVEL.map((l) => l.id);
 
@@ -32,7 +33,17 @@ function MenueBallon() {
 export default function App() {
   const { t } = useTranslation();
   const [gewaehlt, setGewaehlt] = useState<number | null>(null);
+  const [endlos, setEndlos] = useState<EndlosArt | null>(null);
   const [fortschritt, setFortschritt] = useState(lade);
+
+  if (endlos !== null) {
+    return (
+      <SpielPage
+        endlos={endlos}
+        zurueck={() => { setFortschritt(lade()); setEndlos(null); }}
+      />
+    );
+  }
 
   if (gewaehlt !== null) {
     return (
@@ -66,7 +77,40 @@ export default function App() {
           </h1>
           <p className="mt-3 text-white/85 leading-relaxed">{t('menue.untertitel')}</p>
 
-          <div className="mt-8 grid gap-2">
+          {/* Endlos: sofort frei. Wer nur ein paar Minuten hat, soll nicht
+              erst zwoelf Level spielen muessen. */}
+          <div className="mt-8 grid grid-cols-2 gap-2">
+            {(['hoch', 'strecke'] as const).map((art) => {
+              const weite = fortschritt.endlos?.[art];
+              return (
+                <button
+                  key={art}
+                  onClick={() => setEndlos(art)}
+                  className="px-3 py-3 rounded-2xl text-left bg-[#ffd75e] text-[#12204f]
+                             shadow-lg shadow-black/15 active:scale-[0.98] transition"
+                >
+                  <span className="flex items-center gap-1.5 font-black">
+                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor"
+                         strokeWidth="3" aria-hidden="true">
+                      <path d={art === 'hoch' ? 'M12 19V5M6 11l6-6 6 6' : 'M5 12h14M13 6l6 6-6 6'}
+                            strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {t('menue.endlos')}
+                  </span>
+                  <span className="block text-xs font-semibold opacity-75 leading-snug">
+                    {art === 'hoch' ? t('menue.endlosHoch') : t('menue.endlosStrecke')}
+                  </span>
+                  {weite !== undefined && (
+                    <span className="block mt-1 text-sm font-bold tabular-nums">
+                      {t('menue.bestweite', { m: weite })}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 grid gap-2">
             {LEVEL.map((lvl, i) => {
               const frei = offen(fortschritt, IDS, i);
               const bestzeit = fortschritt.bestzeit[lvl.id];

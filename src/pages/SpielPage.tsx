@@ -10,17 +10,25 @@ import { useTranslation } from 'react-i18next';
 
 import { neueWelt } from '../spiel/welt.ts';
 import { starteSchleife } from '../spiel/schleife.ts';
-import { sichtBerechnen, kameraFuer, zuLevel, zeichne, type Sicht } from '../spiel/zeichnen.ts';
-import type { Ausgang, Level, Welt } from '../spiel/typen.ts';
-import { lade, speichere, mitSieg } from '../lib/fortschritt.ts';
+import {
+  sichtBerechnen, sichtEndlosHoch, kameraFuer, kameraYFuer, zuLevel, zeichne, type Sicht,
+} from '../spiel/zeichnen.ts';
+import { neueEndlosWelt, neuerSeed, meter } from '../spiel/endlos.ts';
+import type { Ausgang, EndlosArt, Level, Welt } from '../spiel/typen.ts';
+import { lade, speichere, mitSieg, mitWeite } from '../lib/fortschritt.ts';
 
-/** Wie der Lauf zur bisherigen Bestzeit steht — fuers Ende-Fenster. */
-type Rekord = { neu: boolean; bestzeit: number | null };
+/**
+ * Wie der Lauf zur bisherigen Bestmarke steht — fuers Ende-Fenster. Bei
+ * Leveln ist das die Bestzeit (s), im Endlos-Lauf die Bestweite (m).
+ */
+type Rekord = { neu: boolean; beste: number | null };
 
-export default function SpielPage({ level, zurueck, weiter }: {
-  level: Level;
+export default function SpielPage({ level, endlos, zurueck, weiter }: {
+  /** Ein gebautes Level — oder `endlos` fuer einen Endlos-Lauf. */
+  level?: Level;
+  endlos?: EndlosArt;
   zurueck: () => void;
-  /** Fehlt beim letzten Level. */
+  /** Fehlt beim letzten Level und im Endlos-Lauf. */
   weiter?: () => void;
 }) {
   const { t } = useTranslation();
@@ -30,6 +38,7 @@ export default function SpielPage({ level, zurueck, weiter }: {
   const [ende, setEnde] = useState<Ausgang | null>(null);
   const [versuch, setVersuch] = useState(0);
   const [zeit, setZeit] = useState(0);
+  const [weite, setWeite] = useState(0);
   const [rekord, setRekord] = useState<Rekord | null>(null);
   /**
    * Wo der Finger auf dem BILDSCHIRM liegt (CSS-Pixel im Canvas), nicht in der
@@ -47,7 +56,10 @@ export default function SpielPage({ level, zurueck, weiter }: {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const welt = neueWelt(level);
+    // Jeder Versuch im Endlos-Lauf bekommt einen neuen Seed. Die Uhr waehlt
+    // nur den Seed — der Lauf selbst haengt dann allein an ihm.
+    const welt = endlos ? neueEndlosWelt(endlos, neuerSeed(Date.now())) : neueWelt(level!);
+    const lvl = welt.level;
     weltRef.current = welt;
     setEnde(null);
     setRekord(null);
@@ -63,7 +75,9 @@ export default function SpielPage({ level, zurueck, weiter }: {
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       sichtRef.current = {
-        ...sichtBerechnen(b, h, level.groesse.breite, level.groesse.hoehe, level.art),
+        ...(endlos === 'hoch'
+          ? sichtEndlosHoch(b, h, lvl.groesse.breite)
+          : sichtBerechnen(b, h, lvl.groesse.breite, lvl.groesse.hoehe, lvl.art)),
         kameraX: sichtRef.current.kameraX,
       };
     };
@@ -72,7 +86,7 @@ export default function SpielPage({ level, zurueck, weiter }: {
 
     // Die Uhr im HUD darf nicht an der Schleife haengen — 5-mal je Sekunde
     // reicht fuers Auge und kostet React fast nichts.
-    const uhr = setInterval(() => setZeit(welt.zeit), 200);
+    const uhr = setInterval(() => { setZeit(welt.zeit); setWeite(meter(welt)); }, 200);
 
     const schleife = starteSchleife(
       welt,
@@ -80,16 +94,18 @@ export default function SpielPage({ level, zurueck, weiter }: {
         // ⚠ Die Kamera wird beim ZEICHNEN nachgefuehrt, nicht in der Physik.
         // Sonst haenge der Weltzustand vom Bildschirm ab und derselbe Lauf
         // liefe auf zwei Geraeten verschieden.
-        if (level.art === 'strecke') {
-          const ziel = kameraFuer(sichtRef.current, w.ballon.pos.x, level.groesse.breite);
+        if (lvl.art === 'strecke') {
+          const ziel = kameraFuer(sichtRef.current, w.ballon.pos.x, lvl.groesse.breite);
           // Weich nachziehen, damit das Bild nicht am Ballon klebt.
           sichtRef.current.kameraX += (ziel - sichtRef.current.kameraX) * 0.12;
         }
+        // Endlos nach oben haengt die Kamera am Boden, den die Physik fuehrt.
+        if (endlos === 'hoch') sichtRef.current.kameraY = kameraYFuer(sichtRef.current, w.boden);
         // Geblaese der Kamera nachfuehren — jedes Bild, nicht nur wenn sich der
         // Finger bewegt.
         if (fingerRef.current !== null) {
           const im = zuLevel({ x: fingerRef.current, y: 0 }, sichtRef.current);
-          w.geblaese.x = Math.max(40, Math.min(level.groesse.breite - 40, im.x));
+          w.geblaese.x = Math.max(40, Math.min(lvl.groesse.breite - 40, im.x));
         }
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -101,12 +117,22 @@ export default function SpielPage({ level, zurueck, weiter }: {
       (w) => {
         // Sofort speichern, nicht erst mit dem Fenster: Wer gleich nach dem
         // Ankommen zurueck tippt, soll den Sieg trotzdem behalten.
-        if (w.ausgang === 'geschafft') {
+        if (endlos) {
           const vorher = lade();
-          const { f, neu } = mitSieg(vorher, level.id, w.zeit);
+          const m = Math.floor(meter(w));
+          const { f, neu } = mitWeite(vorher, endlos, m);
           speichere(f);
-          const alt = vorher.bestzeit[level.id];
-          setRekord({ neu: neu && alt !== undefined, bestzeit: alt ?? null });
+          const alt = vorher.endlos?.[endlos];
+          // Schon der erste Lauf ist eine Bestweite — anders als bei Leveln,
+          // wo das Ankommen selbst die Nachricht ist.
+          setRekord({ neu: neu && m > 0, beste: alt ?? null });
+          setWeite(meter(w));
+        } else if (w.ausgang === 'geschafft') {
+          const vorher = lade();
+          const { f, neu } = mitSieg(vorher, lvl.id, w.zeit);
+          speichere(f);
+          const alt = vorher.bestzeit[lvl.id];
+          setRekord({ neu: neu && alt !== undefined, beste: alt ?? null });
         }
         // Die Uhr im HUD laeuft nur alle 200 ms nach — fuers Ende-Fenster
         // zaehlt die genaue Zeit, sonst passt sie nicht zur Bestzeit.
@@ -121,7 +147,7 @@ export default function SpielPage({ level, zurueck, weiter }: {
       clearTimeout(endeUhr);
       window.removeEventListener('resize', anpassen);
     };
-  }, [level, versuch]);
+  }, [level, endlos, versuch]);
 
   // --- Finger -------------------------------------------------------------
   // Der Finger schiebt das Geblaese WAAGERECHT; die Hoehe des Fingers ist
@@ -174,9 +200,11 @@ export default function SpielPage({ level, zurueck, weiter }: {
         </button>
         <span className="px-3.5 py-2 rounded-full bg-black/30 backdrop-blur-md
                          border border-white/10 tabular-nums">
-          {level.tempo.zeitlimit > 0
-            ? t('spiel.verbleibend', { s: Math.max(0, level.tempo.zeitlimit - zeit).toFixed(1) })
-            : t('spiel.zeit', { s: zeit.toFixed(1) })}
+          {endlos
+            ? t('spiel.meter', { m: Math.floor(weite) })
+            : level && level.tempo.zeitlimit > 0
+              ? t('spiel.verbleibend', { s: Math.max(0, level.tempo.zeitlimit - zeit).toFixed(1) })
+              : t('spiel.zeit', { s: zeit.toFixed(1) })}
         </span>
       </div>
 
@@ -191,15 +219,21 @@ export default function SpielPage({ level, zurueck, weiter }: {
             </p>
             <h2 className="text-3xl font-black tracking-tight mb-1.5">{t(`spiel.ende.${ende}`)}</h2>
             <p className="text-white/75 leading-relaxed">
-              {ende === 'geschafft'
-                ? t('spiel.gebraucht', { s: zeit.toFixed(1) })
-                : t('spiel.trostworte')}
+              {endlos
+                ? t('spiel.weit', { m: Math.floor(weite) })
+                : ende === 'geschafft'
+                  ? t('spiel.gebraucht', { s: zeit.toFixed(1) })
+                  : t('spiel.trostworte')}
             </p>
-            {ende === 'geschafft' && rekord && (
+            {(ende === 'geschafft' || endlos) && rekord && (
               <p className="mt-1 text-sm font-semibold text-[#ffe48a]">
-                {rekord.neu
-                  ? t('spiel.neueBestzeit')
-                  : rekord.bestzeit !== null && t('spiel.bestzeit', { s: rekord.bestzeit.toFixed(1) })}
+                {endlos
+                  ? rekord.neu
+                    ? t('spiel.neueBestweite')
+                    : rekord.beste !== null && t('spiel.bestweite', { m: rekord.beste })
+                  : rekord.neu
+                    ? t('spiel.neueBestzeit')
+                    : rekord.beste !== null && t('spiel.bestzeit', { s: rekord.beste.toFixed(1) })}
               </p>
             )}
             <div className="mb-7" />

@@ -17,9 +17,10 @@ bereits in den Stores; vor dem ersten Store-Eintrag gehört der Name durch TMvie
 (Klassen 9 und 41). Eine Websuche ersetzt das nicht — vier verworfene Namen bei
 Anigosha waren die Lehre.
 
-## Stand: M2 in Arbeit
+## Stand: M2 — spielbar, mit Endlos-Modus
 
-Zwölf handgebaute Level, Gebläsesteuerung, träge Physik. Läuft im Browser.
+Zwölf handgebaute Level und zwei Endlos-Läufe (immer weiter rauf, immer weiter
+nach rechts), Gebläsesteuerung, träge Physik. Läuft im Browser.
 Der Fortschritt bleibt auf dem Gerät: Jedes Level schaltet das nächste frei,
 und das Menü zeigt die Bestzeit.
 
@@ -30,7 +31,7 @@ und das Menü zeigt die Bestzeit.
 
 Hindernisse sind **Nadelfelder** aus vielen kurzen Stacheln; dazu **fallende**
 und **pendelnde Nadeln**, **Windzonen** (Aufwind, Fallwind) und Zeitlimits.
-Noch **nicht** dabei: Endlos-Modus, Konten, Bestenliste, Werbung, Kauf,
+Noch **nicht** dabei: Konten, Bestenliste, Werbung, Kauf,
 Capacitor, Stores. Reihenfolge siehe unten.
 
 ```bash
@@ -39,6 +40,7 @@ npm run dev      # entwickeln
 npm test         # Physik, Kollision, Determinismus, Wegsuche über jedes Level
 npm run pruefen  # Zahlen je Level: Steigflug, Vorlauf, Zeitfenster
 npm run bot      # ein Bot spielt jedes Level mit der echten Physik (~2 min)
+npm run bot -- endlos   # derselbe Bot im Endlos-Lauf: wie viele Meter?
 npm run nadelfeld -- reihe 600 0 300   # Nadelfeld als JSON für ein Level
 npm run build    # bauen
 ```
@@ -56,7 +58,7 @@ npm run build    # bauen
 ## Die Reihenfolge
 
 - **M1 ✅** Spielbar im Browser
-- **M2** 10–15 Level ✅, Fortschritt auf dem Gerät ✅, Endlos-Modus
+- **M2 ✅** 12 Level, Fortschritt auf dem Gerät, Endlos-Modus (↑ und →)
 - **M3** Routing, Einstellungen, Rechtstexte
 - **M4** Capacitor (`at.gallab.loonpop`), Icons, Splash
 - **M5** Supabase: Konten und Online-Bestenliste

@@ -18,5 +18,6 @@ export function neueWelt(level: Level): Welt {
     zeit: 0,
     nachher: 0,
     ausgang: 'laeuft',
+    boden: level.groesse.hoehe,
   };
 }

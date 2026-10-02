@@ -75,6 +75,22 @@ def main() -> None:
     auf_breite(ballon, 200).save(ZIEL / 'ballon.png', optimize=True)
     print('ballon', ballon.size, 'Seitenverhaeltnis', round(ballon.width / ballon.height, 4))
 
+    # Das Geblaese: Die Trichteroeffnung bestimmt, wo der Strahl beginnt.
+    # Gemessen wird die breiteste Zeile im obersten Sechstel: der Trichterrand.
+    # ⚠ Direkt an der Oberkante ist der Rand eine Ellipse und noch schmal.
+    geblaese = zuschneiden(freistellen(Image.open(QUELLEN / 'geblaese.jpg'), 'gruen'))
+    alpha = np.asarray(geblaese.getchannel('A')) > 128
+    breiten = [(np.nonzero(z)[0].max() - np.nonzero(z)[0].min(), i)
+               for i, z in enumerate(alpha[: geblaese.height // 6]) if z.any()]
+    _, zeile = max(breiten)
+    spalten = np.nonzero(alpha[zeile])[0]
+    links, rechts = spalten.min(), spalten.max()
+    print('geblaese', geblaese.size,
+          'oeffnung mitte', round((links + rechts) / 2 / geblaese.width, 4),
+          'breite', round((rechts - links) / geblaese.width, 4),
+          'seiten', round(geblaese.width / geblaese.height, 4))
+    auf_breite(geblaese, 256).save(ZIEL / 'geblaese.png', optimize=True)
+
     wolken = freistellen(Image.open(QUELLEN / 'wolken.jpg'), 'magenta')
     h = wolken.height // 2
     w = wolken.width // 2

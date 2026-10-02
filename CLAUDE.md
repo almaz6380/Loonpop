@@ -84,7 +84,7 @@ gewartet hat.
 
 ## Bilder
 
-Himmel, Wolken, Hügel, Wiese und Ballon kommen seit dem 02.10.2026 aus Gemini
+Himmel, Wolken, Hügel, Wiese, Ballon und Gebläse kommen seit dem 02.10.2026 aus Gemini
 (`public/bilder/`, Quellen in `scripts/bild-quellen/`). Freigestellt werden sie
 mit `python3 scripts/bilder-freistellen.py` (braucht Pillow und NumPy).
 
@@ -102,7 +102,12 @@ mit `python3 scripts/bilder-freistellen.py` (braucht Pillow und NumPy).
   (der Test in `ballonform.test.ts` schlägt sonst an).
 - Jedes Bild hat seinen gemalten Rückfall, solange es lädt (`bild()` liefert
   dann `null`).
-- Das Gebläse ist noch gemalt: Das erste Gemini-Bild sah aus wie eine Flasche.
+- ⚠ **Das Gebläse muss gedrungen sein.** Die Düse sitzt nur 96 px über dem Boden,
+  der Strahl ist dort 68 px breit (`MUND`). Das zweite Gemini-Bild mit langem Rohr
+  wäre auf diese Höhe 12 px schmal gewesen. Das dritte (kurzer, breiter Trichter)
+  wird mit 48 px Trichterrand gezeichnet (`bildmasse.ts`); mit 56 px ragte es so
+  weit unter den Boden, dass vom Motor nichts mehr zu sehen war. Die Öffnung
+  sitzt genau an der Düse. Unter dem Boden wird nichts gezeichnet (Clip).
 
 ## Nadeln
 

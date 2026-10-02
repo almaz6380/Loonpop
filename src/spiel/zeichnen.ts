@@ -16,6 +16,7 @@ import type { Welt, Punkt } from './typen.ts';
 import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe } from './physik.ts';
 import { nadelnIn, meter } from './endlos.ts';
 import { ballonform, KNOTEN, BALLON_BILD_SEITEN } from './ballonform.ts';
+import { geblaeseMass, GEBLAESE_BILD } from './bildmasse.ts';
 
 /**
  * Bilder, einmal geladen und dann wiederverwendet. Liefert `null`, solange
@@ -350,6 +351,17 @@ function zeichneGeblaese(ctx: CanvasRenderingContext2D, welt: Welt, gy: number, 
   ctx.ellipse(gx, bodenY + 62, 46, 10, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // Mit Bild: Die Trichteroeffnung sitzt genau an der Duese, dort beginnt der
+  // gezeichnete und der gerechnete Strahl. Beim Blasen zittert es ein wenig —
+  // das gemalte Laufrad, das sich dreht, gibt es im Bild nicht.
+  const geblaeseBild = bild('/bilder/geblaese.png');
+  if (geblaeseBild) {
+    const { breite, hoehe } = geblaeseMass();
+    const zittern = Math.sin(welt.zeit * 70) * 0.8 * st;
+    ctx.drawImage(geblaeseBild, gx - GEBLAESE_BILD.oeffnungMitte * breite + zittern, gy - 3, breite, hoehe);
+    return;
+  }
+
   ctx.save();
   ctx.translate(gx, gy);
 
@@ -530,6 +542,11 @@ export function zeichne(
   ctx.translate(sicht.randX, sicht.randY);
   ctx.scale(sicht.skala, sicht.skala);
   ctx.translate(-sicht.kameraX, -kameraY);
+  // Nichts unter den Boden zeichnen: Das Geblaesebild reicht ein Stueck unter
+  // den Rand, und in den Hoch-Leveln liegt dort der dunkle Rahmen.
+  ctx.beginPath();
+  ctx.rect(sicht.kameraX - 50, kameraY - 5000, sichtbar + 100, welt.boden - kameraY + 5000);
+  ctx.clip();
 
   hintergrund(ctx, welt, sicht, bodenY, oben, sichtHoehe);
 

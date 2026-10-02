@@ -19,7 +19,7 @@
 
 import type { Abschnitt, Endlos, EndlosArt, Level, Nadel, Welt } from './typen.ts';
 import { mulberry32, saat } from './zufall.ts';
-import { reihe, spalte } from './nadelfeld.ts';
+import { reihe, wandernd, spalte } from './nadelfeld.ts';
 import { neueWelt, BALLON_RADIUS } from './welt.ts';
 
 /** 50 px Level = 1 m. Der Ballon ist damit gut einen Meter breit. */
@@ -123,14 +123,29 @@ function hochAbschnitt(seed: number, i: number, vorher: Abschnitt | undefined): 
   const nadeln: Nadel[] = [];
   const linkesEnde = mitte - weite / 2;
   const rechtesEnde = mitte + weite / 2;
-  if (linkesEnde > 0) nadeln.push(...reihe(lage, 0, linkesEnde));
-  if (rechtesEnde < BREITE) nadeln.push(...reihe(lage, rechtesEnde, BREITE));
-  if (eng) for (const n of nadeln) n.warnung = true;
   const bewegt = !eng && !ruhig;
+
+  // Ab rund 120 m faehrt manchmal die ganze Reihe samt Luecke zur Seite und
+  // zurueck. Bei zeit = 0 (und dann alle `dauer` Sekunden) liegt die Luecke
+  // dort, wo sie die Reihe davor beruehrt — man wartet auf den Moment.
+  // Gefahren wird zur Seite mit mehr Platz. ⚠ Langsam genug, dass der traege
+  // Ballon mitkommt: rund 90–110 px/s.
+  const platzRechts = BREITE - rechtesEnde;
+  const platzLinks = linkesEnde;
+  const weit = mische(140, 220, d);
+  const weg = platzRechts >= platzLinks ? Math.min(weit, platzRechts) : -Math.min(weit, platzLinks);
+  const wandert = bewegt && d >= 0.4 && Math.abs(weg) >= 80 && z() < 0.35;
+  if (wandert) {
+    nadeln.push(...wandernd(lage, linkesEnde, rechtesEnde, Math.round(weg), mische(5, 4, d), BREITE));
+  } else {
+    if (linkesEnde > 0) nadeln.push(...reihe(lage, 0, linkesEnde));
+    if (rechtesEnde < BREITE) nadeln.push(...reihe(lage, rechtesEnde, BREITE));
+  }
+  if (eng) for (const n of nadeln) n.warnung = true;
 
   // Ab 100 m faehrt manchmal eine Pendelnadel durch die Luecke. Man wartet
   // darunter, bis sie zur Seite ist — in der Luft geht das.
-  if (bewegt && d >= 1 / 3 && z() < 0.5) {
+  if (bewegt && !wandert && d >= 1 / 3 && z() < 0.5) {
     nadeln.push({
       von: { x: linkesEnde + 12, y: lage }, bis: { x: linkesEnde + 12, y: lage + 60 },
       pendel: { weg: { x: weite - 24, y: 0 }, dauer: mische(3.8, 3, d) },
@@ -138,7 +153,7 @@ function hochAbschnitt(seed: number, i: number, vorher: Abschnitt | undefined): 
   }
   // Ab 200 m faellt manchmal eine Nadel durch die Luecke — nur durch ihr Band,
   // nicht durch das ganze Level.
-  if (bewegt && d >= 2 / 3 && z() < 0.5) {
+  if (bewegt && !wandert && d >= 2 / 3 && z() < 0.5) {
     nadeln.push({
       von: { x: mitte, y: 0 }, bis: { x: mitte, y: 150 },
       faellt: { takt: mische(2.8, 2.4, d), versatz: z() * 3, oben: lage - 260, unten: lage + 220 },

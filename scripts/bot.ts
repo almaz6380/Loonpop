@@ -15,9 +15,10 @@
 // der Spieler hat: Geblaese versetzen, druecken, loslassen. Er probiert ein
 // Raster von Reglereinstellungen und meldet, wie viele davon ankommen.
 //
-// Er ist bewusst einfach und WARTET NICHT auf bewegte Nadeln. Fallende und
-// pendelnde Nadeln laesst er deshalb weg; deren Zeitfenster prueft die
-// Wegsuche. "0 von N" heisst also nicht sicher "unschaffbar" — aber es heisst:
+// Er ist bewusst einfach und WARTET NICHT auf einzelne bewegte Nadeln. Fallende
+// und pendelnde Nadeln laesst er deshalb weg; deren Zeitfenster prueft die
+// Wegsuche. Nur auf WANDERNDE REIHEN wartet er (seit 02.10.2026): Ohne sie gaebe
+// es in solchen Leveln gar keine Sperre, und das Ergebnis waere wertlos. "0 von N" heisst also nicht sicher "unschaffbar" — aber es heisst:
 // selbst nachspielen, bevor das Level ins Spiel kommt. Kein Teil von `npm test`,
 // weil ein Bot daneben liegen kann, wo ein Test es nicht darf.
 
@@ -115,15 +116,46 @@ function weg(level: Level, polster: number): Punkt[] | null {
   return xs.map((sx, i) => ({ x: mitte(sx), y: ys[i] }));
 }
 
-type Regler = { polster: number; voraus: number; kx: number; ky: number; versatz: number };
+type Regler = { polster: number; voraus: number; kx: number; ky: number; versatz: number; vorlauf?: number };
+
+/**
+ * Wandernde Reihen (nadelfeld.ts `wandernd`): viele Pendelnadeln mit gleicher
+ * Hoehe und gleichem Umlauf. Bei zeit = 0, dauer, 2·dauer … liegt ihre Luecke
+ * dort, wo sie geplant ist.
+ */
+type Wanderreihe = { y: number; dauer: number };
+function wanderreihen(level: Level): Wanderreihe[] {
+  const zaehler = new Map<string, number>();
+  for (const n of level.nadeln) {
+    if (!n.pendel) continue;
+    const k = `${n.von.y}:${n.pendel.dauer}`;
+    zaehler.set(k, (zaehler.get(k) ?? 0) + 1);
+  }
+  return [...zaehler].filter(([, z]) => z > 3).map(([k]) => {
+    const [y, dauer] = k.split(':').map(Number);
+    return { y, dauer };
+  });
+}
+const gehoertZuWanderreihe = (level: Level) => {
+  const reihen = wanderreihen(level);
+  return (n: Level['nadeln'][number]) =>
+    !!n.pendel && reihen.some((r) => r.y === n.von.y && r.dauer === n.pendel!.dauer);
+};
 
 /** Ein Lauf mit einer Reglereinstellung. */
 function spiele(level: Level, regler: Regler): { ausgang: string; zeit: number } {
+  // Der Weg geht durch die Luecken der wandernden Reihen, wie sie bei zeit = 0
+  // liegen. ⚠ Er WARTET darauf (02.10.2026): Unter jeder wandernden Reihe
+  // schwebt er, bis die Luecke gleich wieder an ihrem Platz ist, und steigt erst
+  // dann. Ohne das hiesse jedes Ergebnis nur „die Reihe stand zufaellig richtig“.
+  const reihen = wanderreihen(level).sort((a, b) => b.y - a.y);
+  const fest: Level = { ...level, nadeln: level.nadeln.map((n) => (n.pendel ? { von: n.von, bis: n.bis } : n)) };
   let punkte: Punkt[] | null = null;
-  for (let p = regler.polster; p >= 0 && !punkte; p -= 5) punkte = weg(level, p);
+  for (let p = regler.polster; p >= 0 && !punkte; p -= 5) punkte = weg(fest, p);
   if (!punkte) return { ausgang: 'kein Weg', zeit: 0 };
   const w = neueWelt(level);
   const rand = (x: number) => Math.max(40, Math.min(level.groesse.breite - 40, x));
+  const freigegeben = new Set<number>();
   let k = 0;
   for (let i = 0; i < 120 * 90 && w.ausgang === 'laeuft'; i++) {
     const b = w.ballon;
@@ -142,7 +174,18 @@ function spiele(level: Level, regler: Regler): { ausgang: string; zeit: number }
         if (d < abstand) { abstand = d; beste = j; }
       }
       k = beste;
-      const ziel = punkte[Math.min(punkte.length - 1, k + regler.voraus)];
+      let ziel = punkte[Math.min(punkte.length - 1, k + regler.voraus)];
+      // Naechste wandernde Reihe ueber dem Ballon: warten, bis ihre Luecke in
+      // `vorlauf` Sekunden wieder am Platz ist.
+      const reihe = reihen.find((r) => r.y + 60 < b.pos.y && b.pos.y - r.y < 300 && !freigegeben.has(r.y));
+      if (reihe) {
+        const bisDahin = (reihe.dauer - (w.zeit % reihe.dauer)) % reihe.dauer;
+        if (bisDahin <= (regler.vorlauf ?? 1) && bisDahin > (regler.vorlauf ?? 1) - 0.4) freigegeben.add(reihe.y);
+        else {
+          const warte = punkte.find((q) => q.y <= reihe.y + 60 + 120) ?? ziel;
+          ziel = { x: warte.x, y: reihe.y + 60 + 120 };
+        }
+      }
       const wunschVx = Math.max(-160, Math.min(160, (ziel.x - b.pos.x) * regler.kx));
       const wunschVy = Math.max(-160, Math.min(120, (ziel.y - b.pos.y) * regler.ky));
       const fehlerVx = wunschVx - b.geschw.x;
@@ -167,7 +210,9 @@ function raster(level: Level): Regler[] {
       for (const kx of strecke ? [1] : [0.5, 0.9, 1.5])
         for (const ky of [0.8, 1.2, 2])
           for (const versatz of strecke ? [0] : [25, 40, 60]) r.push({ polster, voraus, kx, ky, versatz });
-  return r;
+  // Mit wandernden Reihen zusaetzlich: wie frueh er zum Steigen ansetzt.
+  if (!wanderreihen(level).length) return r;
+  return r.flatMap((x) => [0.6, 1.0, 1.4].map((vorlauf) => ({ ...x, vorlauf })));
 }
 
 /**
@@ -243,9 +288,11 @@ for (const datei of readdirSync(ordner).filter((d) => d.endsWith('.json')).sort(
   if (nur.length && !nur.includes(level.id)) continue;
   // Ohne bewegte Nadeln und ohne Zeitlimit: Der Bot wartet nicht, und die
   // Zeit soll er messen, nicht an ihr scheitern.
+  // Wandernde Reihen bleiben drin — auf die wartet er (siehe spiele).
+  const wandernd = gehoertZuWanderreihe(level);
   const ohne: Level = {
     ...level,
-    nadeln: level.nadeln.filter((n) => !n.faellt && !n.pendel),
+    nadeln: level.nadeln.filter((n) => wandernd(n) || (!n.faellt && !n.pendel)),
     tempo: { ...level.tempo, zeitlimit: 0 },
   };
   const laeufe = raster(level).map((r) => spiele(ohne, r));

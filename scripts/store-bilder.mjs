@@ -31,28 +31,28 @@ const FORMATE = {
 };
 
 const UEBERSCHRIFT = {
-  de: ['Zwölf Level und ein Endlos-Modus', 'Lenke den Ballon durch die Nadeln', 'Wie hoch kommst du?', 'Wind, Pendel, fallende Nadeln'],
-  en: ['Twelve levels and an endless mode', 'Guide the balloon through the needles', 'How high can you go?', 'Wind, pendulums, falling needles'],
-  es: ['Doce niveles y un modo infinito', 'Guía el globo entre las agujas', '¿Hasta dónde llegarás?', 'Viento, péndulos y agujas que caen'],
-  fr: ['Douze niveaux et un mode infini', 'Guide le ballon entre les aiguilles', 'Jusqu’où monteras-tu ?', 'Vent, pendules, aiguilles qui tombent'],
-  it: ['Dodici livelli e una modalità infinita', 'Guida il palloncino tra gli aghi', 'Fin dove arriverai?', 'Vento, pendoli, aghi che cadono'],
-  pt: ['Doze fases e um modo infinito', 'Guie o balão entre as agulhas', 'Até onde você consegue subir?', 'Vento, pêndulos, agulhas caindo'],
-  tr: ['On iki bölüm ve sonsuz mod', 'Balonu iğnelerin arasından geçir', 'Ne kadar yükseğe çıkabilirsin?', 'Rüzgâr, sarkaçlar, düşen iğneler'],
-  pl: ['Dwanaście poziomów i tryb bez końca', 'Przeprowadź balon między igłami', 'Jak wysoko dolecisz?', 'Wiatr, wahadła, spadające igły'],
-  ru: ['12 уровней и бесконечный режим', 'Проведи шарик сквозь иглы', 'Как высоко ты поднимешься?', 'Ветер, маятники, падающие иглы'],
-  ja: ['12レベルとエンドレス', '針のすき間を抜けて風船を導こう', 'どこまで高く行ける？', '風、振り子、落ちてくる針'],
-  ko: ['12개 레벨 + 무한 모드', '바늘 사이로 풍선을 이끄세요', '얼마나 높이 갈 수 있을까요?', '바람, 진자, 떨어지는 바늘'],
-  zh: ['12 个关卡 + 无尽模式', '引导气球穿过针阵', '你能飞多高？', '风、摆针和下落的针'],
-  ar: ['اثنتا عشرة مرحلة ووضع بلا نهاية', 'قُد البالون بين الإبر', 'إلى أي ارتفاع ستصل؟', 'رياح وبندولات وإبر تسقط'],
+  de: ['Fünfzehn Level und ein Endlos-Modus', 'Lenke den Ballon durch die Nadeln', 'Wie hoch kommst du?', 'Nadelreihen, die wandern'],
+  en: ['Fifteen levels and an endless mode', 'Guide the balloon through the needles', 'How high can you go?', 'Rows of needles on the move'],
+  es: ['Quince niveles y un modo infinito', 'Guía el globo entre las agujas', '¿Hasta dónde llegarás?', 'Filas de agujas en movimiento'],
+  fr: ['Quinze niveaux et un mode infini', 'Guide le ballon entre les aiguilles', 'Jusqu’où monteras-tu ?', 'Des rangées d’aiguilles qui bougent'],
+  it: ['Quindici livelli e una modalità infinita', 'Guida il palloncino tra gli aghi', 'Fin dove arriverai?', 'File di aghi in movimento'],
+  pt: ['Quinze fases e um modo infinito', 'Guie o balão entre as agulhas', 'Até onde você consegue subir?', 'Fileiras de agulhas em movimento'],
+  tr: ['On beş bölüm ve sonsuz mod', 'Balonu iğnelerin arasından geçir', 'Ne kadar yükseğe çıkabilirsin?', 'Hareket eden iğne sıraları'],
+  pl: ['Piętnaście poziomów i tryb bez końca', 'Przeprowadź balon między igłami', 'Jak wysoko dolecisz?', 'Ruchome rzędy igieł'],
+  ru: ['15 уровней и бесконечный режим', 'Проведи шарик сквозь иглы', 'Как высоко ты поднимешься?', 'Движущиеся ряды игл'],
+  ja: ['15レベルとエンドレス', '針のすき間を抜けて風船を導こう', 'どこまで高く行ける？', '動く針の列'],
+  ko: ['15개 레벨 + 무한 모드', '바늘 사이로 풍선을 이끄세요', '얼마나 높이 갈 수 있을까요?', '움직이는 바늘 줄'],
+  zh: ['15 个关卡 + 无尽模式', '引导气球穿过针阵', '你能飞多高？', '移动的针排'],
+  ar: ['خمس عشرة مرحلة ووضع بلا نهاية', 'قُد البالون بين الإبر', 'إلى أي ارتفاع ستصل؟', 'صفوف إبر متحركة'],
 };
 
 // ⚠ Die Nummer vorn legt die Reihenfolge im Store fest, und play-upload.py
 // nimmt nur Dateien der Form 1-name.jpg (Nummer, Trenner, Name).
-const NAMEN = ['menue', 'level', 'endlos', 'wind'];
+const NAMEN = ['menue', 'level', 'endlos', 'reihen'];
 
 const FORTSCHRITT = {
   v: 1,
-  bestzeit: { 1: 6.2, 2: 9.8, 3: 11.4, 6: 14.1, 8: 12.7, 10: 13.9, 13: 10.3, 14: 8.8 },
+  bestzeit: { 1: 6.2, 2: 9.8, 3: 11.4, 6: 14.1, 8: 12.7, 10: 13.9, 13: 10.3, 14: 8.8, 15: 12.1, 16: 19.4, 17: 30.2, 18: 33.5 },
   endlos: { hoch: 137 },
 };
 
@@ -201,7 +201,7 @@ for (const [name, format] of Object.entries(FORMATE)) {
       await seite.screenshot({ type: 'png' }),
       await imFlug(seite, format.geraet, 8, 1500, 6),     // 9  Zickzack
       await endlos(seite, format.geraet),
-      await imFlug(seite, format.geraet, 7, 1300),        // 8  Fallschacht
+      await imFlug(seite, format.geraet, 13, 1500),       // Schiebetür (Index 0 ist der Endlos-Knopf)
     ];
     const ordner = new URL(`../store-assets/${name}/${code}/`, import.meta.url);
     mkdirSync(ordner, { recursive: true });

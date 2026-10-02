@@ -65,34 +65,50 @@ const PROBEN = 96;
 const umlauf = (n: Nadel) => n.faellt?.takt ?? n.pendel?.dauer ?? 0;
 
 /**
- * Sperrt die Zellen, die eine BEWEGTE Nadel nie lange genug freigibt.
+ * Sperrt die Zellen, die BEWEGTE Nadeln nie lange genug freigeben.
  *
  * ⚠ Die ganze ueberstrichene Flaeche zu sperren war zu streng: Jede Pendelnadel
  * in einer Luecke machte sie zu, obwohl man in der Luft warten kann, bis die
  * Nadel weg ist. Gesperrt ist deshalb nur, was nie FENSTER_MIN am Stueck frei
  * ist — fuer fallende wie fuer pendelnde Nadeln dieselbe Regel.
+ *
+ * ⚠ Geprueft wird eine GRUPPE von Nadeln mit gleichem Umlauf gemeinsam, nicht
+ * jede fuer sich (02.10.2026, wandernde Reihen). Unter einer fahrenden Reihe
+ * ist jede Stelle von jeder einzelnen Nadel meist frei — aber fast nie von
+ * allen zugleich. Einzeln geprueft, galt eine dichte wandernde Reihe als offen.
  */
 function bewegteSperren(
-  frei: Uint8Array, spalten: number, zeilen: number, nadel: Nadel, hoehe: number,
+  frei: Uint8Array, spalten: number, zeilen: number, gruppe: Nadel[], hoehe: number,
 ): void {
   const r = BALLON_RADIUS;
-  const dauer = umlauf(nadel);
-  const lagen = Array.from({ length: PROBEN }, (_, k) => nadelJetzt(nadel, (dauer * k) / PROBEN, hoehe));
-  const xs = lagen.flatMap((l) => [l.von.x, l.bis.x]);
-  const ys = lagen.flatMap((l) => [l.von.y, l.bis.y]);
+  const dauer = umlauf(gruppe[0]);
+  const lagen = gruppe.map((n) =>
+    Array.from({ length: PROBEN }, (_, k) => nadelJetzt(n, (dauer * k) / PROBEN, hoehe)));
+  const alle = lagen.flat();
+  const xs = alle.flatMap((l) => [l.von.x, l.bis.x]);
+  const ys = alle.flatMap((l) => [l.von.y, l.bis.y]);
   const sx0 = Math.max(0, Math.floor((Math.min(...xs) - r) / ZELLE));
   const sx1 = Math.min(spalten - 1, Math.ceil((Math.max(...xs) + r) / ZELLE));
   const sy0 = Math.max(0, Math.floor((Math.min(...ys) - r) / ZELLE));
   const sy1 = Math.min(zeilen - 1, Math.ceil((Math.max(...ys) + r) / ZELLE));
   const noetig = Math.ceil((FENSTER_MIN / dauer) * PROBEN);
+  const belegt = new Uint8Array(PROBEN);
   for (let sy = sy0; sy <= sy1; sy++) {
     for (let sx = sx0; sx <= sx1; sx++) {
       const i = sy * spalten + sx;
       if (!frei[i]) continue;
       const p = { x: (sx + 0.5) * ZELLE, y: (sy + 0.5) * ZELLE };
-      const belegt = lagen.map((l) => abstandPunktStrecke(p, l.von, l.bis) < r);
-      if (!belegt.some(Boolean)) continue;
-      // Laengste freie Strecke im Kreis herum — die Nadel kommt ja wieder.
+      belegt.fill(0);
+      let irgendwann = false;
+      for (const bahn of lagen) {
+        for (let k = 0; k < PROBEN; k++) {
+          const l = bahn[k];
+          if (belegt[k] || Math.abs(l.von.x - p.x) > r + Math.abs(l.bis.x - l.von.x)) continue;
+          if (abstandPunktStrecke(p, l.von, l.bis) < r) { belegt[k] = 1; irgendwann = true; }
+        }
+      }
+      if (!irgendwann) continue;
+      // Laengste freie Strecke im Kreis herum — die Nadeln kommen ja wieder.
       let laengste = 0;
       let lauf = 0;
       for (let k = 0; k < PROBEN * 2; k++) {
@@ -183,9 +199,14 @@ function wegFrei(level: Level): boolean {
       if (!getroffen) frei[sy * spalten + sx] = 1;
     }
   }
+  // Nadeln mit gleichem Umlauf gemeinsam (siehe bewegteSperren).
+  const gruppen = new Map<string, Nadel[]>();
   for (const n of level.nadeln) {
-    if (n.faellt || n.pendel) bewegteSperren(frei, spalten, zeilen, n, hoehe);
+    if (!n.faellt && !n.pendel) continue;
+    const schluessel = `${n.faellt ? 'f' : 'p'}:${umlauf(n)}`;
+    gruppen.set(schluessel, [...(gruppen.get(schluessel) ?? []), n]);
   }
+  for (const g of gruppen.values()) bewegteSperren(frei, spalten, zeilen, g, hoehe);
 
   const zelle = (p: Punkt) => {
     const sx = Math.min(spalten - 1, Math.max(0, Math.floor(p.x / ZELLE)));

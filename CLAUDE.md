@@ -8,7 +8,7 @@ Die sechste App von Josef.
 
 **Repository:** https://github.com/almaz6380/loonpop (privat)
 **Stand:** M2 fertig — Fortschritt auf dem Gerät, Endlos-Modus. Seit 02.10.2026
-wird **nur noch nach oben** gespielt: zwölf Hoch-Level (IDs 1, 2, 3, 6, 8, 10, 13–18) und Endlos ↑. Strecken
+wird **nur noch nach oben** gespielt: fünfzehn Hoch-Level (IDs 1, 2, 3, 6, 8, 10, 13–21) und Endlos ↑. Strecken
 (Level 4, 5, 7, 9, 11, 12) und Endlos → sind ausgeblendet, nicht gelöscht
 (`LEVEL` in `level/index.ts` filtert, `npm test` prüft sie weiter). Siehe README für die Reihenfolge bis zum Store.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
@@ -146,6 +146,14 @@ Drei Sorten, alle über `Nadel` in `typen.ts`:
 | **pendel** | fährt einen Weg hin und her |
 | **faellt** | fällt oben herein, verschwindet unten, fängt von vorn an |
 
+**Wandernde Reihen** (seit 02.10.2026, Level 19–21 und Endlos ↑ ab ~120 m): Eine
+ganze Reihe fährt samt Lücke hin und her. Gebaut wird sie mit `wandernd()` in
+`nadelfeld.ts` aus lauter Pendelnadeln mit gleichem Weg und gleicher Dauer, eine
+neue Nadelart gibt es dafür nicht. Bei `zeit` = 0 (und dann alle `dauer`
+Sekunden) liegt die Lücke an ihrem Platz. Man wartet auf diesen Moment.
+⚠ Die Reihe reicht um ihren Weg über den Levelrand hinaus, sonst öffnete sich
+am Rand ein zweites Loch.
+
 ⚠ **Bewegte Nadeln werden aus der ZEIT gerechnet, nie fortgeschrieben.**
 `nadelJetzt(nadel, zeit, hoehe)` ist eine reine Funktion. Fortgeschriebene
 Positionen hingen an der Bildrate, und derselbe Lauf liefe auf zwei Geräten
@@ -239,6 +247,13 @@ Dort, wo der Ballon ohnehin nicht durchkommt, sind sie wirkungslos.
 15. **Zonen zeigen ihre Richtung.** Die Teilchen wandern in Kraftrichtung. Bis
     zum 01.10.2026 stiegen sie immer auf, und eine Fallwind-Zone hätte das
     Gegenteil dessen gezeigt, was sie tut (siehe Falle 7).
+17. **Bewegte Nadeln prüft man GEMEINSAM.** Bis zum 02.10.2026 sah die Wegsuche
+    jede bewegte Nadel einzeln an. Unter einer wandernden Reihe ist jede Stelle
+    von jeder einzelnen Nadel meist frei, aber fast nie von allen zugleich. Eine
+    dichte wandernde Reihe galt deshalb als offen. Jetzt werden Nadeln mit
+    gleichem Umlauf zusammen geprüft (`bewegteSperren`), und ein Test hält das
+    fest. Der Bot wartet unter wandernden Reihen, bis die Lücke kommt
+    (`scripts/bot.ts`).
 16. **Cloudflare hat ZWEI Build-Einstellungen.** Production (`main`) und die
     Vorschauen für alle anderen Branches („Previews Base“) werden getrennt
     eingestellt. Am 01.10.2026 hatte nur Production einen Build-Befehl. Der
@@ -267,7 +282,9 @@ Zwei Läufe ohne Ende, beide in `src/spiel/endlos.ts`:
 - ⚠ **Die Lücken zweier Reihen berühren sich** (Lehre aus Level 6, 8, 10). Am
   Anfang überlappen sie 70 px, ab 300 m nur noch 10.
 - Schwerer wird es bis 300 m: engere Lücken, kürzere Abstände, ab 100 m
-  Pendelnadeln (↑), ab 150/200 m fallende Nadeln. Nie über die Physik.
+  Pendelnadeln (↑), ab 120 m wandernde Reihen (↑, etwa jede dritte, nie in
+  Engstellen und nie zusammen mit Pendel- oder Fallnadeln), ab 150/200 m
+  fallende Nadeln. Nie über die Physik.
 - **Immer schneller** über `tempo(meter)` = 1 − e^(−m/430): ohne Ende, aber mit
   Obergrenze (bei 300 m halb, bei 1000 m zu 90 %). Auf → wächst der Grundwind
   230 → 420 (`windBei`), auf ↑ rücken die Reihen enger zusammen. ⚠ Bis zum

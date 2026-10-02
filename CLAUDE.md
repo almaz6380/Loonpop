@@ -233,6 +233,16 @@ Zwei Läufe ohne Ende, beide in `src/spiel/endlos.ts`:
   Anfang überlappen sie 70 px, ab 300 m nur noch 10.
 - Schwerer wird es bis 300 m: engere Lücken, kürzere Abstände, ab 100 m
   Pendelnadeln (↑), ab 150/200 m fallende Nadeln. Nie über die Physik.
+- **Immer schneller** über `tempo(meter)` = 1 − e^(−m/430): ohne Ende, aber mit
+  Obergrenze (bei 300 m halb, bei 1000 m zu 90 %). Auf → wächst der Grundwind
+  230 → 420 (`windBei`), auf ↑ das Bodenkriechen 12 → 70 px/s. ⚠ Bis zum
+  02.10.2026 hörte alles bei 300 m auf, und der Bot flog zehn Minuten weiter.
+  ⚠ Den erlaubten Sprung nach unten rechnet der Generator mit dem Wind **an
+  dieser Stelle**: Mehr Wind heißt weniger Zeit zum Sinken.
+- **Engstellen:** Alle 8–14 Abschnitte kommen 3 enge (60 % der üblichen Breite;
+  ↑ Lücken höchstens 30 px versetzt, → Korridor gerade), danach 2 ruhigere, und das
+  alles ohne bewegte Nadeln. Ihre Nadeln schimmern rot (`Nadel.warnung`), damit
+  man sie kommen sieht.
 - **50 px = 1 m.** Die Bestweite steht im Fortschritt (`endlos.hoch`/`.strecke`).
 - Der Seed jedes Laufs kommt aus der Uhr (`neuerSeed`). Die Uhr wählt nur den
   Seed, der Lauf hängt dann allein an ihm.

@@ -4,7 +4,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { abschnitt, endlosStueck, neueEndlosWelt, meter, nadelnIn, BODEN_ABSTAND, BODEN_SPITZE } from './endlos.ts';
+import {
+  abschnitt, endlosStueck, neueEndlosWelt, meter, nadelnIn, windBei, tempo, kriechen,
+  BODEN_ABSTAND, BODEN_SPITZE, PX_JE_METER,
+} from './endlos.ts';
 import { pruefeLevel } from './pruefung.ts';
 import { schritt, bodenHoehe } from './physik.ts';
 import { BALLON_RADIUS } from './welt.ts';
@@ -25,7 +28,11 @@ for (const art of ['hoch', 'strecke'] as EndlosArt[]) {
   test(`${art}: jedes Stueck besteht die Levelpruefung`, () => {
     // Anfang, Mitte und volle Schwierigkeit.
     for (const seed of SEEDS) {
-      for (const von of [0, 12, 30]) {
+      // Dazu ein Stueck, das eine Engstelle enthaelt, und eines weit hinten.
+      const e: Endlos = { art, seed, abschnitte: [] };
+      let eng = 1;
+      while (!abschnitt(e, eng).eng) eng++;
+      for (const von of [0, 12, 30, eng - 1, 120]) {
         const l = endlosStueck(art, seed, von, 6);
         assert.deepEqual(pruefeLevel(l).maengel, [], l.name);
       }
@@ -66,10 +73,12 @@ test('strecke: der Korridor springt nie weiter nach unten, als der Ballon sinken
   // Ohne Geblaese sinkt er hoechstens ~40 px/s (Falle 14).
   for (const seed of SEEDS) {
     const e: Endlos = { art: 'strecke', seed, abschnitte: [] };
-    for (let i = 1; i < 60; i++) {
+    for (let i = 1; i < 200; i++) {
       const a = abschnitt(e, i - 1);
       const b = abschnitt(e, i);
-      const sekunden = (b.lage - a.lage) / (230 / 1.5);
+      // Mit dem Wind an dieser Stelle — er waechst mit der Strecke.
+      const wind = windBei((a.lage - 200) / PX_JE_METER);
+      const sekunden = (b.lage - a.lage) / (wind / 1.5);
       assert.ok(b.mitte - a.mitte <= 40 * sekunden * 0.5 + 0.5, `Seed ${seed}, Saeule ${i}`);
     }
   }
@@ -102,3 +111,35 @@ test('der Nadelboden gehoert zu den Nadeln um den Ballon', () => {
   const n = nadelnIn(w, unten - 100, unten + 100, unten);
   assert.ok(n.some((x) => x.bis.y < x.von.y && Math.abs(x.bis.y - (unten - BODEN_SPITZE)) < 1));
 });
+
+test('es wird immer schneller, aber nie unbegrenzt', () => {
+  // ⚠ Bis zum 02.10.2026 blieb alles ab 300 m gleich.
+  let vorher = -Infinity;
+  for (let m = 0; m <= 5000; m += 50) {
+    const t = tempo(m);
+    assert.ok(t >= vorher && t < 1, `Tempo bei ${m} m`);
+    vorher = t;
+  }
+  assert.ok(windBei(1000) > windBei(300) + 40, 'der Wind waechst nach 300 m kaum noch');
+  assert.ok(windBei(1e6) <= 420 + 1e-9);
+  assert.ok(kriechen(1000) > kriechen(300) + 10, 'der Boden wird nach 300 m kaum schneller');
+  assert.ok(kriechen(1e6) <= 70 + 1e-9);
+});
+
+for (const art of ['hoch', 'strecke'] as EndlosArt[]) {
+  test(`${art}: immer wieder Engstellen, danach kurz Luft`, () => {
+    for (const seed of SEEDS) {
+      const e: Endlos = { art, seed, abschnitte: [] };
+      const teile = Array.from({ length: 80 }, (_, i) => abschnitt(e, i));
+      const engstellen = teile.filter((a, i) => a.eng && !teile[i - 1]?.eng).length;
+      assert.ok(engstellen >= 4, `Seed ${seed}: nur ${engstellen} Engstellen in 80 Abschnitten`);
+      teile.forEach((a, i) => {
+        if (!a.eng) return;
+        assert.ok(a.nadeln.every((n) => n.warnung), 'Engstelle ohne Warnfarbe');
+        assert.ok(a.nadeln.every((n) => !n.faellt && !n.pendel), 'bewegte Nadel in der Engstelle');
+        const davor = teile[i - 1];
+        if (davor && !davor.eng) assert.ok(a.weite < davor.weite, 'Engstelle nicht enger');
+      });
+    }
+  });
+}

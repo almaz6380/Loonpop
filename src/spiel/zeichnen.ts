@@ -566,9 +566,18 @@ export function zeichne(
       ctx.translate(n.von.x, n.von.y);
       ctx.rotate(Math.atan2(dy, dx) - Math.PI / 2);
       const breite = laenge * (nadelBild.naturalWidth / nadelBild.naturalHeight) * NADEL_BREITER;
-      ctx.shadowColor = 'rgba(10,20,45,0.35)';
-      ctx.shadowBlur = 6;
-      ctx.shadowOffsetY = 2;
+      // Engstellen im Endlos-Lauf schimmern rot — man soll sie kommen sehen.
+      if (nadel.warnung) {
+        // Zweimal mit rotem Schein: Einmal war am Handy kaum zu sehen.
+        ctx.shadowColor = 'rgba(255,60,90,1)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 0;
+        ctx.drawImage(nadelBild, -breite / 2, 0, breite, laenge);
+      } else {
+        ctx.shadowColor = 'rgba(10,20,45,0.35)';
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetY = 2;
+      }
       ctx.drawImage(nadelBild, -breite / 2, 0, breite, laenge);
       ctx.restore();
     } else {

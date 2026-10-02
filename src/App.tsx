@@ -11,22 +11,18 @@ import type { EndlosArt } from './spiel/typen.ts';
 
 const IDS = LEVEL.map((l) => l.id);
 
-/** Der Ballon im Menue — dasselbe Motiv wie im Spiel, damit es zusammenpasst. */
+/**
+ * Der Ballon im Menue — dasselbe Bild wie im Spiel, damit es zusammenpasst.
+ * Die Schnur ist gemalt, wie im Spiel auch.
+ */
 function MenueBallon() {
   return (
-    <svg viewBox="0 0 120 170" className="w-24 h-auto mx-auto drop-shadow-[0_10px_24px_rgba(0,0,0,0.35)]">
-      <defs>
-        <radialGradient id="haut" cx="35%" cy="30%" r="75%">
-          <stop offset="0%" stopColor="#ff8d9e" />
-          <stop offset="55%" stopColor="#f94d67" />
-          <stop offset="100%" stopColor="#c62d47" />
-        </radialGradient>
-      </defs>
-      <ellipse cx="60" cy="58" rx="46" ry="52" fill="url(#haut)" />
-      <path d="M52 108h16l-8 12z" fill="#c62d47" />
-      <ellipse cx="42" cy="38" rx="11" ry="16" fill="#fff" opacity=".45" transform="rotate(-22 42 38)" />
-      <path d="M60 120c12 14-12 20 0 30" stroke="#fff" strokeWidth="2.5" fill="none" opacity=".6" />
-    </svg>
+    <div className="w-24 mx-auto drop-shadow-[0_10px_24px_rgba(0,0,0,0.35)]">
+      <img src="/bilder/ballon.png" alt="" className="w-full h-auto" />
+      <svg viewBox="0 0 20 40" className="w-5 h-10 mx-auto -mt-1" aria-hidden="true">
+        <path d="M10 0c8 12-8 20 0 40" stroke="#fff" strokeWidth="2" fill="none" opacity=".6" />
+      </svg>
+    </div>
   );
 }
 

@@ -17,6 +17,13 @@ const NEIGUNG_JE_TEMPO = 0.0035;
 /** Wie weit der Knoten unter dem Rand der Haut sitzt (px). */
 export const KNOTEN = 8;
 
+/**
+ * Breite zu Hoehe des Ballonbilds (public/bilder/ballon.png), von der
+ * Oberkante bis zur Knotenspitze. Gemessen von scripts/bilder-freistellen.py.
+ * ⚠ Neues Bild → neu messen, sonst wird der Ballon verzerrt gezeichnet.
+ */
+export const BALLON_BILD_SEITEN = 0.7527;
+
 export type Ballonform = {
   /** Drehung im Uhrzeigersinn (rad). Positiv = Knoten schwingt nach links. */
   neigung: number;

@@ -15,20 +15,54 @@
 import type { Welt, Punkt } from './typen.ts';
 import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe } from './physik.ts';
 import { nadelnIn, meter } from './endlos.ts';
-import { ballonform, KNOTEN } from './ballonform.ts';
+import { ballonform, KNOTEN, BALLON_BILD_SEITEN } from './ballonform.ts';
+import { geblaeseMass, GEBLAESE_BILD } from './bildmasse.ts';
 
 /**
- * Das Nadelbild. Gezeichnete Striche sahen aus wie Streichhoelzer — einer
- * Nadel fehlten Verjuengung, Oehr und Metallglanz. Das Bild zeigt die Nadel
- * SENKRECHT MIT DER SPITZE NACH UNTEN; daraus folgt der Drehwinkel unten.
+ * Bilder, einmal geladen und dann wiederverwendet. Liefert `null`, solange
+ * ein Bild noch laedt — dann zeichnet jede Stelle ihren gemalten Rueckfall.
+ * ⚠ Ohne Rueckfall waere das Level in den ersten Bildern leer, und das sieht
+ * aus wie ein Fehler (CLAUDE.md).
  *
- * Herkunft: mit Gemini erzeugt, freigestellt von scripts/nadel-freistellen.py.
+ * Herkunft: mit Gemini erzeugt. Die Nadel stellt scripts/nadel-freistellen.py
+ * frei, alles unter /bilder/ scripts/bilder-freistellen.py.
  */
-const nadelBild = new Image();
-nadelBild.src = '/nadel.png';
+const bilder = new Map<string, HTMLImageElement>();
+function bild(pfad: string): HTMLImageElement | null {
+  let b = bilder.get(pfad);
+  if (!b) {
+    b = new Image();
+    b.src = pfad;
+    bilder.set(pfad, b);
+  }
+  return b.complete && b.naturalWidth > 0 ? b : null;
+}
 
-/** Erst wenn das Bild wirklich da ist — sonst bliebe das Level kurz leer. */
-const nadelBereit = () => nadelBild.complete && nadelBild.naturalWidth > 0;
+/**
+ * Eine Bildkachel ueber den sichtbaren Ausschnitt wiederholen, jede zweite
+ * gespiegelt. ⚠ Gemini liefert "nahtlose" Kacheln nicht wirklich nahtlos;
+ * gespiegelt passen die Raender immer. Ein Ueberblenden ergab doppelte Kanten.
+ */
+function kacheln(
+  ctx: CanvasRenderingContext2D, b: HTMLImageElement,
+  von: number, bis: number, versatz: number, y: number, hoehe: number,
+) {
+  const breite = hoehe * (b.naturalWidth / b.naturalHeight);
+  const erste = Math.floor((von - versatz) / breite);
+  const letzte = Math.ceil((bis - versatz) / breite);
+  for (let n = erste; n <= letzte; n++) {
+    const x = versatz + n * breite;
+    if (n % 2 === 0) {
+      ctx.drawImage(b, x, y, breite + 1, hoehe);
+    } else {
+      ctx.save();
+      ctx.translate(x + breite, y);
+      ctx.scale(-1, 1);
+      ctx.drawImage(b, -1, 0, breite + 1, hoehe);
+      ctx.restore();
+    }
+  }
+}
 
 /**
  * Wie viel breiter als massstabsgetreu die Nadel gezeichnet wird.
@@ -139,13 +173,19 @@ function hintergrund(
   const sichtbar = sicht.breite / sicht.skala;
 
   // Der Himmel selbst steht fest — er fuellt immer den ganzen Ausschnitt.
-  const himmel = ctx.createLinearGradient(0, oben, 0, oben + hoehe);
-  himmel.addColorStop(0, '#152364');
-  himmel.addColorStop(0.35, '#2f5cb4');
-  himmel.addColorStop(0.7, '#5f9ddb');
-  himmel.addColorStop(1, '#bfe2f2');
-  ctx.fillStyle = himmel;
-  ctx.fillRect(sicht.kameraX - 20, oben, sichtbar + 40, hoehe);
+  // Das Bild bringt seine Sonne mit; nur der gemalte Rueckfall braucht eine.
+  const himmelBild = bild('/bilder/himmel.jpg');
+  if (himmelBild) {
+    ctx.drawImage(himmelBild, sicht.kameraX - 20, oben, sichtbar + 40, hoehe);
+  } else {
+    const himmel = ctx.createLinearGradient(0, oben, 0, oben + hoehe);
+    himmel.addColorStop(0, '#152364');
+    himmel.addColorStop(0.35, '#2f5cb4');
+    himmel.addColorStop(0.7, '#5f9ddb');
+    himmel.addColorStop(1, '#bfe2f2');
+    ctx.fillStyle = himmel;
+    ctx.fillRect(sicht.kameraX - 20, oben, sichtbar + 40, hoehe);
+  }
 
   // Endlos nach oben wird der Himmel mit der Hoehe dunkler — man sieht, dass
   // man weit gekommen ist, auch ohne auf die Meter zu schauen.
@@ -156,17 +196,30 @@ function hintergrund(
   }
 
   // Sonne, tief am Horizont — gibt dem Himmel eine Richtung.
-  const sx = sicht.kameraX + sichtbar * 0.76;
-  const sy = oben + hoehe * 0.42;
-  const sonne = ctx.createRadialGradient(sx, sy, 10, sx, sy, hoehe * 0.42);
-  sonne.addColorStop(0, 'rgba(255,240,200,0.55)');
-  sonne.addColorStop(0.25, 'rgba(255,225,160,0.18)');
-  sonne.addColorStop(1, 'rgba(255,220,150,0)');
-  ctx.fillStyle = sonne;
-  ctx.fillRect(sicht.kameraX - 20, oben, sichtbar + 40, hoehe);
+  if (!himmelBild) {
+    const sx = sicht.kameraX + sichtbar * 0.76;
+    const sy = oben + hoehe * 0.42;
+    const sonne = ctx.createRadialGradient(sx, sy, 10, sx, sy, hoehe * 0.42);
+    sonne.addColorStop(0, 'rgba(255,240,200,0.55)');
+    sonne.addColorStop(0.25, 'rgba(255,225,160,0.18)');
+    sonne.addColorStop(1, 'rgba(255,220,150,0)');
+    ctx.fillStyle = sonne;
+    ctx.fillRect(sicht.kameraX - 20, oben, sichtbar + 40, hoehe);
+  }
 
   // --- Wolken, drei Schichten ---------------------------------------------
-  const wolke = (x: number, y: number, gr: number, deckung: number) => {
+  const wolke = (x: number, y: number, gr: number, deckung: number, n: number) => {
+    // Eine der vier Wolken aus dem Bild — welche, entscheidet streu, nicht
+    // der Zufall. Ferne Schichten blasser, wie beim gemalten Rueckfall.
+    const b = bild(`/bilder/wolke${1 + Math.floor(streu(n * 2.3 + gr) * 4) % 4}.png`);
+    if (b) {
+      const breite = gr * 3.6;
+      const hoch = breite * (b.naturalHeight / b.naturalWidth);
+      ctx.globalAlpha = Math.min(1, deckung * 3.6);
+      ctx.drawImage(b, x - breite / 2, y - hoch / 2, breite, hoch);
+      ctx.globalAlpha = 1;
+      return;
+    }
     ctx.fillStyle = `rgba(255,255,255,${deckung})`;
     for (const [dx, dy, f] of [[-1, 0.15, 0.62], [-0.35, -0.2, 0.85], [0.4, -0.1, 0.72], [1, 0.2, 0.52]]) {
       ctx.beginPath();
@@ -187,7 +240,7 @@ function hintergrund(
       for (let n = von; n <= bis; n++) {
         const x = n * abstand + versatz;
         const y = hoehe * (0.06 + streu(n * 3.7 + tiefe) * 0.32);
-        wolke(x, y, gr * (0.7 + streu(n + tiefe * 9) * 0.6), deckung);
+        wolke(x, y, gr * (0.7 + streu(n + tiefe * 9) * 0.6), deckung, n);
       }
       continue;
     }
@@ -203,12 +256,23 @@ function hintergrund(
         if (streu(n * 7.1 + m * 3.3 + tiefe) < 0.35) continue;
         const x = n * abstand + versatz + (streu(m * 1.7 + n) - 0.5) * abstand * 0.6;
         const y = m * abstandY + versatzY + streu(n * 3.7 + m + tiefe) * abstandY * 0.6;
-        wolke(x, y, gr * (0.7 + streu(n + m * 5 + tiefe * 9) * 0.6), deckung);
+        wolke(x, y, gr * (0.7 + streu(n + m * 5 + tiefe * 9) * 0.6), deckung, n * 31 + m);
       }
     }
   }
 
   // --- Huegel, zwei Schichten ---------------------------------------------
+  // Mit Bild: ferne Huegel wandern auf dem Schirm mit einem Viertel, nahe mit
+  // der Haelfte des Tempos — wie die gemalten Schichten.
+  const fern = bild('/bilder/huegel-fern.png');
+  const nah = bild('/bilder/huegel-nah.png');
+  if (fern && nah) {
+    const von = sicht.kameraX - 40;
+    const bis = sicht.kameraX + sichtbar + 40;
+    kacheln(ctx, fern, von, bis, sicht.kameraX * 0.75, bodenY - 250, 270);
+    kacheln(ctx, nah, von, bis, sicht.kameraX * 0.5, bodenY - 170, 190);
+    return;
+  }
   for (const [tiefe, hoehenAnteil, farbe] of [[0.35, 0.16, '#5e86a8'], [0.6, 0.1, '#4a7a6a']] as const) {
     const versatz = sicht.kameraX * (1 - tiefe);
     ctx.fillStyle = farbe;
@@ -239,6 +303,16 @@ function wiese(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: 
   gras.addColorStop(1, '#3d6e30');
   ctx.fillStyle = gras;
   ctx.fillRect(von, bodenY, bis - von, hoehe - bodenY);
+
+  // Mit Bild: ein Streifen Wiese, die Grasbueschel ragen ueber bodenY hinaus.
+  // Darunter bleibt der Verlauf sichtbar, wo das Bild nicht hinreicht.
+  const wiesenBild = bild('/bilder/wiese.png');
+  if (wiesenBild) {
+    ctx.fillStyle = '#3e6a3a';
+    ctx.fillRect(von, bodenY + 60, bis - von, hoehe - bodenY - 60);
+    kacheln(ctx, wiesenBild, von, bis, 0, bodenY - 46, 136);
+    return;
+  }
 
   // ⚠ Nur den sichtbaren Ausschnitt bestuecken. Ueber eine 3500 px lange
   // Strecke waeren es sonst hunderte Halme je Bild, von denen 85 % niemand
@@ -276,6 +350,17 @@ function zeichneGeblaese(ctx: CanvasRenderingContext2D, welt: Welt, gy: number, 
   ctx.beginPath();
   ctx.ellipse(gx, bodenY + 62, 46, 10, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // Mit Bild: Die Trichteroeffnung sitzt genau an der Duese, dort beginnt der
+  // gezeichnete und der gerechnete Strahl. Beim Blasen zittert es ein wenig —
+  // das gemalte Laufrad, das sich dreht, gibt es im Bild nicht.
+  const geblaeseBild = bild('/bilder/geblaese.png');
+  if (geblaeseBild) {
+    const { breite, hoehe } = geblaeseMass();
+    const zittern = Math.sin(welt.zeit * 70) * 0.8 * st;
+    ctx.drawImage(geblaeseBild, gx - GEBLAESE_BILD.oeffnungMitte * breite + zittern, gy - 3, breite, hoehe);
+    return;
+  }
 
   ctx.save();
   ctx.translate(gx, gy);
@@ -366,6 +451,16 @@ function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bo
   ctx.translate(pos.x, pos.y);
   ctx.rotate(form.neigung);
   ctx.scale(1 / form.dehnung, form.dehnung);
+  // Das Bild reicht von der Oberkante (−r) bis zur Knotenspitze (r + KNOTEN) —
+  // genau dort, wo die Schnur ansetzt und wo der gemalte Ballon lag.
+  const ballonBild = bild('/bilder/ballon.png');
+  if (ballonBild) {
+    const hoch = 2 * r + KNOTEN;
+    const breit = hoch * BALLON_BILD_SEITEN;
+    ctx.drawImage(ballonBild, -breit / 2, -r, breit, hoch);
+    ctx.restore();
+    return;
+  }
   const haut = ctx.createRadialGradient(-r * 0.32, -r * 0.38, r * 0.12, 0, 0, r * 1.15);
   haut.addColorStop(0, '#ff8d9e');
   haut.addColorStop(0.55, '#f94d67');
@@ -447,6 +542,11 @@ export function zeichne(
   ctx.translate(sicht.randX, sicht.randY);
   ctx.scale(sicht.skala, sicht.skala);
   ctx.translate(-sicht.kameraX, -kameraY);
+  // Nichts unter den Boden zeichnen: Das Geblaesebild reicht ein Stueck unter
+  // den Rand, und in den Hoch-Leveln liegt dort der dunkle Rahmen.
+  ctx.beginPath();
+  ctx.rect(sicht.kameraX - 50, kameraY - 5000, sichtbar + 100, welt.boden - kameraY + 5000);
+  ctx.clip();
 
   hintergrund(ctx, welt, sicht, bodenY, oben, sichtHoehe);
 
@@ -534,8 +634,8 @@ export function zeichne(
   // Im Endlos-Lauf nur die im Bild — es gibt unendlich viele.
   const nadeln = !welt.endlos ? level.nadeln
     : endlosHoch
-      ? nadelnIn(welt, oben - 100, oben + sichtHoehe + 100, bodenY)
-      : nadelnIn(welt, sicht.kameraX - 100, sicht.kameraX + sichtbar + 100, bodenY);
+      ? nadelnIn(welt, oben - 100, oben + sichtHoehe + 100)
+      : nadelnIn(welt, sicht.kameraX - 100, sicht.kameraX + sichtbar + 100);
   for (const nadel of nadeln) {
     const n = nadelJetzt(nadel, welt.zeit, hoehe);
     // ⚠ Fallende Nadeln unterhalb der Wiese nicht mehr zeichnen — sonst sieht
@@ -560,7 +660,8 @@ export function zeichne(
     const dy = n.bis.y - n.von.y;
     const laenge = Math.hypot(dx, dy);
 
-    if (nadelBereit() && laenge > 1) {
+    const nadelBild = bild('/nadel.png');
+    if (nadelBild && laenge > 1) {
       // Das Bild zeigt nach unten (+y), also entspricht es dem Winkel π/2.
       ctx.save();
       ctx.translate(n.von.x, n.von.y);

@@ -169,4 +169,6 @@ export type Endlos = {
    * und dann aufgehoben werden, ohne dass der Lauf vom Zeitpunkt abhaengt.
    */
   abschnitte: Abschnitt[];
+  /** Hoechster Punkt, den der Ballon erreicht hat (kleinstes y) — fuer die Meter. */
+  hoechste: number;
 };

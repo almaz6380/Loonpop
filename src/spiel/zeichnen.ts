@@ -634,8 +634,8 @@ export function zeichne(
   // Im Endlos-Lauf nur die im Bild — es gibt unendlich viele.
   const nadeln = !welt.endlos ? level.nadeln
     : endlosHoch
-      ? nadelnIn(welt, oben - 100, oben + sichtHoehe + 100, bodenY)
-      : nadelnIn(welt, sicht.kameraX - 100, sicht.kameraX + sichtbar + 100, bodenY);
+      ? nadelnIn(welt, oben - 100, oben + sichtHoehe + 100)
+      : nadelnIn(welt, sicht.kameraX - 100, sicht.kameraX + sichtbar + 100);
   for (const nadel of nadeln) {
     const n = nadelJetzt(nadel, welt.zeit, hoehe);
     // ⚠ Fallende Nadeln unterhalb der Wiese nicht mehr zeichnen — sonst sieht

@@ -8,6 +8,18 @@
 import { DT, schritt } from './physik.ts';
 import type { Welt } from './typen.ts';
 
+/**
+ * Wie schnell das Spiel ablaeuft: 1,4 Spielsekunden je echter Sekunde.
+ *
+ * ⚠ Josef fand den Ballon am 02.10.2026 zu traege und alles zu langsam. Statt
+ * Schwerkraft, Blaskraft und Daempfung einzeln zu verdrehen, laeuft dieselbe
+ * Physik schneller ab. So bleibt jede Pruefung gueltig — Wegsuche, Bot,
+ * Zeitfenster der bewegten Nadeln rechnen in Spielzeit — und das Spiel
+ * fuehlt sich trotzdem in allem flotter an. Regel 2 bleibt: Es gibt nur
+ * eine Physik. Die angezeigte Zeit ist Spielzeit.
+ */
+export const SPIELTEMPO = 1.4;
+
 export type Schleife = { stopp: () => void };
 
 /**
@@ -29,11 +41,11 @@ export function starteSchleife(
   // Tab-Wechsel mit 30 Sekunden Rueckstand zurueck, duerfen nicht 3600
   // Physikschritte in einem Bild nachgeholt werden — das friert das Geraet ein
   // und der Ballon steht ploetzlich woanders. Lieber Zeit verwerfen.
-  const MAX_SCHRITTE = 5;
+  const MAX_SCHRITTE = 8;
 
   const bild = (jetzt: number) => {
     if (!laeuft) return;
-    akku += Math.min((jetzt - zuletzt) / 1000, MAX_SCHRITTE * DT);
+    akku += Math.min(((jetzt - zuletzt) / 1000) * SPIELTEMPO, MAX_SCHRITTE * DT);
     zuletzt = jetzt;
 
     let n = 0;

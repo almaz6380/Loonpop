@@ -34,11 +34,10 @@ const STRECKE_BODEN = HOEHE - 96 - 12;
 
 /**
  * Wie weit der Boden hoechstens unter dem Ballon bleibt (px). So weit traegt
- * der Strahl noch gut; wer tiefer faellt, landet auf den Nadeln.
+ * der Strahl noch gut. Auf dem Boden steht das Geblaese; er wandert mit nach
+ * oben, damit es den Ballon immer erreicht.
  */
 export const BODEN_ABSTAND = 900;
-/** Wie schnell der Boden von selbst steigt (px/s), am Anfang und ganz am Ende. */
-const KRIECHEN = { von: 12, bis: 70 };
 
 const mische = (a: number, b: number, t: number) => a + (b - a) * t;
 const schwere = (meter: number) => Math.max(0, Math.min(1, meter / VOLL_SCHWER));
@@ -247,7 +246,7 @@ export function endlosLevel(art: EndlosArt): Level {
 
 export function neueEndlosWelt(art: EndlosArt, seed: number): Welt {
   const welt = neueWelt(endlosLevel(art));
-  welt.endlos = { art, seed: seed >>> 0, abschnitte: [] };
+  welt.endlos = { art, seed: seed >>> 0, abschnitte: [], hoechste: welt.ballon.pos.y };
   return welt;
 }
 
@@ -263,10 +262,9 @@ export function abschnitt(e: Endlos, i: number): Abschnitt {
 
 /**
  * Alle Nadeln, die zwischen `von` und `bis` liegen koennen — y bei hoch,
- * x bei strecke. Bei hoch gehoert der Nadelboden dazu: eine Reihe mit den
- * Spitzen nach oben, knapp ueber der tiefsten Ballonhoehe `bodenY`.
+ * x bei strecke.
  */
-export function nadelnIn(welt: Welt, von: number, bis: number, bodenY: number): Nadel[] {
+export function nadelnIn(welt: Welt, von: number, bis: number): Nadel[] {
   const e = welt.endlos!;
   const raus: Nadel[] = [];
   if (e.art === 'hoch') {
@@ -276,7 +274,6 @@ export function nadelnIn(welt: Welt, von: number, bis: number, bodenY: number): 
       if (a.lage + 260 < von - 300) break;
       if (a.lage - 300 <= bis) raus.push(...a.nadeln);
     }
-    raus.push(...bodenNadeln(bodenY));
   } else {
     for (let i = 0; ; i++) {
       const a = abschnitt(e, i);
@@ -287,25 +284,6 @@ export function nadelnIn(welt: Welt, von: number, bis: number, bodenY: number): 
   return raus;
 }
 
-/** Wie weit die Spitzen des Nadelbodens ueber das Gras ragen (px). */
-export const BODEN_SPITZE = 36;
-
-/**
- * Der Nadelboden: Spitzen nach oben, so hoch, dass sie den Ballon erwischen,
- * bevor er auf dem Gras aufsetzt.
- * ⚠ Am 02.10.2026 ragten sie nur 6 px aus dem Gras. Man sah sie kaum und
- * platzte scheinbar am Gras. Was toetet, muss man sehen.
- */
-export function bodenNadeln(bodenY: number): Nadel[] {
-  return reihe(0, 0, BREITE).map((n) => ({
-    von: { x: n.von.x, y: bodenY + 24 },
-    bis: { x: n.von.x, y: bodenY - BODEN_SPITZE },
-  }));
-}
-
-/** Wie schnell der Boden gerade von selbst steigt (px/s). */
-export const kriechen = (meter: number) => mische(KRIECHEN.von, KRIECHEN.bis, tempo(meter));
-
 /** Der Grundwind, der gerade wirkt — auf Strecken waechst er mit (siehe windBei). */
 export function endlosWind(welt: Welt): { x: number; y: number } | undefined {
   if (welt.endlos?.art !== 'strecke') return welt.level.grundwind;
@@ -314,22 +292,26 @@ export function endlosWind(welt: Welt): { x: number; y: number } | undefined {
 
 /**
  * Den Boden nachziehen — vor jedem Physikschritt. Er folgt dem Ballon nach
- * oben, sinkt nie, und kriecht dazu von selbst. ⚠ Das rechnet die PHYSIK,
- * nicht die Kamera (Falle 10): Sonst liefe derselbe Lauf auf zwei
- * Bildschirmen verschieden.
+ * oben und sinkt nie. ⚠ Das rechnet die PHYSIK, nicht die Kamera (Falle 10):
+ * Sonst liefe derselbe Lauf auf zwei Bildschirmen verschieden.
+ *
+ * ⚠ Bis zum 02.10.2026 standen auf dem Boden Nadeln, und er kroch von selbst
+ * hoch. Josef wollte das nicht: Gefaehrlich sind jetzt nur die Nadelreihen.
  */
-export function bodenNachziehen(welt: Welt, dt: number): void {
+export function bodenNachziehen(welt: Welt): void {
   if (welt.endlos?.art !== 'hoch') return;
-  const folgt = welt.ballon.pos.y + BODEN_ABSTAND;
-  welt.boden = Math.min(welt.boden - kriechen(meter(welt)) * dt, folgt, welt.boden);
+  welt.endlos.hoechste = Math.min(welt.endlos.hoechste, welt.ballon.pos.y);
+  welt.boden = Math.min(welt.boden, welt.ballon.pos.y + BODEN_ABSTAND);
 }
 
 /** Wie weit der Lauf gekommen ist (m). */
 export function meter(welt: Welt): number {
   const e = welt.endlos;
   if (!e) return 0;
+  // ↑ zaehlt die groesste erreichte Hoehe: Der Ballon darf wieder sinken,
+  // die Meter sollen dann nicht rueckwaerts laufen.
   const strecke = e.art === 'hoch'
-    ? welt.level.start.y - welt.ballon.pos.y
+    ? welt.level.start.y - Math.min(welt.ballon.pos.y, e.hoechste)
     : welt.ballon.pos.x - welt.level.start.x;
   return Math.max(0, strecke / PX_JE_METER);
 }
@@ -341,7 +323,7 @@ export function meter(welt: Welt): number {
  * Stuecke baut.
  */
 export function endlosStueck(art: EndlosArt, seed: number, von: number, anzahl: number): Level {
-  const e: Endlos = { art, seed: seed >>> 0, abschnitte: [] };
+  const e: Endlos = { art, seed: seed >>> 0, abschnitte: [], hoechste: 0 };
   const teile = Array.from({ length: anzahl }, (_, k) => abschnitt(e, von + k));
   const davor = von > 0 ? abschnitt(e, von - 1) : undefined;
   const basis = endlosLevel(art);

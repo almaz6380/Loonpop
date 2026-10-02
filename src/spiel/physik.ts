@@ -183,7 +183,7 @@ export function schritt(welt: Welt): void {
 
   welt.zeit += DT;
   // Im Endlos-Lauf nach oben steigt der Boden mit (siehe endlos.ts).
-  bodenNachziehen(welt, DT);
+  bodenNachziehen(welt);
 
   // --- Geblaese nachfuehren ----------------------------------------------
   // Schnell an, langsam aus: Druecken soll sich unmittelbar anfuehlen,
@@ -253,8 +253,8 @@ export function schritt(welt: Welt): void {
   // Im Endlos-Lauf nur die Nadeln in der Naehe — es sind sonst unendlich viele.
   const nadeln = !welt.endlos ? level.nadeln
     : welt.endlos.art === 'hoch'
-      ? nadelnIn(welt, ballon.pos.y - 200, ballon.pos.y + 200, boden)
-      : nadelnIn(welt, ballon.pos.x - 200, ballon.pos.x + 200, boden);
+      ? nadelnIn(welt, ballon.pos.y - 200, ballon.pos.y + 200)
+      : nadelnIn(welt, ballon.pos.x - 200, ballon.pos.x + 200);
   for (const nadel of nadeln) {
     const n = nadelJetzt(nadel, welt.zeit, level.groesse.hoehe);
     if (streckeTrifftNadel(ballon.vorher, ballon.pos, r, n.von, n.bis)) {

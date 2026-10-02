@@ -100,7 +100,14 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
           sichtRef.current.kameraX += (ziel - sichtRef.current.kameraX) * 0.12;
         }
         // Endlos nach oben haengt die Kamera am Boden, den die Physik fuehrt.
-        if (endlos === 'hoch') sichtRef.current.kameraY = kameraYFuer(sichtRef.current, w.boden);
+        // Weich nachgezogen wie auf Strecken: Der Ballon wird zwischen zwei
+        // Physikschritten gezeichnet, die Kamera soll nicht dazwischen springen.
+        if (endlos === 'hoch') {
+          const ziel = kameraYFuer(sichtRef.current, w.boden);
+          const jetzt = sichtRef.current.kameraY;
+          sichtRef.current.kameraY = jetzt === undefined || Math.abs(ziel - jetzt) > 600
+            ? ziel : jetzt + (ziel - jetzt) * 0.25;
+        }
         // Geblaese der Kamera nachfuehren — jedes Bild, nicht nur wenn sich der
         // Finger bewegt.
         if (fingerRef.current !== null) {

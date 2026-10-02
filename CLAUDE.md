@@ -33,6 +33,11 @@ das war ein anderes Spiel.
 **2. Tempo kommt über den Level, nie über die Physik.** Schneller wird ein Level
 durch engere Gassen, stärkeren Wind (`tempo.windKraft`) und Zeitlimits. Ein
 zweiter Physik-Modus wären zwei Spiele, die sich beide nur halb gut anfühlen.
+**Spieltempo:** Die Physik läuft mit `SPIELTEMPO` = 1,4 Spielsekunden je
+echter Sekunde (`schleife.ts`). ⚠ Josef fand am 02.10.2026 den Ballon zu träge
+und alles zu langsam. Statt einzelne Kräfte zu verdrehen, läuft dieselbe Physik
+schneller ab: Wegsuche, Bot und Zeitfenster rechnen in Spielzeit und bleiben
+gültig. Angezeigte Zeiten und Zeitlimits sind Spielzeit.
 ⚠ Nachmessen statt raten: `npm run pruefen` (`steigflug()` in `src/spiel/pruefung.ts`)
 simuliert einen Steigflug ohne Browser und sagt, wie viele Pixel der Ballon in der ersten Sekunde steigt.
 Richtwert **rund 150 px** — bei den ersten Werten waren es 504, und der Ballon
@@ -245,7 +250,7 @@ Zwei Läufe ohne Ende, beide in `src/spiel/endlos.ts`:
 
 | | |
 |---|---|
-| **↑ Immer weiter rauf** | Nadelreihen übereinander. Das Gebläse steht auf einem **Nadelboden**, der dem Ballon folgt (höchstens `BODEN_ABSTAND` = 900 px darunter), nie sinkt und dazu von selbst kriecht (12 → 40 px/s). Wer fällt oder trödelt, platzt auf ihm. |
+| **↑ Immer weiter rauf** | Nadelreihen übereinander. Das Gebläse steht auf einem Boden, der dem Ballon folgt (höchstens `BODEN_ABSTAND` = 900 px darunter) und nie sinkt. ⚠ Bis zum 02.10.2026 standen dort Nadeln, und er kroch von selbst hoch. Josef wollte das nicht: Gefährlich sind nur die Nadelreihen. |
 | **→ Immer weiter nach rechts** | Säulen im Wechsel von unten und oben, Grundwind 230. |
 
 - ⚠ **Abschnitte statt eines wachsenden Arrays.** Abschnitt *i* hängt nur von
@@ -262,7 +267,7 @@ Zwei Läufe ohne Ende, beide in `src/spiel/endlos.ts`:
   Pendelnadeln (↑), ab 150/200 m fallende Nadeln. Nie über die Physik.
 - **Immer schneller** über `tempo(meter)` = 1 − e^(−m/430): ohne Ende, aber mit
   Obergrenze (bei 300 m halb, bei 1000 m zu 90 %). Auf → wächst der Grundwind
-  230 → 420 (`windBei`), auf ↑ das Bodenkriechen 12 → 70 px/s. ⚠ Bis zum
+  230 → 420 (`windBei`), auf ↑ rücken die Reihen enger zusammen. ⚠ Bis zum
   02.10.2026 hörte alles bei 300 m auf, und der Bot flog zehn Minuten weiter.
   ⚠ Den erlaubten Sprung nach unten rechnet der Generator mit dem Wind **an
   dieser Stelle**: Mehr Wind heißt weniger Zeit zum Sinken.
@@ -275,8 +280,6 @@ Zwei Läufe ohne Ende, beide in `src/spiel/endlos.ts`:
   Seed, der Lauf hängt dann allein an ihm.
 - Prüfen: `npm test` steckt Stücke aus 16 Seeds in dieselbe Levelprüfung
   (`endlosStueck`), `npm run bot -- endlos` spielt 12 Seeds je Richtung.
-- ⚠ Der Nadelboden ragte zuerst nur 6 px aus dem Gras (02.10.2026) — man
-  platzte scheinbar am Gras. Was tötet, muss man sehen: 36 px.
 
 ## Fortschritt
 

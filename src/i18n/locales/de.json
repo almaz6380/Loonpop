@@ -5,7 +5,9 @@
     "level": "Level {{n}}",
     "hinweis": "Schiebe das Gebläse seitwärts, halte zum Blasen. Versetzt stehen lenkt den Ballon zur Seite.",
     "hoch": "hoch",
-    "strecke": "Strecke"
+    "strecke": "Strecke",
+    "gesperrt": "gesperrt",
+    "bestzeit": "{{s}} s"
   },
   "spiel": {
     "zurueck": "Zurück",
@@ -19,6 +21,9 @@
       "geschafft": "Angekommen!",
       "geplatzt": "Geplatzt",
       "zeit-aus": "Zeit abgelaufen"
-    }
+    },
+    "weiter": "Weiter",
+    "neueBestzeit": "Neue Bestzeit!",
+    "bestzeit": "Bestzeit: {{s}} s"
   }
 }

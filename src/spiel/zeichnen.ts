@@ -14,6 +14,7 @@
 
 import type { Welt, Punkt } from './typen.ts';
 import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe } from './physik.ts';
+import { ballonform, KNOTEN } from './ballonform.ts';
 
 /**
  * Das Nadelbild. Gezeichnete Striche sahen aus wie Streichhoelzer — einer
@@ -281,7 +282,7 @@ function zeichneGeblaese(ctx: CanvasRenderingContext2D, welt: Welt, gy: number, 
 function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bodenY: number) {
   const { ballon } = welt;
   const r = ballon.radius;
-  const v = Math.hypot(ballon.geschw.x, ballon.geschw.y);
+  const form = ballonform(pos, ballon.geschw, r);
 
   // Schatten auf der Wiese: kleiner und blasser, je hoeher der Ballon steht.
   const hoeheUeber = Math.max(0, bodenY - pos.y);
@@ -297,22 +298,20 @@ function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bo
   ctx.strokeStyle = 'rgba(255,255,255,0.6)';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(pos.x, pos.y + r);
+  // ⚠ Am KNOTEN beginnen, nicht fest unter der Mitte — sonst passt die
+  // Schnur nicht mehr zum Ballon, sobald er sich neigt (siehe ballonform.ts).
+  const k = form.knoten;
+  ctx.moveTo(k.x, k.y);
   ctx.quadraticCurveTo(
-    pos.x - ballon.geschw.x * 0.03, pos.y + r + 20,
-    pos.x - ballon.geschw.x * 0.05, pos.y + r + 38,
+    k.x - ballon.geschw.x * 0.03, k.y + 14,
+    k.x - ballon.geschw.x * 0.05, k.y + 30,
   );
   ctx.stroke();
 
-  // In Flugrichtung leicht gestreckt. Ein starrer Kreis wirkt tot; zu viel
-  // Verformung sieht nach Gummiball aus. 12 % bei vollem Tempo reichen.
   ctx.save();
   ctx.translate(pos.x, pos.y);
-  if (v > 8) {
-    ctx.rotate(Math.atan2(ballon.geschw.y, ballon.geschw.x) + Math.PI / 2);
-    const dehnung = 1 + Math.min(0.12, v / 3200);
-    ctx.scale(1 / dehnung, dehnung);
-  }
+  ctx.rotate(form.neigung);
+  ctx.scale(1 / form.dehnung, form.dehnung);
   const haut = ctx.createRadialGradient(-r * 0.32, -r * 0.38, r * 0.12, 0, 0, r * 1.15);
   haut.addColorStop(0, '#ff8d9e');
   haut.addColorStop(0.55, '#f94d67');
@@ -324,7 +323,7 @@ function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bo
   ctx.beginPath();
   ctx.moveTo(-5, r - 1);
   ctx.lineTo(5, r - 1);
-  ctx.lineTo(0, r + 8);
+  ctx.lineTo(0, r + KNOTEN);
   ctx.closePath();
   ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,0.5)';
@@ -421,13 +420,20 @@ export function zeichne(
     ctx.fillRect(b.x, b.y, b.breite, b.hoehe);
     // Statt eines Pfeils: Teilchen, die in Kraftrichtung wandern. Man sieht
     // sofort, wohin es einen zieht.
-    for (let i = 0; i < 9; i++) {
-      const p = ((welt.zeit * 0.55 + i / 9) % 1);
-      const x = b.x + (0.12 + streu(i) * 0.76) * b.breite + (z.kraft.x / d) * p * 40;
-      const y = b.y + b.hoehe - p * b.hoehe;
+    // ⚠ Bis zum 01.10.2026 stiegen sie immer nach oben — bei Seiten- oder
+    // Fallwind zeigte das Bild dann das Gegenteil dessen, was gerechnet wird.
+    const ux = z.kraft.x / d;
+    const uy = z.kraft.y / d;
+    const weg = Math.abs(ux) * b.breite + Math.abs(uy) * b.hoehe;
+    const umlauf = (v: number, von: number, l: number) => von + ((((v - von) % l) + l) % l);
+    const anzahl = Math.max(9, Math.round((b.breite * b.hoehe) / 22000));
+    for (let i = 0; i < anzahl; i++) {
+      const p = ((welt.zeit * 0.55 + i / anzahl) % 1);
+      const x = umlauf(b.x + (0.06 + streu(i) * 0.88) * b.breite + ux * p * weg, b.x, b.breite);
+      const y = umlauf(b.y + (0.06 + streu(i + 31) * 0.88) * b.hoehe + uy * p * weg, b.y, b.hoehe);
       ctx.fillStyle = `rgba(226,246,255,${0.5 * Math.sin(p * Math.PI)})`;
       ctx.beginPath();
-      ctx.ellipse(x, y, 2.6, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, y, 2.6, 7, Math.atan2(uy, ux) - Math.PI / 2, 0, Math.PI * 2);
       ctx.fill();
     }
   }

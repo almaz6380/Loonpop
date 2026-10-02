@@ -5,7 +5,9 @@
     "level": "Level {{n}}",
     "hinweis": "Slide the blower sideways, hold to blow. Standing off-centre pushes the balloon sideways.",
     "hoch": "up",
-    "strecke": "course"
+    "strecke": "course",
+    "gesperrt": "locked",
+    "bestzeit": "{{s}} s"
   },
   "spiel": {
     "zurueck": "Back",
@@ -19,6 +21,9 @@
       "geschafft": "Arrived!",
       "geplatzt": "Popped",
       "zeit-aus": "Out of time"
-    }
+    },
+    "weiter": "Next",
+    "neueBestzeit": "New best time!",
+    "bestzeit": "Best: {{s}} s"
   }
 }

@@ -7,7 +7,7 @@ unteren Rand, das den Ballon nach oben bläst. **Nadeln** lassen ihn platzen.
 Die sechste App von Josef.
 
 **Repository:** https://github.com/almaz6380/loonpop (privat)
-**Stand:** M1 — spielbar, drei Level. Siehe README für die Reihenfolge bis zum Store.
+**Stand:** M2 in Arbeit — zwölf Level und Fortschritt auf dem Gerät; es fehlt der Endlos-Modus. Siehe README für die Reihenfolge bis zum Store.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
 Löschen ohne ausdrückliches „ja" im Chat.
 **Testversion im Browser:** https://loonpop.almaz6380.workers.dev (seit 01.10.2026,
@@ -33,8 +33,8 @@ das war ein anderes Spiel.
 **2. Tempo kommt über den Level, nie über die Physik.** Schneller wird ein Level
 durch engere Gassen, stärkeren Wind (`tempo.windKraft`) und Zeitlimits. Ein
 zweiter Physik-Modus wären zwei Spiele, die sich beide nur halb gut anfühlen.
-⚠ Nachmessen statt raten: `scratchpad/balance.mts` simuliert einen Steigflug ohne
-Browser und sagt, wie viele Pixel der Ballon in der ersten Sekunde steigt.
+⚠ Nachmessen statt raten: `npm run pruefen` (`steigflug()` in `src/spiel/pruefung.ts`)
+simuliert einen Steigflug ohne Browser und sagt, wie viele Pixel der Ballon in der ersten Sekunde steigt.
 Richtwert **rund 150 px** — bei den ersten Werten waren es 504, und der Ballon
 schoss durchs Level. `blaskraft` ist die Schraube.
 
@@ -116,11 +116,18 @@ Drei Sorten, alle über `Nadel` in `typen.ts`:
 Positionen hingen an der Bildrate, und derselbe Lauf liefe auf zwei Geräten
 verschieden — der Endlos-Seed wäre wertlos.
 
-**Nadelfelder statt Balken:** Eine Sperre besteht aus vielen einzelnen Nadeln
-nebeneinander, nicht aus einer langen Linie. ⚠ Die Nadel muss **kürzer sein als
-ihr Abstand** (60 lang, 70 Abstand), sonst überlappen sie sich und verschmelzen
-optisch wieder zu einem Balken. Die 10 px Lücke ist für den 52 px breiten Ballon
-trotzdem dicht — das ist der ganze Trick.
+**Nadelfelder statt Balken:** Eine Sperre besteht aus vielen einzelnen Nadeln,
+nicht aus einer langen Linie. Erzeugt werden sie mit `npm run nadelfeld`
+(`src/spiel/nadelfeld.ts`). Je nach Richtung gilt eine andere Regel:
+
+- **Spalte** (Nadeln hintereinander, Strecken): Die Nadel muss **kürzer sein als
+  ihr Abstand** (60 lang, 70 Abstand), sonst verschmelzen sie optisch zu einem
+  Balken. Die 10 px Lücke ist für den 52 px breiten Ballon trotzdem dicht.
+- **Reihe** (senkrechte Nadeln nebeneinander, Hoch-Level): Der Abstand muss
+  **kleiner als der Ballon** sein, höchstens 48 px. ⚠ Bis zum 01.10.2026 standen
+  sie auch hier 70 px auseinander. Der Ballon passte mit je 9 px Luft
+  dazwischen durch, und die Reihen in Level 1–3 waren gar nicht dicht. Ein Test
+  in `pruefung.test.ts` hält das fest.
 
 **Fallende Nadeln gehören in die Durchlasslücken**, nicht in ein Stachelfeld:
 Dort, wo der Ballon ohnehin nicht durchkommt, sind sie wirkungslos.
@@ -169,19 +176,50 @@ Dort, wo der Ballon ohnehin nicht durchkommt, sind sie wirkungslos.
 11. **Der Start eines Streckenlevels muss im freien Korridor der ersten Nadel
     liegen** — und weit genug davor. In der ersten Fassung lag er genau auf
     Höhe der ersten Nadelspitze: Man flog ohne Vorwarnung hinein.
-    `scratchpad/streckenpruefung.mts` prüft beides; es tat das anfangs *nicht*
+    `npm run pruefen` prüft beides; die erste Fassung tat das *nicht*
     und meldete „schaffbar", weil es nur die Nadeln untereinander ansah.
 12. **Ein Level prüft man mit einer WEGSUCHE, nicht mit Abstandsregeln.**
-    `scratchpad/streckenpruefung.mts` legt ein Gitter über das Level, sperrt
+    `src/spiel/pruefung.ts` legt ein Gitter über das Level, sperrt
     belegte Zellen und flutet von Start zu Ziel. Zwei Heuristiken davor lagen
     daneben: „Lücke zwischen langen Balken" wurde wertlos, sobald es
     Stachelfelder gab; „Mindestabstand fallender Nadeln" verbot sie in
     Hoch-Leveln ganz, obwohl sie dort passen. Die einzige ehrliche Frage
-    lautet: Kommt der Ballon durch?
+    lautet: Kommt der Ballon durch? ⚠ Bis zum 01.10.2026 lag das Werkzeug nur im
+    Scratchpad einer Sitzung und ging mit ihr verloren. Jetzt prüft `npm test`
+    jedes Level damit, und `npm run pruefen` zeigt die Zahlen dazu. Fallende
+    Nadeln sperren dabei nicht, sie werden über ihr Zeitfenster geprüft.
 13. **Ein Tutorial-Level lehrt EINE Sache nach der anderen.** Level 1: erste
    Lücke mittig über dem Start (halten hebt), zweite seitlich (versetzt lenkt).
    Zwischendurch stand die erste Nadel direkt über dem Start — man platzte,
    bevor man irgendetwas verstanden hatte.
+14. **Die Wegsuche sieht nur die Geometrie, nicht die Physik.** Am 01.10.2026
+    meldete sie Level 5 als schaffbar, und es war es nicht: Die Aufwindzone
+    (Kraft 240) hob den Ballon um rund 100 px, und bis zur nächsten Spalte
+    konnte er nicht wieder sinken. Ohne Gebläse sinkt er höchstens ~40 px/s.
+    Keiner von 30.000 Zufallsversuchen kam durch. Die Zone stammte aus der
+    ersten Fassung mit langen Balken und passte nach dem Umbau auf Nadelfelder
+    nicht mehr; jetzt hat sie Kraft 80. Deshalb gilt: Nach jeder Level-Änderung
+    auch `npm run bot`. Der Bot wartet nicht auf bewegte Nadeln, „0 von N“
+    heißt also: selbst nachspielen.
+15. **Zonen zeigen ihre Richtung.** Die Teilchen wandern in Kraftrichtung. Bis
+    zum 01.10.2026 stiegen sie immer auf, und eine Fallwind-Zone hätte das
+    Gegenteil dessen gezeigt, was sie tut (siehe Falle 7).
+16. **Cloudflare hat ZWEI Build-Einstellungen.** Production (`main`) und die
+    Vorschauen für alle anderen Branches („Previews Base“) werden getrennt
+    eingestellt. Am 01.10.2026 hatte nur Production einen Build-Befehl. Der
+    erste Vorschau-Build (PR #2) brach ab: `wrangler preview` verlangt einen
+    `"previews": {}`-Block, und ohne Build-Befehl gäbe es kein `dist/` (steht
+    nicht im Repo). Seitdem baut `wrangler.jsonc` selbst (`build.command`) und
+    hängt an keiner Dashboard-Einstellung mehr.
+
+## Fortschritt
+
+`src/lib/fortschritt.ts` speichert die Bestzeit je Level im `localStorage`, ein
+Level ist frei, sobald das davor geschafft ist. ⚠ Schlüssel sind die
+**Level-IDs**, nicht die Positionen: Wird später ein Level eingeschoben, bleibt
+der Fortschritt beim richtigen Level. ⚠ Gespeichert wird im Moment des
+Ankommens, nicht erst mit dem Ende-Fenster (800 ms später). Sonst ginge ein
+Sieg verloren, wenn jemand sofort zurücktippt.
 
 ## Konventionen
 

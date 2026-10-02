@@ -19,7 +19,7 @@ Anigosha waren die Lehre.
 
 ## Stand: M2 — spielbar, mit Endlos-Modus
 
-Sechs handgebaute Level und ein Endlos-Lauf, alles nach oben (seit 02.10.2026;
+Zwölf handgebaute Level und ein Endlos-Lauf, alles nach oben (seit 02.10.2026;
 die Strecken nach rechts sind ausgeblendet, nicht gelöscht). Gebläsesteuerung,
 träge Physik. Läuft im Browser.
 Der Fortschritt bleibt auf dem Gerät: Jedes Level schaltet das nächste frei,

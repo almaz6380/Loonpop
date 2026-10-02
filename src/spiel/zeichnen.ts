@@ -14,6 +14,7 @@
 
 import type { Welt, Punkt } from './typen.ts';
 import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe } from './physik.ts';
+import { ballonform, KNOTEN } from './ballonform.ts';
 
 /**
  * Das Nadelbild. Gezeichnete Striche sahen aus wie Streichhoelzer — einer
@@ -281,7 +282,7 @@ function zeichneGeblaese(ctx: CanvasRenderingContext2D, welt: Welt, gy: number, 
 function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bodenY: number) {
   const { ballon } = welt;
   const r = ballon.radius;
-  const v = Math.hypot(ballon.geschw.x, ballon.geschw.y);
+  const form = ballonform(pos, ballon.geschw, r);
 
   // Schatten auf der Wiese: kleiner und blasser, je hoeher der Ballon steht.
   const hoeheUeber = Math.max(0, bodenY - pos.y);
@@ -297,22 +298,20 @@ function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bo
   ctx.strokeStyle = 'rgba(255,255,255,0.6)';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(pos.x, pos.y + r);
+  // ⚠ Am KNOTEN beginnen, nicht fest unter der Mitte — sonst passt die
+  // Schnur nicht mehr zum Ballon, sobald er sich neigt (siehe ballonform.ts).
+  const k = form.knoten;
+  ctx.moveTo(k.x, k.y);
   ctx.quadraticCurveTo(
-    pos.x - ballon.geschw.x * 0.03, pos.y + r + 20,
-    pos.x - ballon.geschw.x * 0.05, pos.y + r + 38,
+    k.x - ballon.geschw.x * 0.03, k.y + 14,
+    k.x - ballon.geschw.x * 0.05, k.y + 30,
   );
   ctx.stroke();
 
-  // In Flugrichtung leicht gestreckt. Ein starrer Kreis wirkt tot; zu viel
-  // Verformung sieht nach Gummiball aus. 12 % bei vollem Tempo reichen.
   ctx.save();
   ctx.translate(pos.x, pos.y);
-  if (v > 8) {
-    ctx.rotate(Math.atan2(ballon.geschw.y, ballon.geschw.x) + Math.PI / 2);
-    const dehnung = 1 + Math.min(0.12, v / 3200);
-    ctx.scale(1 / dehnung, dehnung);
-  }
+  ctx.rotate(form.neigung);
+  ctx.scale(1 / form.dehnung, form.dehnung);
   const haut = ctx.createRadialGradient(-r * 0.32, -r * 0.38, r * 0.12, 0, 0, r * 1.15);
   haut.addColorStop(0, '#ff8d9e');
   haut.addColorStop(0.55, '#f94d67');
@@ -324,7 +323,7 @@ function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bo
   ctx.beginPath();
   ctx.moveTo(-5, r - 1);
   ctx.lineTo(5, r - 1);
-  ctx.lineTo(0, r + 8);
+  ctx.lineTo(0, r + KNOTEN);
   ctx.closePath();
   ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,0.5)';

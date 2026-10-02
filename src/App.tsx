@@ -75,8 +75,10 @@ export default function App() {
 
           {/* Endlos: sofort frei. Wer nur ein paar Minuten hat, soll nicht
               erst zwoelf Level spielen muessen. */}
-          <div className="mt-8 grid grid-cols-2 gap-2">
-            {(['hoch', 'strecke'] as const).map((art) => {
+          <div className="mt-8 grid gap-2">
+            {/* Nur noch nach oben (02.10.2026); der Lauf nach rechts ist
+                ausgeblendet, sein Code bleibt. */}
+            {(['hoch'] as const).map((art) => {
               const weite = fortschritt.endlos?.[art];
               return (
                 <button
@@ -124,14 +126,10 @@ export default function App() {
                 >
                   <span className="shrink-0 w-9 h-9 rounded-xl bg-white/20 border border-white/20
                                    grid place-items-center font-bold tabular-nums">
-                    {lvl.id}
+                    {i + 1}
                   </span>
                   <span className="flex-1 min-w-0">
                     <span className="block font-semibold truncate">{lvl.name}</span>
-                    {/* Strecken kennzeichnen — sie spielen sich spuerbar anders. */}
-                    <span className="block text-xs text-white/60">
-                      {lvl.art === 'strecke' ? t('menue.strecke') : t('menue.hoch')}
-                    </span>
                   </span>
                   {bestzeit !== undefined && (
                     <span className="shrink-0 flex items-center gap-1.5 text-sm font-semibold tabular-nums text-[#ffe48a]">

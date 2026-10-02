@@ -19,7 +19,15 @@ import level011 from './011.json';
 import level012 from './012.json';
 import type { Level } from '../typen.ts';
 
-export const LEVEL = [
+const ALLE = [
   level001, level002, level003, level004, level005, level006,
   level007, level008, level009, level010, level011, level012,
 ] as Level[];
+
+/**
+ * Gespielt wird nur noch nach oben (Josef, 02.10.2026). Die Strecken bleiben
+ * als Dateien liegen und werden weiter geprueft — ausgeblendet, nicht
+ * geloescht, falls sie zurueckkommen. Fortschritt haengt an der ID, nicht an
+ * der Stelle in der Liste, und bleibt deshalb gueltig.
+ */
+export const LEVEL = ALLE.filter((l) => l.art === 'hoch');

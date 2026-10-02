@@ -24,7 +24,7 @@
 
 import type { Punkt, Welt, Nadel } from './typen.ts';
 import { streckeTrifftNadel, laenge, minus } from './kollision.ts';
-import { nadelnIn, bodenNachziehen } from './endlos.ts';
+import { nadelnIn, bodenNachziehen, endlosWind } from './endlos.ts';
 
 /** Ein Physikschritt = 1/120 Sekunde. */
 export const DT = 1 / 120;
@@ -204,10 +204,12 @@ export function schritt(welt: Welt): void {
   ax += strahl.x;
   ay += strahl.y;
 
-  // Grundwind: treibt auf Strecken nach rechts.
-  if (level.grundwind) {
-    ax += level.grundwind.x;
-    ay += level.grundwind.y;
+  // Grundwind: treibt auf Strecken nach rechts. Im Endlos-Lauf waechst er
+  // mit der Strecke (siehe endlos.ts).
+  const wind = welt.endlos ? endlosWind(welt) : level.grundwind;
+  if (wind) {
+    ax += wind.x;
+    ay += wind.y;
   }
 
   // Zonen: dauerhafte Kraefte an bestimmten Stellen (Aufwind, Seitenwind).

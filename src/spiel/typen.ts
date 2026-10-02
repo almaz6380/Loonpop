@@ -21,6 +21,11 @@ export type Nadel = {
    * ⚠ Aus der ZEIT gerechnet, nicht fortgeschrieben: Nur so bleibt der Lauf
    * deterministisch und ein Seed nachspielbar (siehe physik.ts).
    */
+  /**
+   * Nur fuers Zeichnen: Die Nadel gehoert zu einer Engstelle im Endlos-Lauf
+   * und schimmert rot, damit man sie kommen sieht.
+   */
+  warnung?: boolean;
   faellt?: {
     takt: number;
     versatz: number;
@@ -147,6 +152,12 @@ export type Abschnitt = {
   mitte: number;
   /** Breite der Luecke bzw. Hoehe des Korridors, von Nadel zu Nadel. */
   weite: number;
+  /** Teil einer Engstelle? */
+  eng?: boolean;
+  /** Einer der ruhigeren Abschnitte gleich nach einer Engstelle? */
+  ruhig?: boolean;
+  /** Bei welchem Abschnitt die naechste Engstelle beginnt. */
+  naechsteEng: number;
 };
 
 export type Endlos = {

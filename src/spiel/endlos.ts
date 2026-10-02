@@ -38,10 +38,38 @@ const STRECKE_BODEN = HOEHE - 96 - 12;
  */
 export const BODEN_ABSTAND = 900;
 /** Wie schnell der Boden von selbst steigt (px/s), am Anfang und ganz am Ende. */
-const KRIECHEN = { von: 12, bis: 40 };
+const KRIECHEN = { von: 12, bis: 70 };
 
 const mische = (a: number, b: number, t: number) => a + (b - a) * t;
 const schwere = (meter: number) => Math.max(0, Math.min(1, meter / VOLL_SCHWER));
+
+/**
+ * Das Tempo: waechst ohne Ende, naehert sich aber einer Obergrenze. Bei 300 m
+ * ist es halb oben, bei 1000 m zu 90 %.
+ *
+ * ⚠ Bis zum 02.10.2026 hoerte alles bei 300 m auf, schwerer zu werden — der
+ * Bot flog danach zehn Minuten ungestoert weiter. Ohne Obergrenze waere es
+ * irgendwann nicht mehr spielbar, sondern nur noch unfair.
+ */
+export const tempo = (meter: number) => 1 - Math.exp(-Math.max(0, meter) / 430);
+
+/** Die Engstellen: wie lang, wie oft (in Abschnitten). */
+const ENG = { laenge: 3, ruhig: 2, abstandMin: 8, abstandMax: 14 };
+
+/**
+ * Wo im Engstellen-Rhythmus Abschnitt i liegt. Haengt nur von Abschnitt i−1
+ * und dem Zufall von i ab — wie alles hier.
+ */
+function rhythmus(i: number, vorher: Abschnitt | undefined, z: () => number) {
+  const naechste = vorher ? vorher.naechsteEng : ENG.abstandMin;
+  const eng = i >= naechste && i < naechste + ENG.laenge;
+  const ruhig = i >= naechste + ENG.laenge && i < naechste + ENG.laenge + ENG.ruhig;
+  const letzter = i === naechste + ENG.laenge + ENG.ruhig - 1;
+  const naechsteEng = letzter
+    ? i + 1 + ENG.abstandMin + Math.floor(z() * (ENG.abstandMax - ENG.abstandMin + 1))
+    : naechste;
+  return { eng, ruhig, naechsteEng };
+}
 
 /** Der Zufall fuer Abschnitt i — nur aus Seed und Index, nie aus der Uhr. */
 const zufallFuer = (seed: number, i: number) => mulberry32(saat(`${seed}:${i}`));
@@ -64,17 +92,27 @@ function hochAbschnitt(seed: number, i: number, vorher: Abschnitt | undefined): 
   const r = BALLON_RADIUS;
   // Die erste Reihe hat ihre Luecke genau ueber dem Start: Halten hebt
   // hindurch, das ist die erste Lektion (Falle 13).
-  const lage = vorher ? vorher.lage - mische(300, 260, schwere((HOCH_START.y - vorher.lage) / PX_JE_METER)) : 742;
-  const d = schwere((HOCH_START.y - lage) / PX_JE_METER);
-  const weite = Math.round(mische(300, 170, d));
+  const lage = vorher ? vorher.lage - mische(300, 230, tempo((HOCH_START.y - vorher.lage) / PX_JE_METER)) : 742;
+  const meterHier = (HOCH_START.y - lage) / PX_JE_METER;
+  const d = schwere(meterHier);
+  const { eng, ruhig, naechsteEng } = rhythmus(i, vorher, z);
+  const normal = Math.max(150, mische(300, 170, d) - 20 * tempo(meterHier));
+  // Engstelle: 60 % der ueblichen Breite, mindestens 130 — man soll den
+  // Unterschied sehen, nicht nur messen. Danach kurz etwas Luft.
+  const weite = Math.round(eng ? Math.max(130, normal * 0.6) : ruhig ? normal + 30 : normal);
   let mitte = HOCH_START.x;
   if (vorher) {
     const halbVorher = vorher.weite / 2 - r;
     const halb = weite / 2 - r;
     // Wie weit sie sich ueberlappen, streut etwas — sonst pendelte die Luecke
     // nur zwischen zwei Stellen hin und her.
+    // In einer Engstelle liegen die Luecken fast uebereinander (hoechstens
+    // 30 px versetzt): eng, aber nicht verwinkelt — beides zugleich waere
+    // unfair. ⚠ Die erste Fassung gab ihr eine feste Ueberlappung von 40 px —
+    // weniger als sonst am Anfang, also MEHR Haken. Der Bot platzte fast immer
+    // an der ersten Engstelle.
     const ueberlapp = mische(70, 10, d) + z() * mische(50, 25, d);
-    const versatz = halbVorher + halb - ueberlapp;
+    const versatz = eng ? z() * 30 : halbVorher + halb - ueberlapp;
     const links = vorher.mitte - versatz;
     const rechts = vorher.mitte + versatz;
     const passt = (x: number) => x >= weite / 2 && x <= BREITE - weite / 2;
@@ -88,10 +126,12 @@ function hochAbschnitt(seed: number, i: number, vorher: Abschnitt | undefined): 
   const rechtesEnde = mitte + weite / 2;
   if (linkesEnde > 0) nadeln.push(...reihe(lage, 0, linkesEnde));
   if (rechtesEnde < BREITE) nadeln.push(...reihe(lage, rechtesEnde, BREITE));
+  if (eng) for (const n of nadeln) n.warnung = true;
+  const bewegt = !eng && !ruhig;
 
   // Ab 100 m faehrt manchmal eine Pendelnadel durch die Luecke. Man wartet
   // darunter, bis sie zur Seite ist — in der Luft geht das.
-  if (d >= 1 / 3 && z() < 0.5) {
+  if (bewegt && d >= 1 / 3 && z() < 0.5) {
     nadeln.push({
       von: { x: linkesEnde + 12, y: lage }, bis: { x: linkesEnde + 12, y: lage + 60 },
       pendel: { weg: { x: weite - 24, y: 0 }, dauer: mische(3.8, 3, d) },
@@ -99,20 +139,28 @@ function hochAbschnitt(seed: number, i: number, vorher: Abschnitt | undefined): 
   }
   // Ab 200 m faellt manchmal eine Nadel durch die Luecke — nur durch ihr Band,
   // nicht durch das ganze Level.
-  if (d >= 2 / 3 && z() < 0.5) {
+  if (bewegt && d >= 2 / 3 && z() < 0.5) {
     nadeln.push({
       von: { x: mitte, y: 0 }, bis: { x: mitte, y: 150 },
       faellt: { takt: mische(2.8, 2.4, d), versatz: z() * 3, oben: lage - 260, unten: lage + 220 },
     });
   }
-  return { nadeln, lage, mitte, weite };
+  return { nadeln, lage, mitte, weite, eng, ruhig, naechsteEng };
 }
 
 // --------------------------------------------------------------- strecke
 
 const STRECKE_START = { x: 200, y: 500 };
-const GRUNDWIND = 230;
+const GRUNDWIND = { von: 230, bis: 420 };
 const STRECKE_DAEMPFUNG = 1.5;
+
+/**
+ * Der Grundwind an einer Stelle der Strecke (px/s²). Er waechst mit dem Tempo:
+ * Der Ballon treibt anfangs gut 150 px/s, spaeter bis 280 px/s. Das ist
+ * "schneller" ueber den Level, nicht ueber die Physik (Regel 2) — Wind ist
+ * eine Eigenschaft des Levels.
+ */
+export const windBei = (meter: number) => mische(GRUNDWIND.von, GRUNDWIND.bis, tempo(meter));
 
 /**
  * Eine Saeule, abwechselnd von unten und von oben. Dazwischen ein Korridor.
@@ -129,11 +177,20 @@ function streckeAbschnitt(seed: number, i: number, vorher: Abschnitt | undefined
   const meterVorher = vorher ? (vorher.lage - STRECKE_START.x) / PX_JE_METER : 0;
   const abstand = mische(320, 250, schwere(meterVorher));
   const lage = vorher ? vorher.lage + abstand : 900;
-  const d = schwere((lage - STRECKE_START.x) / PX_JE_METER);
-  const weite = Math.round(mische(320, 170, d));
+  const meterHier = (lage - STRECKE_START.x) / PX_JE_METER;
+  const d = schwere(meterHier);
+  const { eng, ruhig, naechsteEng } = rhythmus(i, vorher, z);
+  const normal = Math.max(160, mische(320, 170, d) - 10 * tempo(meterHier));
+  // Engstelle: 60 % des ueblichen Korridors, mindestens 140. Danach kurz Luft.
+  const weite = Math.round(eng ? Math.max(140, normal * 0.6) : ruhig ? normal + 40 : normal);
   let mitte = STRECKE_START.y;
-  if (vorher) {
-    const vx = GRUNDWIND / STRECKE_DAEMPFUNG;
+  if (vorher && eng) {
+    // In der Engstelle laeuft der Korridor gerade: eng, aber ohne Sprung.
+    mitte = vorher.mitte;
+  } else if (vorher) {
+    // ⚠ Mit dem Wind AN DIESER STELLE rechnen: Schnellerer Wind heisst
+    // weniger Zeit zum Sinken, also kleinere Spruenge nach unten.
+    const vx = windBei(meterVorher) / STRECKE_DAEMPFUNG;
     const runter = 40 * (abstand / vx) * 0.5;
     const rauf = 140;
     // Runter geht es in kleinen Schritten, rauf in grossen. Damit der Korridor
@@ -142,22 +199,26 @@ function streckeAbschnitt(seed: number, i: number, vorher: Abschnitt | undefined
     const nachUnten = Math.max(0.25, Math.min(0.9, 0.55 + (620 - vorher.mitte) / 500));
     const schritt = z() < nachUnten ? runter * (0.4 + 0.6 * z()) : -rauf * (0.25 + 0.75 * z());
     mitte = vorher.mitte + schritt;
-    mitte = Math.round(Math.max(weite / 2 + 120, Math.min(STRECKE_BODEN - weite / 2 - 60, mitte)));
+    mitte = Math.max(weite / 2 + 120, Math.min(STRECKE_BODEN - weite / 2 - 60, mitte));
+    // ⚠ Der Rand darf den Korridor nie weiter nach unten schieben, als der
+    // Ballon sinken kann — etwa wenn er nach einer Engstelle wieder breiter wird.
+    mitte = Math.floor(Math.min(mitte, vorher.mitte + runter));
   }
   // Gerade Abschnitte stehen am Boden, ungerade haengen von oben — wie Level 4.
   // `weite` zaehlt von Spitze zu Spitze; der Ballon hat davon `weite − 2r`.
   const nadeln: Nadel[] = i % 2 === 0
     ? spalte(lage, mitte + weite / 2, STRECKE_BODEN, 'oben')
     : spalte(lage, 0, mitte - weite / 2);
+  if (eng) for (const n of nadeln) n.warnung = true;
 
   // Ab 150 m faellt manchmal eine Nadel zwischen die Saeulen.
-  if (d >= 0.5 && z() < 0.5) {
+  if (!eng && !ruhig && d >= 0.5 && z() < 0.5) {
     nadeln.push({
       von: { x: lage + abstand / 2, y: 0 }, bis: { x: lage + abstand / 2, y: 150 },
       faellt: { takt: mische(2.8, 2.4, d), versatz: z() * 3 },
     });
   }
-  return { nadeln, lage, mitte, weite };
+  return { nadeln, lage, mitte, weite, eng, ruhig, naechsteEng };
 }
 
 // ------------------------------------------------------------------ Lauf
@@ -179,7 +240,7 @@ export function endlosLevel(art: EndlosArt): Level {
     groesse: { breite: Infinity, hoehe: HOEHE },
     start: { ...STRECKE_START }, geblaeseStart: 170,
     ziel: ohneZiel, nadeln: [], zonen: [],
-    grundwind: { x: GRUNDWIND, y: 0 },
+    grundwind: { x: GRUNDWIND.von, y: 0 },
     tempo: { blaskraft: 820, daempfung: STRECKE_DAEMPFUNG, zeitlimit: 0 },
   };
 }
@@ -243,7 +304,13 @@ export function bodenNadeln(bodenY: number): Nadel[] {
 }
 
 /** Wie schnell der Boden gerade von selbst steigt (px/s). */
-export const kriechen = (meter: number) => mische(KRIECHEN.von, KRIECHEN.bis, schwere(meter));
+export const kriechen = (meter: number) => mische(KRIECHEN.von, KRIECHEN.bis, tempo(meter));
+
+/** Der Grundwind, der gerade wirkt — auf Strecken waechst er mit (siehe windBei). */
+export function endlosWind(welt: Welt): { x: number; y: number } | undefined {
+  if (welt.endlos?.art !== 'strecke') return welt.level.grundwind;
+  return { x: windBei(meter(welt)), y: 0 };
+}
 
 /**
  * Den Boden nachziehen — vor jedem Physikschritt. Er folgt dem Ballon nach
@@ -312,6 +379,8 @@ export function endlosStueck(art: EndlosArt, seed: number, von: number, anzahl: 
   const erste = teile[0];
   const letzte = teile[teile.length - 1];
   const dx = 700 - erste.lage;
+  // Der Wind dieses Stuecks — weiter hinten weht es staerker.
+  const wind = windBei((erste.lage - STRECKE_START.x) / PX_JE_METER);
   // Im Korridor der ersten Saeule — wie bei den Leveln (Falle 11).
   const startY = erste.mitte;
   return {
@@ -320,6 +389,7 @@ export function endlosStueck(art: EndlosArt, seed: number, von: number, anzahl: 
     groesse: { breite: letzte.lage + dx + 500, hoehe: HOEHE },
     start: { x: 200, y: startY },
     ziel: { pos: { x: letzte.lage + dx + 300, y: letzte.mitte }, radius: 70 },
+    grundwind: { x: wind, y: 0 },
     nadeln: teile.flatMap((t) => t.nadeln.map((n) => verschiebe(n, dx, 0))),
   };
 }

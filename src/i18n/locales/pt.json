@@ -1,0 +1,52 @@
+{
+  "menue": {
+    "titel": "loonpop",
+    "untertitel": "Segure o soprador de folhas embaixo do balão e aperte. As agulhas não perdoam.",
+    "level": "Fase {{n}}",
+    "hinweis": "Deslize o soprador para os lados e segure para soprar. Se ficar de lado, você empurra o balão para o lado.",
+    "hoch": "para cima",
+    "strecke": "percurso",
+    "gesperrt": "bloqueada",
+    "bestzeit": "{{s}} s",
+    "endlos": "Infinito",
+    "endlosHoch": "Sempre para cima",
+    "endlosStrecke": "Sempre em frente",
+    "bestweite": "{{m}} m",
+    "sprache": "Idioma"
+  },
+  "spiel": {
+    "zurueck": "Voltar",
+    "zeit": "{{s}} s",
+    "verbleibend": "faltam {{s}} s",
+    "nochmal": "De novo",
+    "levelwahl": "Fases",
+    "gebraucht": "Concluído em {{s}} segundos.",
+    "trostworte": "O balão continua flutuando: sopre mais cedo.",
+    "ende": {
+      "geschafft": "Chegou!",
+      "geplatzt": "Estourou",
+      "zeit-aus": "Tempo esgotado"
+    },
+    "weiter": "Próxima",
+    "neueBestzeit": "Novo melhor tempo!",
+    "bestzeit": "Melhor: {{s}} s",
+    "meter": "{{m}} m",
+    "weit": "Você chegou a {{m}} metros.",
+    "neueBestweite": "Novo recorde!",
+    "bestweite": "Recorde: {{m}} m"
+  },
+  "levelname": {
+    "1": "Primeiro sopro",
+    "2": "Chuva de agulhas",
+    "3": "Tesoura",
+    "6": "A gangorra",
+    "8": "Contra o relógio",
+    "10": "A chaminé",
+    "13": "Vento lateral",
+    "14": "O poço",
+    "15": "Zigue-zague",
+    "16": "Dois pêndulos",
+    "17": "Aguaceiro",
+    "18": "O cume"
+  }
+}

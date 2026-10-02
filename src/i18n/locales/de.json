@@ -11,7 +11,8 @@
     "endlos": "Endlos",
     "endlosHoch": "Immer weiter rauf",
     "endlosStrecke": "Immer weiter nach rechts",
-    "bestweite": "{{m}} m"
+    "bestweite": "{{m}} m",
+    "sprache": "Sprache"
   },
   "spiel": {
     "zurueck": "Zurück",
@@ -33,5 +34,19 @@
     "weit": "{{m}} Meter weit gekommen.",
     "neueBestweite": "Neue Bestweite!",
     "bestweite": "Bestweite: {{m}} m"
+  },
+  "levelname": {
+    "1": "Erste Luft",
+    "2": "Nadelregen",
+    "3": "Schere",
+    "6": "Die Wippe",
+    "8": "Gegen die Uhr",
+    "10": "Der Kamin",
+    "13": "Seitenwind",
+    "14": "Fallschacht",
+    "15": "Zickzack",
+    "16": "Zwei Pendel",
+    "17": "Platzregen",
+    "18": "Der Gipfel"
   }
 }

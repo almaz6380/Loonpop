@@ -1,0 +1,52 @@
+{
+  "menue": {
+    "titel": "loonpop",
+    "untertitel": "송풍기를 풍선 아래에 대고 누르세요. 바늘에 닿으면 끝이에요.",
+    "level": "레벨 {{n}}",
+    "hinweis": "송풍기를 옆으로 밀고, 꾹 누르면 바람이 나와요. 비켜 서면 풍선이 옆으로 밀려요.",
+    "hoch": "위로",
+    "strecke": "코스",
+    "gesperrt": "잠김",
+    "bestzeit": "{{s}}초",
+    "endlos": "무한",
+    "endlosHoch": "끝없이 위로",
+    "endlosStrecke": "끝없이 앞으로",
+    "bestweite": "{{m}}m",
+    "sprache": "언어"
+  },
+  "spiel": {
+    "zurueck": "뒤로",
+    "zeit": "{{s}}초",
+    "verbleibend": "{{s}}초 남음",
+    "nochmal": "다시",
+    "levelwahl": "레벨",
+    "gebraucht": "{{s}}초 만에 성공!",
+    "trostworte": "풍선은 계속 떠밀려 가요. 더 일찍 부세요.",
+    "ende": {
+      "geschafft": "도착!",
+      "geplatzt": "터졌어요",
+      "zeit-aus": "시간 초과"
+    },
+    "weiter": "다음",
+    "neueBestzeit": "최고 기록 갱신!",
+    "bestzeit": "최고: {{s}}초",
+    "meter": "{{m}}m",
+    "weit": "{{m}}m 날아갔어요.",
+    "neueBestweite": "신기록!",
+    "bestweite": "기록: {{m}}m"
+  },
+  "levelname": {
+    "1": "첫 바람",
+    "2": "바늘비",
+    "3": "가위",
+    "6": "시소",
+    "8": "시간과의 싸움",
+    "10": "굴뚝",
+    "13": "옆바람",
+    "14": "하강 기류",
+    "15": "지그재그",
+    "16": "두 개의 진자",
+    "17": "소나기",
+    "18": "정상"
+  }
+}

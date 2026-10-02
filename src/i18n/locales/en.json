@@ -11,7 +11,8 @@
     "endlos": "Endless",
     "endlosHoch": "Ever upwards",
     "endlosStrecke": "Ever onwards",
-    "bestweite": "{{m}} m"
+    "bestweite": "{{m}} m",
+    "sprache": "Language"
   },
   "spiel": {
     "zurueck": "Back",
@@ -33,5 +34,19 @@
     "weit": "You made it {{m}} metres.",
     "neueBestweite": "New record!",
     "bestweite": "Record: {{m}} m"
+  },
+  "levelname": {
+    "1": "First Breath",
+    "2": "Needle Rain",
+    "3": "Scissors",
+    "6": "The Seesaw",
+    "8": "Against the Clock",
+    "10": "The Chimney",
+    "13": "Crosswind",
+    "14": "Downdraft",
+    "15": "Zigzag",
+    "16": "Two Pendulums",
+    "17": "Downpour",
+    "18": "The Summit"
   }
 }

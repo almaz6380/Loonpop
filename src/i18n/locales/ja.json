@@ -1,0 +1,52 @@
+{
+  "menue": {
+    "titel": "loonpop",
+    "untertitel": "ブロワーを風船の下に構えて押そう。針に触れたらおしまい。",
+    "level": "レベル {{n}}",
+    "hinweis": "ブロワーを左右に動かし、押し続けて風を送ろう。少しずらすと風船は横に流れる。",
+    "hoch": "上へ",
+    "strecke": "コース",
+    "gesperrt": "ロック中",
+    "bestzeit": "{{s}} 秒",
+    "endlos": "エンドレス",
+    "endlosHoch": "どこまでも上へ",
+    "endlosStrecke": "どこまでも先へ",
+    "bestweite": "{{m}} m",
+    "sprache": "言語"
+  },
+  "spiel": {
+    "zurueck": "戻る",
+    "zeit": "{{s}} 秒",
+    "verbleibend": "残り {{s}} 秒",
+    "nochmal": "もう一度",
+    "levelwahl": "レベル選択",
+    "gebraucht": "{{s}} 秒でクリア！",
+    "trostworte": "風船は惰性で流れる。早めに吹こう。",
+    "ende": {
+      "geschafft": "ゴール！",
+      "geplatzt": "割れた！",
+      "zeit-aus": "時間切れ"
+    },
+    "weiter": "次へ",
+    "neueBestzeit": "ベストタイム更新！",
+    "bestzeit": "ベスト: {{s}} 秒",
+    "meter": "{{m}} m",
+    "weit": "{{m}} m 進んだ。",
+    "neueBestweite": "新記録！",
+    "bestweite": "記録: {{m}} m"
+  },
+  "levelname": {
+    "1": "はじめての風",
+    "2": "針の雨",
+    "3": "ハサミ",
+    "6": "シーソー",
+    "8": "タイムアタック",
+    "10": "煙突",
+    "13": "横風",
+    "14": "下降気流",
+    "15": "ジグザグ",
+    "16": "ふたつの振り子",
+    "17": "にわか雨",
+    "18": "頂上"
+  }
+}

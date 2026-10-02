@@ -293,6 +293,24 @@ der Fortschritt beim richtigen Level. ⚠ Gespeichert wird im Moment des
 Ankommens, nicht erst mit dem Ende-Fenster (800 ms später). Sonst ginge ein
 Sieg verloren, wenn jemand sofort zurücktippt.
 
+## Sprachen
+
+Dreizehn Sprachen seit dem 02.10.2026 (für den Store): de, en, es, fr, it, pt
+(Brasilien), tr, pl, ru, ja, ko, zh (Kurzzeichen), ar. Die Liste steht in
+`src/lib/sprache.ts`. Die Sprache folgt dem Handy, und der Umschalter unten im
+Menü überstimmt sie (`localStorage` „sprache“).
+
+- ⚠ **Arabisch liest von rechts.** `<html dir="rtl">` wird gesetzt, deshalb gilt im
+  Layout `ps-`/`pe-`/`text-start` statt `pl-`/`pr-`/`text-left`. Das Spielfeld
+  (Canvas) spiegelt sich nicht, sonst wären die Level andere.
+- ⚠ **Level-Namen stehen in den Sprachdateien** (`levelname.<id>`), das `name`
+  im JSON ist nur der Rückfall. Neues Level → Namen in allen 13 Dateien, sonst
+  schlägt `sprache.test.ts` an. Dort wird auch geprüft, dass jede Datei alle
+  Schlüssel und dieselben Platzhalter hat. Ein fehlender Schlüssel fiele sonst
+  stumm auf Englisch zurück.
+- Ohne Mehrzahlformen: „{{s}} s“ statt „{{s}} Sekunden“, wo die Sprache
+  (ru, pl, ar) die Zahl beugt.
+
 ## Konventionen
 
 - Dokumentation und Kommentare auf Deutsch; ein Kommentar sagt, **warum** etwas so

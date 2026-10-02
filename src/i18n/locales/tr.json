@@ -1,0 +1,52 @@
+{
+  "menue": {
+    "titel": "loonpop",
+    "untertitel": "Yaprak üfleyiciyi balonun altında tut ve bas. İğneler affetmez.",
+    "level": "Bölüm {{n}}",
+    "hinweis": "Üfleyiciyi yana kaydır, üflemek için basılı tut. Balonun yanında durursan onu yana itersin.",
+    "hoch": "yukarı",
+    "strecke": "parkur",
+    "gesperrt": "kilitli",
+    "bestzeit": "{{s}} sn",
+    "endlos": "Sonsuz",
+    "endlosHoch": "Hep yukarı",
+    "endlosStrecke": "Hep ileri",
+    "bestweite": "{{m}} m",
+    "sprache": "Dil"
+  },
+  "spiel": {
+    "zurueck": "Geri",
+    "zeit": "{{s}} sn",
+    "verbleibend": "{{s}} sn kaldı",
+    "nochmal": "Tekrar",
+    "levelwahl": "Bölümler",
+    "gebraucht": "{{s}} saniyede tamamlandı.",
+    "trostworte": "Balon sürüklenmeye devam eder — daha erken üfle.",
+    "ende": {
+      "geschafft": "Vardın!",
+      "geplatzt": "Patladı",
+      "zeit-aus": "Süre doldu"
+    },
+    "weiter": "Sonraki",
+    "neueBestzeit": "Yeni en iyi süre!",
+    "bestzeit": "En iyi: {{s}} sn",
+    "meter": "{{m}} m",
+    "weit": "{{m}} metre ilerledin.",
+    "neueBestweite": "Yeni rekor!",
+    "bestweite": "Rekor: {{m}} m"
+  },
+  "levelname": {
+    "1": "İlk nefes",
+    "2": "İğne yağmuru",
+    "3": "Makas",
+    "6": "Tahterevalli",
+    "8": "Zamana karşı",
+    "10": "Baca",
+    "13": "Yan rüzgâr",
+    "14": "Kuyu",
+    "15": "Zikzak",
+    "16": "İki sarkaç",
+    "17": "Sağanak",
+    "18": "Zirve"
+  }
+}

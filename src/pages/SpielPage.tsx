@@ -197,10 +197,10 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
                       flex items-center justify-between text-white text-sm font-semibold">
         <button
           onClick={zurueck}
-          className="pl-2.5 pr-3.5 py-2 rounded-full bg-black/30 backdrop-blur-md
+          className="ps-2.5 pe-3.5 py-2 rounded-full bg-black/30 backdrop-blur-md
                      border border-white/10 flex items-center gap-1.5 active:scale-95 transition"
         >
-          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <svg viewBox="0 0 24 24" className="w-4 h-4 rtl:-scale-x-100" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           {t('spiel.zurueck')}

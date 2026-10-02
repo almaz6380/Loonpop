@@ -24,6 +24,7 @@
 
 import type { Punkt, Welt, Nadel } from './typen.ts';
 import { streckeTrifftNadel, laenge, minus } from './kollision.ts';
+import { nadelnIn, bodenNachziehen } from './endlos.ts';
 
 /** Ein Physikschritt = 1/120 Sekunde. */
 export const DT = 1 / 120;
@@ -75,6 +76,14 @@ const SEITENSCHUB = 0.55;
 
 /** Wie hoch die Duese ueber dem unteren Rand sitzt (px). */
 export const DUESE_HOEHE = 96;
+
+/**
+ * Gegen welche Hoehe der Strahl abfaellt (px). Fest, nicht die Levelhoehe:
+ * Im Endlos-Lauf gibt es keine Levelhoehe, und ein Strahl, der in einem
+ * hoeheren Level weiter truege, waere ein zweites Spiel (Regel 2). Alle
+ * Level sind 1280 hoch, fuer sie aendert sich nichts.
+ */
+export const BEZUGSHOEHE = 1280;
 
 /**
  * Wie weit der Ballon TIEFSTENS sinken darf, gemessen ueber der Duese.
@@ -131,10 +140,12 @@ export function nadelJetzt(nadel: Nadel, zeit: number, levelHoehe = 1280): { von
     // vorn. Die Nadel wird dabei NICHT fortgeschrieben, sondern aus der Zeit
     // gerechnet — sonst waere der Lauf nicht mehr reproduzierbar.
     const laenge = Math.abs(nadel.bis.y - nadel.von.y);
-    const strecke = levelHoehe + laenge * 2;
+    const von = nadel.faellt.oben ?? 0;
+    const bis = nadel.faellt.unten ?? levelHoehe;
+    const strecke = bis - von + laenge * 2;
     const p = (((zeit + nadel.faellt.versatz) % nadel.faellt.takt) + nadel.faellt.takt)
       % nadel.faellt.takt / nadel.faellt.takt;
-    const oben = -laenge + p * strecke;
+    const oben = von - laenge + p * strecke;
     return {
       von: { x: nadel.von.x, y: oben },
       bis: { x: nadel.bis.x, y: oben + laenge },
@@ -171,6 +182,8 @@ export function schritt(welt: Welt): void {
   const { blaskraft, daempfung, zeitlimit } = level.tempo;
 
   welt.zeit += DT;
+  // Im Endlos-Lauf nach oben steigt der Boden mit (siehe endlos.ts).
+  bodenNachziehen(welt, DT);
 
   // --- Geblaese nachfuehren ----------------------------------------------
   // Schnell an, langsam aus: Druecken soll sich unmittelbar anfuehlen,
@@ -185,8 +198,8 @@ export function schritt(welt: Welt): void {
   let ay = SCHWERKRAFT - AUFTRIEB;
 
   const strahl = strahlKraft(
-    geblaese.x, level.groesse.hoehe - DUESE_HOEHE, ballon.pos,
-    blaskraft, geblaese.staerke, level.groesse.hoehe,
+    geblaese.x, welt.boden - DUESE_HOEHE, ballon.pos,
+    blaskraft, geblaese.staerke, BEZUGSHOEHE,
   );
   ax += strahl.x;
   ay += strahl.y;
@@ -224,16 +237,23 @@ export function schritt(welt: Welt): void {
 
   // --- Waende -------------------------------------------------------------
   const r = ballon.radius;
-  const { breite, hoehe } = level.groesse;
+  const { breite } = level.groesse;
   if (ballon.pos.x < r) { ballon.pos.x = r; ballon.geschw.x = Math.abs(ballon.geschw.x) * WAND_ABPRALL; }
   if (ballon.pos.x > breite - r) { ballon.pos.x = breite - r; ballon.geschw.x = -Math.abs(ballon.geschw.x) * WAND_ABPRALL; }
-  if (ballon.pos.y < r) { ballon.pos.y = r; ballon.geschw.y = Math.abs(ballon.geschw.y) * WAND_ABPRALL; }
-  const boden = bodenHoehe(hoehe);
+  // Endlos nach oben gibt es keine Decke.
+  const decke = welt.endlos?.art !== 'hoch';
+  if (decke && ballon.pos.y < r) { ballon.pos.y = r; ballon.geschw.y = Math.abs(ballon.geschw.y) * WAND_ABPRALL; }
+  const boden = bodenHoehe(welt.boden);
   if (ballon.pos.y > boden) { ballon.pos.y = boden; ballon.geschw.y = -Math.abs(ballon.geschw.y) * WAND_ABPRALL; }
 
   // --- Nadeln -------------------------------------------------------------
   // Ueber den zurueckgelegten WEG geprueft, nicht ueber die Endposition.
-  for (const nadel of level.nadeln) {
+  // Im Endlos-Lauf nur die Nadeln in der Naehe — es sind sonst unendlich viele.
+  const nadeln = !welt.endlos ? level.nadeln
+    : welt.endlos.art === 'hoch'
+      ? nadelnIn(welt, ballon.pos.y - 200, ballon.pos.y + 200, boden)
+      : nadelnIn(welt, ballon.pos.x - 200, ballon.pos.x + 200, boden);
+  for (const nadel of nadeln) {
     const n = nadelJetzt(nadel, welt.zeit, level.groesse.hoehe);
     if (streckeTrifftNadel(ballon.vorher, ballon.pos, r, n.von, n.bis)) {
       welt.ausgang = 'geplatzt';

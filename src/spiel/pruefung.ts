@@ -112,7 +112,8 @@ function bewegteSperren(
 export function fallFenster(nadel: Nadel, hoehe: number): number {
   if (!nadel.faellt) return Infinity;
   const laenge = Math.abs(nadel.bis.y - nadel.von.y);
-  const tempo = (hoehe + laenge * 2) / nadel.faellt.takt;
+  const bereich = (nadel.faellt.unten ?? hoehe) - (nadel.faellt.oben ?? 0);
+  const tempo = (bereich + laenge * 2) / nadel.faellt.takt;
   return nadel.faellt.takt - (laenge + 2 * BALLON_RADIUS) / tempo;
 }
 

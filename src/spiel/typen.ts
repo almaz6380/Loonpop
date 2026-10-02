@@ -21,7 +21,17 @@ export type Nadel = {
    * ⚠ Aus der ZEIT gerechnet, nicht fortgeschrieben: Nur so bleibt der Lauf
    * deterministisch und ein Seed nachspielbar (siehe physik.ts).
    */
-  faellt?: { takt: number; versatz: number };
+  faellt?: {
+    takt: number;
+    versatz: number;
+    /**
+     * Wo sie faellt (y von oben nach unten). Fehlt das, faellt sie durch das
+     * ganze Level. Im Endlos-Lauf gibt es kein "ganzes Level" — dort faellt
+     * sie nur durch ihr eigenes Band.
+     */
+    oben?: number;
+    unten?: number;
+  };
 };
 
 /** Ein Bereich, der dauerhaft schiebt — Aufwind, Seitenwind, Fallschacht. */
@@ -116,4 +126,36 @@ export type Welt = {
    */
   nachher: number;
   ausgang: Ausgang;
+  /**
+   * Die Bodenlinie (y), auf der das Geblaese steht. In den Leveln ist das
+   * immer die Levelhoehe. Im Endlos-Lauf nach oben steigt sie mit — deshalb
+   * gehoert sie zur Welt und nicht zum Level.
+   */
+  boden: number;
+  /** Nur im Endlos-Lauf: woraus die Nadeln entstehen (siehe endlos.ts). */
+  endlos?: Endlos;
+};
+
+export type EndlosArt = 'hoch' | 'strecke';
+
+/** Ein Stueck Endlos-Lauf: eine Nadelreihe (hoch) oder eine Saeule (strecke). */
+export type Abschnitt = {
+  nadeln: Nadel[];
+  /** Wo es liegt, entlang der Laufrichtung (y bei hoch, x bei strecke). */
+  lage: number;
+  /** Mitte der Luecke (x bei hoch) bzw. des freien Korridors (y bei strecke). */
+  mitte: number;
+  /** Breite der Luecke bzw. Hoehe des Korridors, von Nadel zu Nadel. */
+  weite: number;
+};
+
+export type Endlos = {
+  art: EndlosArt;
+  seed: number;
+  /**
+   * Bisher erzeugte Abschnitte, in Reihenfolge. Abschnitt i haengt nur vom
+   * Seed, von i und von Abschnitt i−1 ab — deshalb darf er einmal erzeugt
+   * und dann aufgehoben werden, ohne dass der Lauf vom Zeitpunkt abhaengt.
+   */
+  abschnitte: Abschnitt[];
 };

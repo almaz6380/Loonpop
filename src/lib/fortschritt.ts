@@ -9,6 +9,8 @@
 // ⚠ Schluessel sind die Level-IDS, nicht die Positionen in der Liste. Schiebt
 // man spaeter ein Level ein, bleibt der Fortschritt beim richtigen Level.
 
+import type { EndlosArt } from '../spiel/typen.ts';
+
 const SCHLUESSEL = 'loonpop.fortschritt';
 
 export type Fortschritt = {
@@ -16,6 +18,11 @@ export type Fortschritt = {
   v: 1;
   /** Bestzeit in Sekunden je geschafftem Level, nach Level-ID. */
   bestzeit: Record<string, number>;
+  /**
+   * Bestweite im Endlos-Lauf (m). Optional, damit Staende von vor dem
+   * Endlos-Modus ohne Umbau weiter gelten.
+   */
+  endlos?: Partial<Record<EndlosArt, number>>;
 };
 
 const leer = (): Fortschritt => ({ v: 1, bestzeit: {} });
@@ -31,7 +38,8 @@ export function lade(): Fortschritt {
     if (!roh) return leer();
     const f = JSON.parse(roh) as Partial<Fortschritt>;
     if (f.v !== 1 || typeof f.bestzeit !== 'object' || f.bestzeit === null) return leer();
-    return { v: 1, bestzeit: f.bestzeit };
+    const endlos = typeof f.endlos === 'object' && f.endlos !== null ? f.endlos : undefined;
+    return { v: 1, bestzeit: f.bestzeit, ...(endlos ? { endlos } : {}) };
   } catch {
     return leer();
   }
@@ -58,4 +66,11 @@ export function mitSieg(f: Fortschritt, id: number, zeit: number): { f: Fortschr
  */
 export function offen(f: Fortschritt, ids: number[], index: number): boolean {
   return index === 0 || f.bestzeit[ids[index - 1]] !== undefined;
+}
+
+/** Traegt eine Endlos-Weite ein. `neu` heisst: weiter als je zuvor. */
+export function mitWeite(f: Fortschritt, art: EndlosArt, meter: number): { f: Fortschritt; neu: boolean } {
+  const alt = f.endlos?.[art];
+  if (alt !== undefined && alt >= meter) return { f, neu: false };
+  return { f: { ...f, endlos: { ...f.endlos, [art]: meter } }, neu: true };
 }

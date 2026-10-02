@@ -7,7 +7,7 @@ unteren Rand, das den Ballon nach oben bläst. **Nadeln** lassen ihn platzen.
 Die sechste App von Josef.
 
 **Repository:** https://github.com/almaz6380/loonpop (privat)
-**Stand:** M2 in Arbeit — zwölf Level und Fortschritt auf dem Gerät; es fehlt der Endlos-Modus. Siehe README für die Reihenfolge bis zum Store.
+**Stand:** M2 fertig — zwölf Level, Fortschritt auf dem Gerät, Endlos-Modus (↑ und →). Siehe README für die Reihenfolge bis zum Store.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
 Löschen ohne ausdrückliches „ja" im Chat.
 **Testversion im Browser:** https://loonpop.almaz6380.workers.dev (seit 01.10.2026,
@@ -211,6 +211,35 @@ Dort, wo der Ballon ohnehin nicht durchkommt, sind sie wirkungslos.
     `"previews": {}`-Block, und ohne Build-Befehl gäbe es kein `dist/` (steht
     nicht im Repo). Seitdem baut `wrangler.jsonc` selbst (`build.command`) und
     hängt an keiner Dashboard-Einstellung mehr.
+
+## Endlos
+
+Zwei Läufe ohne Ende, beide in `src/spiel/endlos.ts`:
+
+| | |
+|---|---|
+| **↑ Immer weiter rauf** | Nadelreihen übereinander. Das Gebläse steht auf einem **Nadelboden**, der dem Ballon folgt (höchstens `BODEN_ABSTAND` = 900 px darunter), nie sinkt und dazu von selbst kriecht (12 → 40 px/s). Wer fällt oder trödelt, platzt auf ihm. |
+| **→ Immer weiter nach rechts** | Säulen im Wechsel von unten und oben, Grundwind 230. |
+
+- ⚠ **Abschnitte statt eines wachsenden Arrays.** Abschnitt *i* hängt nur von
+  Seed, *i* und Abschnitt *i−1* ab. Die Physik fragt nur die Nadeln um den
+  Ballon ab (`nadelnIn`), das Zeichnen nur die im Bild.
+- ⚠ **Der Boden gehört zur Welt (`welt.boden`), nicht zum Level und nicht zur
+  Kamera.** Die Physik zieht ihn nach, die Kamera hängt an ihm (Falle 10).
+- ⚠ **Das Sinktempo begrenzt die Strecke.** Zwischen zwei Säulen springt der
+  Korridor höchstens halb so weit nach unten, wie der Ballon ohne Gebläse sinken
+  kann (Falle 14). Nach oben geht es leicht.
+- ⚠ **Die Lücken zweier Reihen berühren sich** (Lehre aus Level 6, 8, 10). Am
+  Anfang überlappen sie 70 px, ab 300 m nur noch 10.
+- Schwerer wird es bis 300 m: engere Lücken, kürzere Abstände, ab 100 m
+  Pendelnadeln (↑), ab 150/200 m fallende Nadeln. Nie über die Physik.
+- **50 px = 1 m.** Die Bestweite steht im Fortschritt (`endlos.hoch`/`.strecke`).
+- Der Seed jedes Laufs kommt aus der Uhr (`neuerSeed`). Die Uhr wählt nur den
+  Seed, der Lauf hängt dann allein an ihm.
+- Prüfen: `npm test` steckt Stücke aus 16 Seeds in dieselbe Levelprüfung
+  (`endlosStueck`), `npm run bot -- endlos` spielt 12 Seeds je Richtung.
+- ⚠ Der Nadelboden ragte zuerst nur 6 px aus dem Gras (02.10.2026) — man
+  platzte scheinbar am Gras. Was tötet, muss man sehen: 36 px.
 
 ## Fortschritt
 

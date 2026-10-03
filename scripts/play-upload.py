@@ -352,6 +352,8 @@ def main():
                    help='vorhandenen versionCode weiter ausrollen (ohne Upload)')
     p.add_argument('--fraction', type=float, help='Anteil der Nutzer, z. B. 0.2')
     p.add_argument('--complete', action='store_true', help='an alle ausrollen')
+    p.add_argument('--entwurf', action='store_true',
+                   help='nur als Entwurf anlegen (Pflicht, solange die App nie veroeffentlicht war)')
     p.add_argument('--notes', default='', help='Was-ist-neu-Text (de-DE)')
     p.add_argument('--status', action='store_true', help='nur den Track anzeigen')
     p.add_argument('--screenshots', metavar='VERZEICHNIS',
@@ -414,23 +416,16 @@ def main():
     else:
         release['status'] = 'inProgress'
         release['userFraction'] = a.fraction
+    if a.entwurf:
+        # ⚠ Solange die App nie veroeffentlicht war, nimmt Google nur Entwuerfe an
+        # („Only releases with status draft may be created on draft app“, beim
+        # :validate, 03.10.2026). Abgeschickt wird der erste in der Play Console.
+        release = {'name': release['name'], 'versionCodes': release['versionCodes'], 'status': 'draft'}
     if a.notes:
         release['releaseNotes'] = [{'language': 'de-DE', 'text': a.notes}]
 
-    try:
-        call(tok, 'PUT', f'{API}/applications/{PKG}/edits/{eid}/tracks/{a.track}',
-             data={'track': a.track, 'releases': [release]}, fatal=False)
-    except ApiError as e:
-        # ⚠ Solange eine App nie veroeffentlicht war, nimmt Google nur Entwuerfe
-        # an („Only releases with status draft may be created on draft app“).
-        # Dann als Entwurf anlegen; abgeschickt wird er in der Play Console.
-        if e.code != 400 or 'draft' not in e.detail:
-            sys.exit(f'\nFEHLER {e.code} bei Track {a.track}\n{e.detail}\n')
-        release = {k: v for k, v in release.items() if k != 'userFraction'}
-        release['status'] = 'draft'
-        call(tok, 'PUT', f'{API}/applications/{PKG}/edits/{eid}/tracks/{a.track}',
-             data={'track': a.track, 'releases': [release]})
-        print('  App noch nie veroeffentlicht: Release als ENTWURF angelegt.')
+    call(tok, 'PUT', f'{API}/applications/{PKG}/edits/{eid}/tracks/{a.track}',
+         data={'track': a.track, 'releases': [release]})
     ziel = 'alle Nutzer' if a.complete else f'{a.fraction * 100:.0f} % der Nutzer'
     print(f'Track {a.track} gesetzt: versionCode {vc} an {ziel}')
 

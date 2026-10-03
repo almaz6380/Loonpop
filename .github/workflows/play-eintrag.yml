@@ -68,7 +68,7 @@ jobs:
             if [ "$DRY_RUN" = "true" ]; then
               python3 scripts/play-upload.py --status --track internal
             else
-              python3 scripts/play-upload.py --promote 1 --track production --complete \
+              python3 scripts/play-upload.py --promote 1 --track production --complete --entwurf \
                 --notes "Erste Version von LoonPop."
             fi
             exit 0

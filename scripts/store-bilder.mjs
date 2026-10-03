@@ -170,9 +170,9 @@ async function vorstellung(browser) {
       <img src="data:image/png;base64,${b64('wolke3.png')}" style="position:absolute;right:40px;top:90px;width:170px;opacity:.85">
       <img src="data:image/png;base64,${b64('huegel-fern.png')}" style="position:absolute;left:0;bottom:30px;width:1024px">
       <img src="data:image/png;base64,${b64('wiese.png')}" style="position:absolute;left:0;bottom:-40px;width:1024px">
-      <img src="data:image/png;base64,${b64('ballon.png')}" style="position:absolute;left:640px;top:70px;width:170px;
+      <img src="data:image/png;base64,${b64('ballon.png')}" style="position:absolute;left:760px;top:70px;width:170px;
         filter:drop-shadow(0 14px 24px rgba(0,0,0,.35))">
-      <div style="position:absolute;left:90px;top:150px;color:#fff;font-weight:800;font-size:112px;
+      <div style="position:absolute;left:70px;top:150px;color:#fff;font-weight:800;font-size:112px;
         letter-spacing:-3px;text-shadow:0 6px 24px rgba(0,0,0,.3)">LoonPop</div>
     </div></body>`);
   await seite.waitForTimeout(200);

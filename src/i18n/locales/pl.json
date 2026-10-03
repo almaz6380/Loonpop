@@ -1,6 +1,6 @@
 {
   "menue": {
-    "titel": "loonpop",
+    "titel": "LoonPop",
     "untertitel": "Trzymaj dmuchawę pod balonem i naciskaj. Igły nie wybaczają.",
     "level": "Poziom {{n}}",
     "hinweis": "Przesuwaj dmuchawę na boki, przytrzymaj, aby dmuchać. Stojąc z boku, spychasz balon w bok.",
@@ -14,7 +14,9 @@
     "bestweite": "{{m}} m",
     "sprache": "Język",
     "datenschutz": "Prywatność",
-    "impressum": "Nota prawna"
+    "impressum": "Nota prawna",
+    "spielen": "Graj",
+    "alleLevel": "Wszystkie poziomy"
   },
   "spiel": {
     "zurueck": "Wstecz",

@@ -18,7 +18,7 @@ BETREIBER = {
     'name': 'Josef Gallab (Einzelunternehmen)',
     'adresse': 'Oberhofenweg 21b',
     'ort': '6380 St. Johann in Tirol, Österreich',
-    # ⚠ Noch die Adresse von Anigosha. Eigene Adresse fuer loonpop? Hier aendern
+    # ⚠ Noch die Adresse von Anigosha. Eigene Adresse fuer LoonPop? Hier aendern
     # und neu erzeugen — sie steht auch in den Store-Eintraegen (docs/store.md).
     'mail': 'anigosha@wellbooked.at',
 }
@@ -30,22 +30,22 @@ BETR_EN = BETR_DE.replace('E-Mail:', 'Email:').replace('Österreich', 'Austria')
 
 DATENSCHUTZ = {
  'de': ('Datenschutzerklärung', [
-  ('Kurz gesagt', 'loonpop sammelt keine personenbezogenen Daten. Es gibt kein Konto, keine Werbung, keine Analyse und kein Tracking. Dein Spielstand bleibt auf deinem Gerät.'),
+  ('Kurz gesagt', 'LoonPop sammelt keine personenbezogenen Daten. Es gibt kein Konto, keine Werbung, keine Analyse und kein Tracking. Dein Spielstand bleibt auf deinem Gerät.'),
   ('Verantwortlich', BETR_DE),
-  ('Was auf deinem Gerät gespeichert wird', 'Damit du beim nächsten Start weiterspielen kannst, speichert loonpop im lokalen Speicher deines Geräts: welche Level du geschafft hast und in welcher Bestzeit, deine Bestweite im Endlos-Modus und die gewählte Sprache. Diese Daten verlassen dein Gerät nicht, wir haben keinen Zugriff darauf. Du löschst sie, indem du die App deinstallierst oder ihre Daten in den Einstellungen deines Geräts löschst.'),
+  ('Was auf deinem Gerät gespeichert wird', 'Damit du beim nächsten Start weiterspielen kannst, speichert LoonPop im lokalen Speicher deines Geräts: welche Level du geschafft hast und in welcher Bestzeit, deine Bestweite im Endlos-Modus und die gewählte Sprache. Diese Daten verlassen dein Gerät nicht, wir haben keinen Zugriff darauf. Du löschst sie, indem du die App deinstallierst oder ihre Daten in den Einstellungen deines Geräts löschst.'),
   ('Keine Übermittlung', 'Die App braucht keine Internetverbindung und sendet keine Daten an uns oder an Dritte. Sie enthält keine Werbung, keine Analyse- oder Absturzdienste und keine Social-Media-Funktionen. Es werden keine Cookies gesetzt.'),
-  ('Browser-Version', 'Spielst du loonpop im Browser, wird die Seite über Cloudflare (Cloudflare, Inc., USA) ausgeliefert. Dabei verarbeitet Cloudflare technisch notwendige Verbindungsdaten wie die IP-Adresse, um die Seite auszuliefern und vor Angriffen zu schützen. Rechtsgrundlage ist unser berechtigtes Interesse an einem sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO). Cloudflare ist nach dem EU-US Data Privacy Framework zertifiziert. Wir selbst werten diese Daten nicht aus.'),
-  ('Kinder', 'loonpop eignet sich für alle Altersgruppen. Da wir keine personenbezogenen Daten erheben, erheben wir auch keine von Kindern.'),
+  ('Browser-Version', 'Spielst du LoonPop im Browser, wird die Seite über Cloudflare (Cloudflare, Inc., USA) ausgeliefert. Dabei verarbeitet Cloudflare technisch notwendige Verbindungsdaten wie die IP-Adresse, um die Seite auszuliefern und vor Angriffen zu schützen. Rechtsgrundlage ist unser berechtigtes Interesse an einem sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO). Cloudflare ist nach dem EU-US Data Privacy Framework zertifiziert. Wir selbst werten diese Daten nicht aus.'),
+  ('Kinder', 'LoonPop eignet sich für alle Altersgruppen. Da wir keine personenbezogenen Daten erheben, erheben wir auch keine von Kindern.'),
   ('Deine Rechte', 'Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch (Art. 15–21 DSGVO). Da wir keine Daten über dich speichern, gibt es in der Regel nichts herauszugeben. Fragen beantworten wir gern per E-Mail. Du kannst dich außerdem bei der Österreichischen Datenschutzbehörde beschweren (dsb.gv.at).'),
   ('Änderungen', 'Kommt eine neue Funktion dazu, die Daten verarbeitet, passen wir diese Erklärung vorher an.'),
  ]),
  'en': ('Privacy Policy', [
-  ('In short', 'loonpop does not collect any personal data. There is no account, no advertising, no analytics and no tracking. Your progress stays on your device.'),
+  ('In short', 'LoonPop does not collect any personal data. There is no account, no advertising, no analytics and no tracking. Your progress stays on your device.'),
   ('Controller', BETR_EN),
-  ('What is stored on your device', 'So that you can continue where you left off, loonpop stores in your device’s local storage: which levels you have completed and your best times, your best distance in endless mode, and your chosen language. This data never leaves your device and we have no access to it. You can delete it by uninstalling the app or clearing its data in your device settings.'),
+  ('What is stored on your device', 'So that you can continue where you left off, LoonPop stores in your device’s local storage: which levels you have completed and your best times, your best distance in endless mode, and your chosen language. This data never leaves your device and we have no access to it. You can delete it by uninstalling the app or clearing its data in your device settings.'),
   ('No data transfer', 'The app does not need an internet connection and sends no data to us or to third parties. It contains no advertising, no analytics or crash reporting services and no social media features. No cookies are set.'),
-  ('Browser version', 'If you play loonpop in a web browser, the page is delivered via Cloudflare (Cloudflare, Inc., USA). Cloudflare processes technically necessary connection data such as your IP address to deliver the page and protect it from attacks. The legal basis is our legitimate interest in secure operation (Art. 6(1)(f) GDPR). Cloudflare is certified under the EU-US Data Privacy Framework. We do not analyse this data ourselves.'),
-  ('Children', 'loonpop is suitable for all ages. As we do not collect any personal data, we do not collect any from children either.'),
+  ('Browser version', 'If you play LoonPop in a web browser, the page is delivered via Cloudflare (Cloudflare, Inc., USA). Cloudflare processes technically necessary connection data such as your IP address to deliver the page and protect it from attacks. The legal basis is our legitimate interest in secure operation (Art. 6(1)(f) GDPR). Cloudflare is certified under the EU-US Data Privacy Framework. We do not analyse this data ourselves.'),
+  ('Children', 'LoonPop is suitable for all ages. As we do not collect any personal data, we do not collect any from children either.'),
   ('Your rights', 'You have the right to access, rectification, erasure, restriction of processing, data portability and objection (Art. 15–21 GDPR). As we do not store any data about you, there is usually nothing to disclose. We are happy to answer questions by email. You can also lodge a complaint with the Austrian Data Protection Authority (dsb.gv.at).'),
   ('Changes', 'If a new feature that processes data is added, we will update this policy beforehand.'),
  ]),
@@ -73,7 +73,7 @@ SEITE = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>loonpop · {titel}</title>
+<title>LoonPop · {titel}</title>
 <style>
   :root {{ color-scheme: light dark; --grund: #f4f8fc; --text: #13203f; --leise: #5a6787; --karte: #fff; --akzent: #2f5cb4; }}
   @media (prefers-color-scheme: dark) {{ :root {{ --grund: #0d1330; --text: #e8eefc; --leise: #9aa8cc; --karte: #152364; --akzent: #8fb4ff; }} }}
@@ -89,7 +89,7 @@ SEITE = """<!doctype html>
 </style>
 </head>
 <body><main>
-<nav><a href="./">← loonpop</a><a href="#de">Deutsch</a><a href="#en">English</a><a href="{andere_url}">{andere}</a></nav>
+<nav><a href="./">← LoonPop</a><a href="#de">Deutsch</a><a href="#en">English</a><a href="{andere_url}">{andere}</a></nav>
 {inhalt}
 </main></body>
 </html>

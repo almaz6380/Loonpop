@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { mitSieg, mitWeite, offen, type Fortschritt } from './fortschritt.ts';
+import { mitSieg, mitWeite, naechstes, offen, type Fortschritt } from './fortschritt.ts';
 
 const leer = (): Fortschritt => ({ v: 1, bestzeit: {} });
 
@@ -44,4 +44,13 @@ test('nur eine groessere Weite ersetzt die Bestweite, je Richtung', () => {
   assert.deepEqual(r.f.endlos, { hoch: 120, strecke: 40 });
   // Die Level bleiben davon unberuehrt.
   assert.deepEqual(r.f.bestzeit, {});
+});
+
+test('der Spielen-Knopf startet das erste offene, nicht geschaffte Level', () => {
+  const ids = [1, 2, 3, 6];
+  const leer: Fortschritt = { v: 1, bestzeit: {} };
+  assert.equal(naechstes(leer, ids), 0);
+  assert.equal(naechstes({ v: 1, bestzeit: { 1: 5, 2: 7 } }, ids), 2);
+  // Alles geschafft: das letzte, dort jagt man Bestzeiten.
+  assert.equal(naechstes({ v: 1, bestzeit: { 1: 5, 2: 7, 3: 9, 6: 4 } }, ids), 3);
 });

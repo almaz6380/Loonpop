@@ -1,6 +1,6 @@
 {
   "menue": {
-    "titel": "loonpop",
+    "titel": "LoonPop",
     "untertitel": "Tieni il soffiatore sotto il palloncino e premi. Gli aghi non perdonano.",
     "level": "Livello {{n}}",
     "hinweis": "Fai scorrere il soffiatore di lato e tieni premuto per soffiare. Se ti sposti di lato, spingi il palloncino di fianco.",
@@ -14,7 +14,9 @@
     "bestweite": "{{m}} m",
     "sprache": "Lingua",
     "datenschutz": "Privacy",
-    "impressum": "Note legali"
+    "impressum": "Note legali",
+    "spielen": "Gioca",
+    "alleLevel": "Tutti i livelli"
   },
   "spiel": {
     "zurueck": "Indietro",

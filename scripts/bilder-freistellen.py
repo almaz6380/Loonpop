@@ -91,6 +91,13 @@ def main() -> None:
           'seiten', round(geblaese.width / geblaese.height, 4))
     auf_breite(geblaese, 256).save(ZIEL / 'geblaese.png', optimize=True)
 
+    # Der Schriftzug fuers Menue (03.10.2026). Gemini lieferte ein Gruen von
+    # etwa (35, 242, 14) statt #00FF00 — der Abstand zur Schluesselfarbe traegt
+    # das, weil er nur Gruen gegen Rot und Blau misst.
+    logo = zuschneiden(freistellen(Image.open(QUELLEN / 'logo.jpg'), 'gruen'))
+    auf_breite(logo, 900).save(ZIEL / 'logo.png', optimize=True)
+    print('logo', logo.size, 'Seitenverhaeltnis', round(logo.width / logo.height, 4))
+
     wolken = freistellen(Image.open(QUELLEN / 'wolken.jpg'), 'magenta')
     h = wolken.height // 2
     w = wolken.width // 2
@@ -104,6 +111,14 @@ def main() -> None:
         oben = roh.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()[1]
         roh = roh.crop((0, oben, roh.width, roh.height))
         auf_breite(roh, breite).save(ZIEL / f'{name}.png', optimize=True)
+
+    # Der Menue-Hintergrund (03.10.2026): ganze Landschaft ohne Ballon und
+    # Geblaese, die stellt das Menue selbst davor. ⚠ Der erste Versuch
+    # (menue-hintergrund.jpg) hatte beides schon im Bild — es lag dann unter
+    # dem Level-Raster — und eine harte Kante im Himmel.
+    menue = Image.open(QUELLEN / 'menue-himmel.jpg').convert('RGB')
+    menue.resize((1080, round(menue.height * 1080 / menue.width)), Image.LANCZOS).save(
+        ZIEL / 'menue-himmel.jpg', quality=85)
 
     himmel = Image.open(QUELLEN / 'himmel.jpg').convert('RGB')
     himmel.resize((360, 728), Image.LANCZOS).save(ZIEL / 'himmel.jpg', quality=88)

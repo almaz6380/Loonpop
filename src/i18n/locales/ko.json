@@ -1,6 +1,6 @@
 {
   "menue": {
-    "titel": "loonpop",
+    "titel": "LoonPop",
     "untertitel": "송풍기를 풍선 아래에 대고 누르세요. 바늘에 닿으면 끝이에요.",
     "level": "레벨 {{n}}",
     "hinweis": "송풍기를 옆으로 밀고, 꾹 누르면 바람이 나와요. 비켜 서면 풍선이 옆으로 밀려요.",
@@ -14,7 +14,9 @@
     "bestweite": "{{m}}m",
     "sprache": "언어",
     "datenschutz": "개인정보 처리방침",
-    "impressum": "법적 고지"
+    "impressum": "법적 고지",
+    "spielen": "플레이",
+    "alleLevel": "전체 레벨"
   },
   "spiel": {
     "zurueck": "뒤로",

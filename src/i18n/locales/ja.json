@@ -1,6 +1,6 @@
 {
   "menue": {
-    "titel": "loonpop",
+    "titel": "LoonPop",
     "untertitel": "ブロワーを風船の下に構えて押そう。針に触れたらおしまい。",
     "level": "レベル {{n}}",
     "hinweis": "ブロワーを左右に動かし、押し続けて風を送ろう。少しずらすと風船は横に流れる。",
@@ -14,7 +14,9 @@
     "bestweite": "{{m}} m",
     "sprache": "言語",
     "datenschutz": "プライバシー",
-    "impressum": "運営者情報"
+    "impressum": "運営者情報",
+    "spielen": "プレイ",
+    "alleLevel": "レベル一覧"
   },
   "spiel": {
     "zurueck": "戻る",

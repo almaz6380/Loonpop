@@ -29,7 +29,8 @@ await ctx.addInitScript(() => {
 const seite = await ctx.newPage();
 await seite.goto(URL_APP);
 await seite.waitForTimeout(800);
-await seite.locator('button').first().click();
+// Im Menue: erst „Spielen“, dann „Endlos“.
+await seite.locator('main > button').nth(1).click();
 await seite.waitForTimeout(800);
 
 const cdp = await ctx.newCDPSession(seite);

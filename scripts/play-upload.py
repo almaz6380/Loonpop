@@ -82,19 +82,27 @@ class ApiError(Exception):
 def call(tok, method, url, data=None, ctype='application/json', fatal=True):
     if data is not None and ctype == 'application/json':
         data = json.dumps(data).encode()
-    req = urllib.request.Request(url, data=data, method=method)
-    req.add_header('Authorization', f'Bearer {tok}')
-    if data is not None:
-        req.add_header('Content-Type', ctype)
-    try:
-        with urllib.request.urlopen(req) as r:
-            raw = r.read()
-            return json.loads(raw) if raw else {}
-    except urllib.error.HTTPError as e:
-        detail = e.read().decode(errors='replace')
-        if not fatal:
-            raise ApiError(e.code, detail) from None
-        sys.exit(f'\nFEHLER {e.code} bei {method} {url}\n{detail}\n')
+    # ⚠ Google antwortet zwischendurch mit 503 „currently unavailable“ (03.10.2026,
+    # mitten im Commit nach vier Uploads). Ein zweiter Versuch geht fast immer.
+    for versuch in range(4):
+        req = urllib.request.Request(url, data=data, method=method)
+        req.add_header('Authorization', f'Bearer {tok}')
+        if data is not None:
+            req.add_header('Content-Type', ctype)
+        try:
+            with urllib.request.urlopen(req) as r:
+                raw = r.read()
+                return json.loads(raw) if raw else {}
+        except urllib.error.HTTPError as e:
+            code, detail = e.code, e.read().decode(errors='replace')
+            if code in (500, 502, 503, 504) and versuch < 3:
+                print(f'  {code} von Google, neuer Versuch in {5 * 2 ** versuch} s')
+                time.sleep(5 * 2 ** versuch)
+                continue
+            break
+    if not fatal:
+        raise ApiError(code, detail)
+    sys.exit(f'\nFEHLER {code} bei {method} {url}\n{detail}\n')
 
 
 def commit_edit(tok, eid):
@@ -290,9 +298,16 @@ def setze_listing(tok, datei, lang, dry_run=False):
 
     eid = call(tok, 'POST', f'{API}/applications/{PKG}/edits')['id']
     url = f'{API}/applications/{PKG}/edits/{eid}/listings/{lang}'
-    alt = call(tok, 'GET', url)
+    # ⚠ Eine Sprache, die es im Eintrag noch nicht gibt, liefert beim Lesen 404
+    # (03.10.2026, loonpop „ar“). Angelegt wird sie per PUT, nicht per PATCH.
+    try:
+        alt, neu_anlegen = call(tok, 'GET', url, fatal=False), False
+    except ApiError as e:
+        if e.code != 404:
+            sys.exit(f'\nFEHLER {e.code} bei GET {url}\n{e.detail}\n')
+        alt, neu_anlegen = {}, True
 
-    print(f'Store-Eintrag {lang}:')
+    print(f'Store-Eintrag {lang}{" (neu)" if neu_anlegen else ""}:')
     for feld in ('title', 'shortDescription', 'fullDescription'):
         if feld not in neu:
             continue
@@ -318,7 +333,7 @@ def setze_listing(tok, datei, lang, dry_run=False):
         print('\n--dry-run: Edit verworfen, am Eintrag hat sich nichts geaendert.')
         return
 
-    call(tok, 'PATCH', url, data=dict(neu, language=lang))
+    call(tok, 'PUT' if neu_anlegen else 'PATCH', url, data=dict(neu, language=lang))
     print()
     commit_edit(tok, eid)
 
@@ -337,6 +352,8 @@ def main():
                    help='vorhandenen versionCode weiter ausrollen (ohne Upload)')
     p.add_argument('--fraction', type=float, help='Anteil der Nutzer, z. B. 0.2')
     p.add_argument('--complete', action='store_true', help='an alle ausrollen')
+    p.add_argument('--entwurf', action='store_true',
+                   help='nur als Entwurf anlegen (Pflicht, solange die App nie veroeffentlicht war)')
     p.add_argument('--notes', default='', help='Was-ist-neu-Text (de-DE)')
     p.add_argument('--status', action='store_true', help='nur den Track anzeigen')
     p.add_argument('--screenshots', metavar='VERZEICHNIS',
@@ -399,6 +416,11 @@ def main():
     else:
         release['status'] = 'inProgress'
         release['userFraction'] = a.fraction
+    if a.entwurf:
+        # ⚠ Solange die App nie veroeffentlicht war, nimmt Google nur Entwuerfe an
+        # („Only releases with status draft may be created on draft app“, beim
+        # :validate, 03.10.2026). Abgeschickt wird der erste in der Play Console.
+        release = {'name': release['name'], 'versionCodes': release['versionCodes'], 'status': 'draft'}
     if a.notes:
         release['releaseNotes'] = [{'language': 'de-DE', 'text': a.notes}]
 

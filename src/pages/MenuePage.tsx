@@ -80,9 +80,11 @@ export default function MenuePage({ fortschritt, spieleLevel, spieleEndlos }: {
 
       {/* ⚠ pb-24: Unten liegt die Wiese; weiss auf hellgruen waere kaum lesbar. */}
       <main className="relative mx-auto w-full max-w-sm px-6 pt-[max(1.75rem,env(safe-area-inset-top))] pb-24 text-center">
-        <h1 className="schrift-rund text-6xl font-bold tracking-tight
-                       drop-shadow-[0_4px_14px_rgba(10,20,60,0.45)]">
-          {t('menue.titel')}
+        {/* Der Schriftzug aus Gemini (public/bilder/logo.png). Laedt er noch,
+            steht der Name als Text da — alt ist zugleich die Ueberschrift. */}
+        <h1 className="schrift-rund text-5xl font-bold">
+          <img src="/bilder/logo.png" alt={t('menue.titel')}
+               className="mx-auto w-72 h-auto drop-shadow-[0_6px_14px_rgba(10,20,60,0.4)]" />
         </h1>
         <p className="mt-1.5 text-sm font-medium text-white leading-relaxed drop-shadow-[0_1px_6px_rgba(10,20,60,0.8)]">
           {t('menue.untertitel')}

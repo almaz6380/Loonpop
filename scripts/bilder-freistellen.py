@@ -91,6 +91,13 @@ def main() -> None:
           'seiten', round(geblaese.width / geblaese.height, 4))
     auf_breite(geblaese, 256).save(ZIEL / 'geblaese.png', optimize=True)
 
+    # Der Schriftzug fuers Menue (03.10.2026). Gemini lieferte ein Gruen von
+    # etwa (35, 242, 14) statt #00FF00 — der Abstand zur Schluesselfarbe traegt
+    # das, weil er nur Gruen gegen Rot und Blau misst.
+    logo = zuschneiden(freistellen(Image.open(QUELLEN / 'logo.jpg'), 'gruen'))
+    auf_breite(logo, 900).save(ZIEL / 'logo.png', optimize=True)
+    print('logo', logo.size, 'Seitenverhaeltnis', round(logo.width / logo.height, 4))
+
     wolken = freistellen(Image.open(QUELLEN / 'wolken.jpg'), 'magenta')
     h = wolken.height // 2
     w = wolken.width // 2

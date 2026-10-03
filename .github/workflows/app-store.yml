@@ -5,7 +5,7 @@
 #   texte           Name, Untertitel, Beschreibung, Stichworte … in allen 13 Sprachen
 #   screenshots     iPhone-Bilder je Sprache ersetzen (store-assets/ios/<code>)
 #   build           Build <nummer> der offenen Version zuweisen
-#   pflicht         Exportfrage + Inhaberrechte + Alterseinstufung
+#   pflicht         Exportfrage, Inhaberrechte, Alter, Copyright, Kategorie, Kontakt, Preis, Laender
 #   einreichen      Version zur Pruefung schicken
 #   aufraeumen      festhaengende Einreichung zurueckziehen
 #   profil          pruefen, ob das Profil „loonpop AppStore“ abrufbar ist (liest nur)
@@ -54,6 +54,6 @@ jobs:
           case "$MODE" in
             build)   python3 scripts/asc.py --build "$NUMMER" "${TROCKEN[@]}" ;;
             profil)  python3 scripts/profil-holen.py "loonpop AppStore" "$RUNNER_TEMP/p.mobileprovision" && rm -f "$RUNNER_TEMP/p.mobileprovision"* ;;
-            pflicht) python3 scripts/asc.py --exportfrage --inhaberrechte --alter-setzen "${TROCKEN[@]}" ;;
+            pflicht) python3 scripts/asc.py --exportfrage --inhaberrechte --alter-setzen --vervollstaendigen "${TROCKEN[@]}" ;;
             *)       python3 scripts/asc.py "--$MODE" "${TROCKEN[@]}" ;;
           esac

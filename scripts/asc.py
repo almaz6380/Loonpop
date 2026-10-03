@@ -15,6 +15,7 @@ Zugang ueber drei Umgebungsvariablen (in der CI aus den Repo-Secrets):
     python3 scripts/asc.py --exportfrage    # Verschluesselung: nur HTTPS → false
     python3 scripts/asc.py --inhaberrechte  # keine Inhalte Dritter
     python3 scripts/asc.py --alter-setzen   # Alterseinstufung: alles „keine“
+    python3 scripts/asc.py --vervollstaendigen  # Copyright, Kategorie, Pruef-Kontakt, Preis, Laender
     python3 scripts/asc.py --einreichen
     python3 scripts/asc.py --aufraeumen     # festhaengende Einreichung zurueckziehen
 
@@ -386,6 +387,150 @@ def alter_setzen(tok):
 
 # ── Einreichen ─────────────────────────────────────────────────────────────
 
+# ── Was Apple vor dem Einreichen verlangt (03.10.2026) ──────────────────────
+# Die erste Einreichung scheiterte an fuenf Punkten. Vier gehen ueber die API,
+# die App-Datenschutz-Angaben („Keine Daten“) NICHT: die muessen einmal in ASC
+# geklickt werden.
+COPYRIGHT = '2026 Josef Gallab'
+KATEGORIE, UNTERKATEGORIE = 'GAMES', 'GAMES_CASUAL'
+PRUEF_NOTIZ = ('LoonPop is a single-player skill game. No account, no login, no network '
+               'access, no in-app purchases and no ads. Touch and hold to blow the leaf '
+               'blower; slide to move it. All levels are reachable by playing; the endless '
+               'mode is available from the start.')
+V2 = 'https://api.appstoreconnect.apple.com/v2'
+
+
+def _verdeckt(x):
+    x = x or ''
+    return x[:3] + '…' + x[-2:] if len(x) > 6 else '…'
+
+
+def setze_copyright(tok, aid):
+    v = offene_version(tok, aid)
+    if v['attributes'].get('copyright'):
+        print(f'  Copyright steht: {v["attributes"]["copyright"]}')
+        return
+    print(f'  Copyright -> {COPYRIGHT}')
+    if TROCKEN:
+        return
+    res = api(tok, f'appStoreVersions/{v["id"]}', 'PATCH', {'data': {
+        'type': 'appStoreVersions', 'id': v['id'], 'attributes': {'copyright': COPYRIGHT}}}, fatal=False)
+    print(f'    FEHLER: {fehler_text(res)}' if res.get('_fehler') else '    ok')
+
+
+def setze_kategorie(tok, aid):
+    info = bearbeitbares_app_info(tok, aid)
+    print(f'  Kategorie -> {KATEGORIE} / {UNTERKATEGORIE}')
+    if TROCKEN:
+        return
+    res = api(tok, f'appInfos/{info["id"]}', 'PATCH', {'data': {
+        'type': 'appInfos', 'id': info['id'], 'relationships': {
+            'primaryCategory': {'data': {'type': 'appCategories', 'id': KATEGORIE}},
+            'primarySubcategoryOne': {'data': {'type': 'appCategories', 'id': UNTERKATEGORIE}}}}},
+        fatal=False)
+    print(f'    FEHLER: {fehler_text(res)}' if res.get('_fehler') else '    ok')
+
+
+def _kontakt_von_anderer_app(tok, aid):
+    """Den Pruef-Kontakt aus Josefs anderen Apps (Anigosha …) uebernehmen.
+
+    ⚠ Josef war nicht am Rechner; Telefonnummer und Name stehen dort laengst."""
+    for app in api(tok, 'apps?limit=50').get('data', []):
+        if app['id'] == aid:
+            continue
+        for v in api(tok, f'apps/{app["id"]}/appStoreVersions?limit=5', fatal=False).get('data', []):
+            d = api(tok, f'appStoreVersions/{v["id"]}/appStoreReviewDetail', fatal=False).get('data')
+            if d and d['attributes'].get('contactPhone'):
+                print(f'  Kontakt aus „{app["attributes"]["name"]}“ uebernommen')
+                return {k: d['attributes'].get(k) for k in
+                        ('contactFirstName', 'contactLastName', 'contactPhone', 'contactEmail')}
+    return None
+
+
+def setze_pruefkontakt(tok, aid):
+    v = offene_version(tok, aid)
+    da = api(tok, f'appStoreVersions/{v["id"]}/appStoreReviewDetail', fatal=False).get('data')
+    if da and da['attributes'].get('contactPhone'):
+        print('  Pruef-Kontakt steht schon')
+        return
+    k = _kontakt_von_anderer_app(tok, aid)
+    if not k:
+        print('  KEIN Pruef-Kontakt gefunden — in ASC unter der Version „App-Pruefung“ von Hand.')
+        return
+    print(f'  Kontakt: {k["contactFirstName"]} {k["contactLastName"]}, '
+          f'Tel. {_verdeckt(k["contactPhone"])}, {_verdeckt(k["contactEmail"])}')
+    if TROCKEN:
+        return
+    attr = dict(k, demoAccountRequired=False, notes=PRUEF_NOTIZ)
+    if da:
+        res = api(tok, f'appStoreReviewDetails/{da["id"]}', 'PATCH', {'data': {
+            'type': 'appStoreReviewDetails', 'id': da['id'], 'attributes': attr}}, fatal=False)
+    else:
+        res = api(tok, 'appStoreReviewDetails', 'POST', {'data': {
+            'type': 'appStoreReviewDetails', 'attributes': attr, 'relationships': {
+                'appStoreVersion': {'data': {'type': 'appStoreVersions', 'id': v['id']}}}}}, fatal=False)
+    print(f'    FEHLER: {fehler_text(res)}' if res.get('_fehler') else '    ok')
+
+
+def setze_preis(tok, aid):
+    """Kostenlos, Basis USA."""
+    punkte = api(tok, f'apps/{aid}/appPricePoints?filter[territory]=USA&limit=200').get('data', [])
+    frei = [p for p in punkte if float(p['attributes'].get('customerPrice') or 1) == 0]
+    if not frei:
+        print('  KEIN kostenloser Preispunkt gefunden — Preis in ASC von Hand auf 0.')
+        return
+    print('  Preis -> kostenlos')
+    if TROCKEN:
+        return
+    res = api(tok, 'appPriceSchedules', 'POST', {
+        'data': {'type': 'appPriceSchedules', 'relationships': {
+            'app': {'data': {'type': 'apps', 'id': aid}},
+            'baseTerritory': {'data': {'type': 'territories', 'id': 'USA'}},
+            'manualPrices': {'data': [{'type': 'appPrices', 'id': '${preis}'}]}}},
+        'included': [{'type': 'appPrices', 'id': '${preis}', 'attributes': {'startDate': None},
+                      'relationships': {'appPricePoint': {'data': {
+                          'type': 'appPricePoints', 'id': frei[0]['id']}}}}]}, fatal=False)
+    print(f'    FEHLER: {fehler_text(res)}' if res.get('_fehler') else '    ok')
+
+
+def setze_verfuegbarkeit(tok, aid):
+    """In allen Laendern, auch in kuenftigen."""
+    da = api(tok, f'apps/{aid}/appAvailabilityV2', fatal=False)
+    if da.get('data'):
+        print('  Verfuegbarkeit steht schon')
+        return
+    laender = []
+    url = 'territories?limit=200'
+    while url:
+        res = api(tok, url)
+        laender += [t['id'] for t in res.get('data', [])]
+        url = (res.get('links') or {}).get('next')
+    print(f'  Verfuegbarkeit -> alle {len(laender)} Laender')
+    if TROCKEN:
+        return
+    res = api(tok, f'{V2}/appAvailabilities', 'POST', {
+        'data': {'type': 'appAvailabilities', 'attributes': {'availableInNewTerritories': True},
+                 'relationships': {
+                     'app': {'data': {'type': 'apps', 'id': aid}},
+                     'territoryAvailabilities': {'data': [
+                         {'type': 'territoryAvailabilities', 'id': f'${{{t}}}'} for t in laender]}}},
+        'included': [{'type': 'territoryAvailabilities', 'id': f'${{{t}}}',
+                      'attributes': {'available': True},
+                      'relationships': {'territory': {'data': {'type': 'territories', 'id': t}}}}
+                     for t in laender]}, fatal=False)
+    print(f'    FEHLER: {fehler_text(res)}' if res.get('_fehler') else '    ok')
+
+
+def vervollstaendigen(tok):
+    aid = app_id(tok)
+    setze_copyright(tok, aid)
+    setze_kategorie(tok, aid)
+    setze_pruefkontakt(tok, aid)
+    setze_preis(tok, aid)
+    setze_verfuegbarkeit(tok, aid)
+    print('  App-Datenschutz („Keine Daten“) geht nicht ueber die API — in ASC von Hand.')
+
+
 def einreichen(tok):
     aid = app_id(tok)
     v = offene_version(tok, aid)
@@ -463,7 +608,7 @@ def main():
     global TROCKEN
     p = argparse.ArgumentParser()
     for name in ('status', 'texte', 'screenshots', 'exportfrage', 'inhaberrechte',
-                 'alter-setzen', 'einreichen', 'aufraeumen'):
+                 'alter-setzen', 'vervollstaendigen', 'einreichen', 'aufraeumen'):
         p.add_argument(f'--{name}', action='store_true')
     p.add_argument('--build', metavar='NUMMER')
     p.add_argument('--dry-run', action='store_true')
@@ -486,6 +631,8 @@ def main():
         inhaberrechte(tok)
     if a.alter_setzen:
         alter_setzen(tok)
+    if a.vervollstaendigen:
+        vervollstaendigen(tok)
     if a.einreichen:
         einreichen(tok)
     if a.aufraeumen:

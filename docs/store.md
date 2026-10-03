@@ -66,6 +66,21 @@ in beide Konsolen.
 
 ### 3. Secrets ins Repo
 
+**Vom Handy (ohne Mac, 03.10.2026):** Die Schlüssel liegen schon im Repo
+`anigosha`. Dessen Workflow **„Schluessel nach loonpop“** trägt sie hier ein.
+Dafür braucht er einmal ein Token:
+1. https://github.com/settings/personal-access-tokens/new: Name `loonpop-schluessel`,
+   Ablauf 7 Tage, *Only select repositories* → `Loonpop`, unter *Repository
+   permissions* → **Secrets: Read and write** → *Generate token* → kopieren.
+2. https://github.com/almaz6380/anigosha/settings/secrets/actions/new: Name
+   `LOONPOP_TOKEN`, Wert einfügen → *Add secret*.
+3. Den Workflow „Schluessel nach loonpop“ in anigosha starten.
+
+Das Provisioning-Profil wird nicht kopiert. `ios-release.yml` holt
+„loonpop AppStore“ selbst über die ASC-API (`scripts/profil-holen.py`).
+
+**Am Mac** geht es weiterhin so:
+
 Am Mac im Repo-Ordner: `bash scripts/setup-release-secrets.sh`. Es fragt
 nach denselben Dateien wie bei Anigosha (Keystore, Play-Dienstkonto, .p12,
 .p8) und zusätzlich nach dem neuen Profil `loonpop AppStore`.

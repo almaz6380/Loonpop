@@ -8,6 +8,7 @@
 #   pflicht         Exportfrage + Inhaberrechte + Alterseinstufung
 #   einreichen      Version zur Pruefung schicken
 #   aufraeumen      festhaengende Einreichung zurueckziehen
+#   profil          pruefen, ob das Profil „loonpop AppStore“ abrufbar ist (liest nur)
 name: App Store
 
 on:
@@ -16,7 +17,7 @@ on:
       mode:
         description: 'Was getan wird'
         type: choice
-        options: [status, texte, screenshots, build, pflicht, einreichen, aufraeumen]
+        options: [status, profil, texte, screenshots, build, pflicht, einreichen, aufraeumen]
         default: status
       nummer:
         description: 'Build-Nummer (nur fuer build)'
@@ -52,6 +53,7 @@ jobs:
           [ "$DRY_RUN" = "true" ] && [ "$MODE" != "status" ] && TROCKEN=(--dry-run)
           case "$MODE" in
             build)   python3 scripts/asc.py --build "$NUMMER" "${TROCKEN[@]}" ;;
+            profil)  python3 scripts/profil-holen.py "loonpop AppStore" "$RUNNER_TEMP/p.mobileprovision" && rm -f "$RUNNER_TEMP/p.mobileprovision" ;;
             pflicht) python3 scripts/asc.py --exportfrage --inhaberrechte --alter-setzen "${TROCKEN[@]}" ;;
             *)       python3 scripts/asc.py "--$MODE" "${TROCKEN[@]}" ;;
           esac

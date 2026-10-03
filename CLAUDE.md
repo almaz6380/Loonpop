@@ -8,7 +8,7 @@ Die sechste App von Josef.
 
 **Repository:** https://github.com/almaz6380/loonpop (privat)
 **Stand:** M2 fertig — Fortschritt auf dem Gerät, Endlos-Modus. Seit 02.10.2026
-wird **nur noch nach oben** gespielt: sechs Hoch-Level und Endlos ↑. Strecken
+wird **nur noch nach oben** gespielt: zwölf Hoch-Level (IDs 1, 2, 3, 6, 8, 10, 13–18) und Endlos ↑. Strecken
 (Level 4, 5, 7, 9, 11, 12) und Endlos → sind ausgeblendet, nicht gelöscht
 (`LEVEL` in `level/index.ts` filtert, `npm test` prüft sie weiter). Siehe README für die Reihenfolge bis zum Store.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein

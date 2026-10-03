@@ -17,11 +17,18 @@ import level009 from './009.json';
 import level010 from './010.json';
 import level011 from './011.json';
 import level012 from './012.json';
+import level013 from './013.json';
+import level014 from './014.json';
+import level015 from './015.json';
+import level016 from './016.json';
+import level017 from './017.json';
+import level018 from './018.json';
 import type { Level } from '../typen.ts';
 
 const ALLE = [
   level001, level002, level003, level004, level005, level006,
   level007, level008, level009, level010, level011, level012,
+  level013, level014, level015, level016, level017, level018,
 ] as Level[];
 
 /**

@@ -10,6 +10,8 @@ import { useTranslation } from 'react-i18next';
 
 import { neueWelt } from '../spiel/welt.ts';
 import { starteSchleife } from '../spiel/schleife.ts';
+import { glaetten, KAMERA_TEMPO } from '../spiel/kamera.ts';
+import { naechsteDichte, startDichte, DICHTE_FENSTER } from '../spiel/dichte.ts';
 import {
   sichtBerechnen, sichtEndlosHoch, kameraFuer, kameraYFuer, zuLevel, zeichne, type Sicht,
 } from '../spiel/zeichnen.ts';
@@ -22,6 +24,12 @@ import { lade, speichere, mitSieg, mitWeite } from '../lib/fortschritt.ts';
  * Leveln ist das die Bestzeit (s), im Endlos-Lauf die Bestweite (m).
  */
 type Rekord = { neu: boolean; beste: number | null };
+
+/**
+ * Die Pixeldichte, die dieses Geraet schafft (siehe dichte.ts). Ausserhalb der
+ * Komponente: Einmal gesenkt, gilt sie fuer alle weiteren Laeufe der Sitzung.
+ */
+let dichte: number | null = null;
 
 export default function SpielPage({ level, endlos, zurueck, weiter }: {
   /** Ein gebautes Level — oder `endlos` fuer einen Endlos-Lauf. */
@@ -67,8 +75,9 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
 
     // ⚠ Auf dem Canvas in GERAETEPIXELN zeichnen, sonst ist auf einem Handy mit
     // doppelter Pixeldichte alles unscharf.
+    dichte ??= startDichte(window.devicePixelRatio);
     const anpassen = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = dichte!;
       const b = canvas.clientWidth;
       const h = canvas.clientHeight;
       canvas.width = Math.round(b * dpr);
@@ -88,16 +97,34 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
     // reicht fuers Auge und kostet React fast nichts.
     const uhr = setInterval(() => { setZeit(welt.zeit); setWeite(meter(welt)); }, 200);
 
+    let letztesBild = performance.now();
+    let messSumme = 0;
+    let messBilder = -10; // die ersten Bilder (Laden, Aufwaermen) zaehlen nicht
     const schleife = starteSchleife(
       welt,
       (w, blende) => {
+        const jetztMs = performance.now();
+        const dtMs = jetztMs - letztesBild;
+        letztesBild = jetztMs;
+        if (++messBilder > 0) {
+          messSumme += dtMs;
+          if (messBilder === DICHTE_FENSTER) {
+            const neu = naechsteDichte(dichte!, messSumme / DICHTE_FENSTER);
+            if (neu !== dichte) { dichte = neu; anpassen(); }
+            messBilder = 0;
+            messSumme = 0;
+          }
+        }
+        // Hoechstens 0,1 s auf einmal nachziehen: Nach einem Tab-Wechsel soll
+        // die Kamera nicht ueber den Ballon hinwegspringen.
+        const dt = Math.min(dtMs / 1000, 0.1);
         // ⚠ Die Kamera wird beim ZEICHNEN nachgefuehrt, nicht in der Physik.
         // Sonst haenge der Weltzustand vom Bildschirm ab und derselbe Lauf
         // liefe auf zwei Geraeten verschieden.
         if (lvl.art === 'strecke') {
           const ziel = kameraFuer(sichtRef.current, w.ballon.pos.x, lvl.groesse.breite);
           // Weich nachziehen, damit das Bild nicht am Ballon klebt.
-          sichtRef.current.kameraX += (ziel - sichtRef.current.kameraX) * 0.12;
+          sichtRef.current.kameraX = glaetten(sichtRef.current.kameraX, ziel, dt, KAMERA_TEMPO.strecke);
         }
         // Endlos nach oben haengt die Kamera am Boden, den die Physik fuehrt.
         // Weich nachgezogen wie auf Strecken: Der Ballon wird zwischen zwei
@@ -106,7 +133,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
           const ziel = kameraYFuer(sichtRef.current, w.boden);
           const jetzt = sichtRef.current.kameraY;
           sichtRef.current.kameraY = jetzt === undefined || Math.abs(ziel - jetzt) > 600
-            ? ziel : jetzt + (ziel - jetzt) * 0.25;
+            ? ziel : glaetten(jetzt, ziel, dt, KAMERA_TEMPO.hoch);
         }
         // Geblaese der Kamera nachfuehren — jedes Bild, nicht nur wenn sich der
         // Finger bewegt.
@@ -114,8 +141,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
           const im = zuLevel({ x: fingerRef.current, y: 0 }, sichtRef.current);
           w.geblaese.x = Math.max(40, Math.min(lvl.groesse.breite - 40, im.x));
         }
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.setTransform(dichte!, 0, 0, dichte!, 0, 0);
         zeichne(ctx, w, blende, sichtRef.current);
       },
       // ⚠ Verzoegert: Der Platz-Effekt dauert knapp eine Sekunde, und ein
@@ -198,7 +224,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
                       flex items-center justify-between text-white text-sm font-semibold">
         <button
           onClick={zurueck}
-          className="ps-2.5 pe-3.5 py-2 rounded-full bg-black/30 backdrop-blur-md
+          className="ps-2.5 pe-3.5 py-2 rounded-full bg-black/40
                      border border-white/10 flex items-center gap-1.5 active:scale-95 transition"
         >
           <svg viewBox="0 0 24 24" className="w-4 h-4 rtl:-scale-x-100" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -206,7 +232,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
           </svg>
           {t('spiel.zurueck')}
         </button>
-        <span className="px-3.5 py-2 rounded-full bg-black/30 backdrop-blur-md
+        <span className="px-3.5 py-2 rounded-full bg-black/40
                          border border-white/10 tabular-nums">
           {endlos
             ? t('spiel.meter', { m: Math.floor(weite) })
@@ -219,7 +245,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
       {/* Ende — erscheint verzoegert, damit man den Platz-Effekt noch sieht */}
       {ende && ende !== 'laeuft' && (
         <div className="absolute inset-0 grid place-items-center px-8
-                        bg-gradient-to-b from-black/45 via-black/60 to-black/75 backdrop-blur-[3px]
+                        bg-gradient-to-b from-black/45 via-black/60 to-black/75
                         animate-[einblenden_240ms_ease-out]">
           <div className="text-center text-white max-w-xs">
             <p className="text-6xl mb-3 drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)]">
@@ -260,7 +286,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
               </button>
               <button onClick={zurueck}
                 className="px-6 py-3.5 rounded-2xl bg-white/12 border border-white/20
-                           font-semibold backdrop-blur-sm active:scale-95 transition">
+                           font-semibold active:scale-95 transition">
                 {t('spiel.levelwahl')}
               </button>
             </div>

@@ -15,7 +15,8 @@
     "app:bilder": "python3 scripts/app-bilder.py",
     "store:texte": "python3 scripts/store-texte.py",
     "store:bilder": "node scripts/store-bilder.mjs",
-    "rechtstexte": "python3 scripts/rechtstexte.py"
+    "rechtstexte": "python3 scripts/rechtstexte.py",
+    "leistung": "node scripts/leistung.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",

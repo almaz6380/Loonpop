@@ -1,0 +1,22 @@
+{
+  "storeCodes": {
+    "play": [
+      "it-IT"
+    ],
+    "appstore": [
+      "it"
+    ]
+  },
+  "play": {
+    "title": "loonpop: Avventura in pallone",
+    "shortDescription": "Tieni in aria il palloncino con un soffiatore di foglie ed evita gli aghi!",
+    "fullDescription": "Un palloncino, un soffiatore di foglie e tantissimi aghi.\n\nIn loonpop tieni in aria un palloncino con un soffiatore di foglie e lo guidi verso l’alto tra file di aghi. Il soffiatore soffia sempre in verticale. Per dirigerlo ti sposti un po’ di lato sotto il palloncino: il bordo del getto d’aria lo spinge di fianco. Sembra facile? Il palloncino ha inerzia: reagisce in ritardo e continua a fluttuare quando lasci. Vince chi pensa in anticipo.\n\nDODICI LIVELLI FATTI A MANO\nDal primo soffio fino alla vetta: vento laterale, correnti discendenti, aghi che oscillano e che cadono, stretti passaggi a zigzag e corse contro il tempo. Ogni livello porta qualcosa di nuovo.\n\nMODALITÀ INFINITA\nSempre più in alto, finché ce la fai. Diventa sempre più veloce e tornano continuamente passaggi stretti che brillano di rosso. Quanti metri riuscirai a fare?\n\nINOLTRE\n• Basta un dito: scorri e tieni premuto\n• Migliori tempi e migliore distanza salvati\n• 13 lingue\n• Si gioca offline, senza connessione internet\n• Niente pubblicità, niente acquisti in-app, nessun account\n• Nessuna raccolta di dati"
+  },
+  "appstore": {
+    "name": "loonpop: Avventura in pallone",
+    "subtitle": "Soffia, guida, non scoppiare",
+    "keywords": "palloncino,soffiatore,aghi,abilità,fisica,infinito,arcade,vento,riflessi,casual,offline",
+    "promotionalText": "Dodici livelli e una modalità infinita sempre più veloce. Fin dove riesci a salire?",
+    "description": "Un palloncino, un soffiatore di foglie e tantissimi aghi.\n\nIn loonpop tieni in aria un palloncino con un soffiatore di foglie e lo guidi verso l’alto tra file di aghi. Il soffiatore soffia sempre in verticale. Per dirigerlo ti sposti un po’ di lato sotto il palloncino: il bordo del getto d’aria lo spinge di fianco. Sembra facile? Il palloncino ha inerzia: reagisce in ritardo e continua a fluttuare quando lasci. Vince chi pensa in anticipo.\n\nDODICI LIVELLI FATTI A MANO\nDal primo soffio fino alla vetta: vento laterale, correnti discendenti, aghi che oscillano e che cadono, stretti passaggi a zigzag e corse contro il tempo. Ogni livello porta qualcosa di nuovo.\n\nMODALITÀ INFINITA\nSempre più in alto, finché ce la fai. Diventa sempre più veloce e tornano continuamente passaggi stretti che brillano di rosso. Quanti metri riuscirai a fare?\n\nINOLTRE\n• Basta un dito: scorri e tieni premuto\n• Migliori tempi e migliore distanza salvati\n• 13 lingue\n• Si gioca offline, senza connessione internet\n• Niente pubblicità, niente acquisti in-app, nessun account\n• Nessuna raccolta di dati"
+  }
+}

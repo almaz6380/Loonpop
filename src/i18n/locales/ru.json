@@ -12,7 +12,9 @@
     "endlosHoch": "Всё выше и выше",
     "endlosStrecke": "Всё дальше и дальше",
     "bestweite": "{{m}} м",
-    "sprache": "Язык"
+    "sprache": "Язык",
+    "datenschutz": "Конфиденциальность",
+    "impressum": "Правовая информация"
   },
   "spiel": {
     "zurueck": "Назад",

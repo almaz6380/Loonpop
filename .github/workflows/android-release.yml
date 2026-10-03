@@ -1,0 +1,116 @@
+# Android bauen, signieren und zu Google Play hochladen — auf GitHubs Rechnern.
+# Vorlage: almaz6380/anigosha (dort erprobt), ohne Werbung, Kaeufe und Push.
+#
+# Startet NUR von Hand (Actions -> "Android Release" -> Run workflow), nie bei
+# einem Push. Hochladen steht auf aus: dann wird nur gebaut, und das AAB liegt
+# als Artefakt am Lauf. Einrichtung: docs/store.md.
+# WICHTIG: versionCode in android/app/build.gradle vor jedem Upload erhoehen —
+# Play lehnt einen schon benutzten versionCode ab.
+name: Android Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: 'Play-Track'
+        type: choice
+        default: 'internal'
+        options: ['internal', 'production']
+      notes:
+        description: 'Was-ist-neu-Text (de-DE)'
+        type: string
+        default: 'Fehlerkorrekturen und Verbesserungen.'
+      upload:
+        description: 'Wirklich zu Play hochladen? (aus = nur bauen und als Artefakt ablegen)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'   # Capacitor 8 braucht JDK 21
+
+      - name: Abhaengigkeiten
+        run: npm ci
+
+      - name: Tests
+        # Wegsuche, Physik, Sprachen, Store-Textlaengen — ein rotes Level soll
+        # nicht erst im Store auffallen.
+        run: npm test
+
+      - name: Versionsnummer anzeigen
+        run: |
+          VC=$(grep -m1 versionCode android/app/build.gradle | tr -dc '0-9')
+          VN=$(grep -m1 versionName android/app/build.gradle | cut -d'"' -f2)
+          echo "versionCode $VC · versionName $VN"
+          echo "VC=$VC" >> "$GITHUB_ENV"
+          echo "VN=$VN" >> "$GITHUB_ENV"
+
+      - name: Web-Bundle + Capacitor-Sync
+        run: |
+          npm run build
+          npx cap sync android
+
+      - name: Signaturschluessel bereitstellen
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::warning::Kein ANDROID_KEYSTORE_BASE64 — es wird mit dem Debug-Schluessel gebaut. Play nimmt das nicht an."
+            exit 0
+          fi
+          # Nur base64-Alphabet durchlassen — beim Einfuegen ins Secret rutschen
+          # leicht Leerzeichen oder Umbrueche mit hinein.
+          printf '%s' "$KEYSTORE_B64" | tr -cd 'A-Za-z0-9+/=' | base64 -d > android/upload-keystore.jks
+          cat > android/keystore.properties <<EOP
+          storeFile=upload-keystore.jks
+          storePassword=$STORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOP
+
+      - name: AAB bauen
+        run: cd android && ./gradlew --no-daemon bundleRelease
+
+      - name: AAB als Artefakt ablegen
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: loonpop-${{ env.VN }}-vc${{ env.VC }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      - name: Zu Google Play hochladen
+        if: ${{ inputs.upload }}
+        env:
+          PLAY_KEY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          TRACK: ${{ inputs.track }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet pyjwt cryptography
+          printf '%s' "$PLAY_KEY_JSON" > "$RUNNER_TEMP/play-key.json"
+          PLAY_KEY="$RUNNER_TEMP/play-key.json" "$RUNNER_TEMP/venv/bin/python" scripts/play-upload.py \
+            --aab android/app/build/outputs/bundle/release/app-release.aab \
+            --track "$TRACK" --complete --notes "$NOTES"
+
+      - name: Schluessel aufraeumen
+        if: always()
+        run: rm -f android/upload-keystore.jks android/keystore.properties "$RUNNER_TEMP/play-key.json"

@@ -311,6 +311,24 @@ Menü überstimmt sie (`localStorage` „sprache“).
 - Ohne Mehrzahlformen: „{{s}} s“ statt „{{s}} Sekunden“, wo die Sprache
   (ru, pl, ar) die Zahl beugt.
 
+## Store
+
+Alles für die Stores steht in **`docs/store.md`**: was im Repo liegt, was Josef
+selbst tun muss (Konten, Profile, Secrets) und die Antworten für die Formulare.
+
+- Workflows (`.github/workflows/`) starten **nur von Hand**, Hochladen steht auf
+  aus, Store-Workflows starten als Trockenlauf. Vorlage war `almaz6380/anigosha`.
+- Nur **Hochformat** und nur **iPhone** (`TARGETED_DEVICE_FAMILY = 1`). Sonst
+  verlangt Apple iPad-Screenshots.
+- ⚠ **Was die Texte versprechen, muss stimmen:** „ohne Werbung, ohne Käufe,
+  ohne Konto, keine Daten“. Kommt M5 oder M6, ändern sich Store-Texte,
+  `scripts/rechtstexte.py` und beide Datenschutz-Formulare mit.
+- Bilder und Texte werden **erzeugt**, nicht von Hand gepflegt:
+  `npm run app:bilder`, `npm run store:texte`, `npm run store:bilder` (braucht
+  `vite preview` auf Port 4173), `npm run rechtstexte`.
+- Vor jedem Release `versionCode` (Android) und `CURRENT_PROJECT_VERSION`
+  (iOS, 2 Stellen) erhöhen.
+
 ## Konventionen
 
 - Dokumentation und Kommentare auf Deutsch; ein Kommentar sagt, **warum** etwas so

@@ -12,7 +12,9 @@
     "endlosHoch": "一直向上",
     "endlosStrecke": "一直向前",
     "bestweite": "{{m}} 米",
-    "sprache": "语言"
+    "sprache": "语言",
+    "datenschutz": "隐私政策",
+    "impressum": "法律声明"
   },
   "spiel": {
     "zurueck": "返回",

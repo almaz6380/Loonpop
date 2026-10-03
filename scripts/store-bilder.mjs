@@ -1,0 +1,217 @@
+// Store-Screenshots und Vorstellungsgrafik aus der laufenden App (02.10.2026).
+//
+//   npm run build && npx vite preview --port 4173 &
+//   node scripts/store-bilder.mjs                 alle 13 Sprachen
+//   SPRACHEN=de,en node scripts/store-bilder.mjs  nur diese
+//
+// Ergebnis:
+//   store-assets/play/<code>/1-menue.jpg …   1080×2160 (Google Play, ≤ 2:1)
+//   store-assets/ios/<code>/1-menue.jpg …    1320×2868 (iPhone 6,9", deckt die kleineren ab)
+//   store-assets/play/feature.png            1024×500  (Vorstellungsgrafik)
+//
+// Fotografiert wird das ECHTE Spiel: echte Level, echte Physik, der Finger
+// drueckt wirklich. Nur der Fortschritt ist gesetzt (acht Level geschafft,
+// 137 m Bestweite), damit das Menue nicht leer wirkt.
+// ⚠ Wolken ziehen, und der Endlos-Seed kommt aus der Uhr: Zwei Laeufe ergeben
+// nie exakt dieselben Bilder. Das ist hier egal, solange jedes Bild stimmt.
+// ⚠ Nur iPhone-Bilder: Die App ist auf iPhone beschraenkt
+// (TARGETED_DEVICE_FAMILY = 1), sonst verlangte Apple auch iPad-Bilder.
+
+import { chromium } from 'playwright';
+import { mkdirSync, readFileSync } from 'node:fs';
+
+const URL_APP = process.env.URL_APP ?? 'http://localhost:4173';
+const ALLE = ['de', 'en', 'es', 'fr', 'it', 'pt', 'tr', 'pl', 'ru', 'ja', 'ko', 'zh', 'ar'];
+const SPRACHEN = process.env.SPRACHEN ? process.env.SPRACHEN.split(',') : ALLE;
+
+// Bildschirm des fotografierten Geraets (CSS-Pixel) und Zielformat.
+const FORMATE = {
+  play: { breite: 1080, hoehe: 2160, geraet: { width: 360, height: 640 } },
+  ios: { breite: 1320, hoehe: 2868, geraet: { width: 402, height: 744 } },
+};
+
+const UEBERSCHRIFT = {
+  de: ['Zwölf Level und ein Endlos-Modus', 'Lenke den Ballon durch die Nadeln', 'Wie hoch kommst du?', 'Wind, Pendel, fallende Nadeln'],
+  en: ['Twelve levels and an endless mode', 'Guide the balloon through the needles', 'How high can you go?', 'Wind, pendulums, falling needles'],
+  es: ['Doce niveles y un modo infinito', 'Guía el globo entre las agujas', '¿Hasta dónde llegarás?', 'Viento, péndulos y agujas que caen'],
+  fr: ['Douze niveaux et un mode infini', 'Guide le ballon entre les aiguilles', 'Jusqu’où monteras-tu ?', 'Vent, pendules, aiguilles qui tombent'],
+  it: ['Dodici livelli e una modalità infinita', 'Guida il palloncino tra gli aghi', 'Fin dove arriverai?', 'Vento, pendoli, aghi che cadono'],
+  pt: ['Doze fases e um modo infinito', 'Guie o balão entre as agulhas', 'Até onde você consegue subir?', 'Vento, pêndulos, agulhas caindo'],
+  tr: ['On iki bölüm ve sonsuz mod', 'Balonu iğnelerin arasından geçir', 'Ne kadar yükseğe çıkabilirsin?', 'Rüzgâr, sarkaçlar, düşen iğneler'],
+  pl: ['Dwanaście poziomów i tryb bez końca', 'Przeprowadź balon między igłami', 'Jak wysoko dolecisz?', 'Wiatr, wahadła, spadające igły'],
+  ru: ['12 уровней и бесконечный режим', 'Проведи шарик сквозь иглы', 'Как высоко ты поднимешься?', 'Ветер, маятники, падающие иглы'],
+  ja: ['12レベルとエンドレス', '針のすき間を抜けて風船を導こう', 'どこまで高く行ける？', '風、振り子、落ちてくる針'],
+  ko: ['12개 레벨 + 무한 모드', '바늘 사이로 풍선을 이끄세요', '얼마나 높이 갈 수 있을까요?', '바람, 진자, 떨어지는 바늘'],
+  zh: ['12 个关卡 + 无尽模式', '引导气球穿过针阵', '你能飞多高？', '风、摆针和下落的针'],
+  ar: ['اثنتا عشرة مرحلة ووضع بلا نهاية', 'قُد البالون بين الإبر', 'إلى أي ارتفاع ستصل؟', 'رياح وبندولات وإبر تسقط'],
+};
+
+// ⚠ Die Nummer vorn legt die Reihenfolge im Store fest, und play-upload.py
+// nimmt nur Dateien der Form 1-name.jpg (Nummer, Trenner, Name).
+const NAMEN = ['menue', 'level', 'endlos', 'wind'];
+
+const FORTSCHRITT = {
+  v: 1,
+  bestzeit: { 1: 6.2, 2: 9.8, 3: 11.4, 6: 14.1, 8: 12.7, 10: 13.9, 13: 10.3, 14: 8.8 },
+  endlos: { hoch: 137 },
+};
+
+/**
+ * Wo der Ballon gerade ist, in CSS-Pixeln: die roten Pixel im Canvas.
+ * ⚠ Nicht aus den Leveldaten gerechnet — die Sicht haengt am Geraet, und eine
+ * eigene Rechnung lag beim ersten Versuch daneben: Das Geblaese stand neben
+ * dem Ballon, und er stieg nie.
+ */
+async function ballonAufSchirm(seite) {
+  return seite.evaluate(() => {
+    const c = document.querySelector('canvas');
+    const ctx = c.getContext('2d');
+    const { data, width, height } = ctx.getImageData(0, 0, c.width, c.height);
+    let sx = 0, sy = 0, n = 0;
+    for (let y = 0; y < height; y += 3) {
+      for (let x = 0; x < width; x += 3) {
+        const i = (y * width + x) * 4;
+        if (data[i] > 200 && data[i + 1] < 110 && data[i + 2] < 110) { sx += x; sy += y; n++; }
+      }
+    }
+    if (!n) return null;
+    const r = c.getBoundingClientRect();
+    return { x: r.left + (sx / n) * r.width / width, y: r.top + (sy / n) * r.height / height };
+  });
+}
+
+/**
+ * Finger unter den Ballon und mitfuehren; fotografiert wird im Flug.
+ * ⚠ Ist er vor dem Foto geplatzt, wird es verworfen — beim ersten Lauf zeigten
+ * vier Endlos-Bilder nur noch Fetzen. Erkannt wird das am Ende-Fenster: Es
+ * erscheint genau 800 ms nach dem Platzen (SpielPage). Steht es 750 ms nach
+ * dem Foto schon da, war der Ballon beim Foto bereits kaputt.
+ */
+async function fliegen(seite, geraet, dauer, versatz = 0) {
+  let b = await ballonAufSchirm(seite);
+  const x = () => (b ? b.x : geraet.width / 2) + versatz;
+  await seite.mouse.move(x(), geraet.height - 40);
+  await seite.mouse.down();
+  for (let t = 0; t < dauer; t += 150) {
+    await seite.waitForTimeout(150);
+    b = (await ballonAufSchirm(seite)) ?? b;
+    await seite.mouse.move(x(), geraet.height - 40);
+  }
+  const bild = await seite.screenshot({ type: 'png' });
+  await seite.waitForTimeout(750);
+  const geplatzt = await seite.locator('h2').count() > 0;
+  await seite.mouse.up();
+  return geplatzt ? null : bild;
+}
+
+/** Bis zu fuenf Versuche, jeder etwas kuerzer. */
+async function versuche(lauf, dauer) {
+  for (let i = 0; i < 5; i++) {
+    const bild = await lauf(Math.round(dauer * (1 - i * 0.15)));
+    if (bild) return bild;
+  }
+  throw new Error('Ballon platzt in jedem Versuch');
+}
+
+async function imFlug(seite, geraet, menuePos, dauer, versatz = 0) {
+  return versuche(async (d) => {
+    await seite.goto(URL_APP);
+    await seite.waitForTimeout(400);
+    await seite.locator('.grid.gap-2 button').nth(menuePos).click();
+    await seite.waitForTimeout(700);
+    return fliegen(seite, geraet, d, versatz);
+  }, dauer);
+}
+
+async function endlos(seite, geraet) {
+  return versuche(async (d) => {
+    await seite.goto(URL_APP);
+    await seite.waitForTimeout(400);
+    await seite.locator('button').first().click();
+    await seite.waitForTimeout(700);
+    return fliegen(seite, geraet, d);
+  }, 1350);
+}
+
+/** Ueberschrift auf Himmel, darunter der Bildschirm mit runden Ecken. */
+async function rahmen(browser, format, text, png, code) {
+  const { breite, hoehe } = format;
+  const seite = await browser.newPage({ viewport: { width: breite, height: hoehe } });
+  const dir = code === 'ar' ? 'rtl' : 'ltr';
+  // Franzoesisch setzt vor ? ! : ; ein Leerzeichen — ungeschuetzt rutscht das
+  // Zeichen allein in die naechste Zeile.
+  const satz = text.replace(/ ([?!:;])/g, '\u00a0$1');
+  await seite.setContent(`<!doctype html><html dir="${dir}"><body style="margin:0">
+    <div style="width:${breite}px;height:${hoehe}px;box-sizing:border-box;overflow:hidden;
+      background:linear-gradient(#152364,#2f5cb4 55%,#bfe2f2);display:flex;flex-direction:column;
+      align-items:center;font-family:'DejaVu Sans','WenQuanYi Zen Hei','IPAGothic',sans-serif">
+      <h1 style="color:#fff;font-weight:800;font-size:${Math.round(breite * 0.068)}px;line-height:1.2;
+        text-align:center;margin:${Math.round(hoehe * 0.05)}px ${Math.round(breite * 0.08)}px ${Math.round(hoehe * 0.035)}px;
+        text-shadow:0 4px 18px rgba(0,0,0,.3)">${satz}</h1>
+      <img src="data:image/png;base64,${png.toString('base64')}"
+        style="width:${Math.round(breite * 0.8)}px;border-radius:${Math.round(breite * 0.05)}px;
+        box-shadow:0 30px 80px rgba(0,0,0,.35);border:${Math.round(breite * 0.012)}px solid rgba(255,255,255,.85)">
+    </div></body></html>`);
+  await seite.waitForTimeout(150);
+  const bild = await seite.screenshot({ type: 'jpeg', quality: 90 });
+  await seite.close();
+  return bild;
+}
+
+async function vorstellung(browser) {
+  const seite = await browser.newPage({ viewport: { width: 1024, height: 500 } });
+  const b64 = (p) => readFileSync(new URL(`../public/bilder/${p}`, import.meta.url)).toString('base64');
+  await seite.setContent(`<!doctype html><body style="margin:0">
+    <div style="position:relative;width:1024px;height:500px;overflow:hidden;
+      background:linear-gradient(#152364,#2f5cb4 60%,#bfe2f2);font-family:'DejaVu Sans',sans-serif">
+      <div style="position:absolute;right:120px;top:-160px;width:520px;height:520px;border-radius:50%;
+        background:radial-gradient(circle,rgba(255,240,200,.45),rgba(255,220,150,0) 65%)"></div>
+      <img src="data:image/png;base64,${b64('wolke1.png')}" style="position:absolute;left:60px;top:40px;width:200px;opacity:.9">
+      <img src="data:image/png;base64,${b64('wolke3.png')}" style="position:absolute;right:40px;top:90px;width:170px;opacity:.85">
+      <img src="data:image/png;base64,${b64('huegel-fern.png')}" style="position:absolute;left:0;bottom:30px;width:1024px">
+      <img src="data:image/png;base64,${b64('wiese.png')}" style="position:absolute;left:0;bottom:-40px;width:1024px">
+      <img src="data:image/png;base64,${b64('ballon.png')}" style="position:absolute;left:640px;top:70px;width:170px;
+        filter:drop-shadow(0 14px 24px rgba(0,0,0,.35))">
+      <div style="position:absolute;left:90px;top:150px;color:#fff;font-weight:800;font-size:112px;
+        letter-spacing:-3px;text-shadow:0 6px 24px rgba(0,0,0,.3)">loonpop</div>
+    </div></body>`);
+  await seite.waitForTimeout(200);
+  mkdirSync(new URL('../store-assets/play/', import.meta.url), { recursive: true });
+  await seite.screenshot({ path: new URL('../store-assets/play/feature.png', import.meta.url).pathname });
+  await seite.close();
+}
+
+const browser = await chromium.launch();
+await vorstellung(browser);
+for (const [name, format] of Object.entries(FORMATE)) {
+  for (const code of SPRACHEN) {
+    const ctx = await browser.newContext({
+      viewport: format.geraet,
+      deviceScaleFactor: format.breite * 0.8 / format.geraet.width,
+      locale: code, hasTouch: false,
+    });
+    await ctx.addInitScript(([f, c]) => {
+      localStorage.setItem('loonpop.fortschritt', JSON.stringify(f));
+      localStorage.setItem('sprache', c);
+    }, [FORTSCHRITT, code]);
+    const seite = await ctx.newPage();
+    await seite.goto(URL_APP);
+    await seite.waitForTimeout(800);
+    const bilder = [
+      await seite.screenshot({ type: 'png' }),
+      await imFlug(seite, format.geraet, 8, 1500, 6),     // 9  Zickzack
+      await endlos(seite, format.geraet),
+      await imFlug(seite, format.geraet, 7, 1300),        // 8  Fallschacht
+    ];
+    const ordner = new URL(`../store-assets/${name}/${code}/`, import.meta.url);
+    mkdirSync(ordner, { recursive: true });
+    for (let i = 0; i < bilder.length; i++) {
+      const jpg = await rahmen(browser, format, UEBERSCHRIFT[code][i], bilder[i], code);
+      const { writeFileSync } = await import('node:fs');
+      writeFileSync(new URL(`${i + 1}-${NAMEN[i]}.jpg`, ordner), jpg);
+    }
+    await ctx.close();
+    console.log(name, code);
+  }
+}
+await browser.close();

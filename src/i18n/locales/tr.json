@@ -12,7 +12,9 @@
     "endlosHoch": "Hep yukarı",
     "endlosStrecke": "Hep ileri",
     "bestweite": "{{m}} m",
-    "sprache": "Dil"
+    "sprache": "Dil",
+    "datenschutz": "Gizlilik",
+    "impressum": "Künye"
   },
   "spiel": {
     "zurueck": "Geri",

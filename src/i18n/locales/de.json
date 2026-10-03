@@ -12,7 +12,9 @@
     "endlosHoch": "Immer weiter rauf",
     "endlosStrecke": "Immer weiter nach rechts",
     "bestweite": "{{m}} m",
-    "sprache": "Sprache"
+    "sprache": "Sprache",
+    "datenschutz": "Datenschutz",
+    "impressum": "Impressum"
   },
   "spiel": {
     "zurueck": "Zurück",

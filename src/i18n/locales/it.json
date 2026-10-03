@@ -12,7 +12,9 @@
     "endlosHoch": "Sempre più in alto",
     "endlosStrecke": "Sempre più avanti",
     "bestweite": "{{m}} m",
-    "sprache": "Lingua"
+    "sprache": "Lingua",
+    "datenschutz": "Privacy",
+    "impressum": "Note legali"
   },
   "spiel": {
     "zurueck": "Indietro",

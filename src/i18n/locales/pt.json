@@ -12,7 +12,9 @@
     "endlosHoch": "Sempre para cima",
     "endlosStrecke": "Sempre em frente",
     "bestweite": "{{m}} m",
-    "sprache": "Idioma"
+    "sprache": "Idioma",
+    "datenschutz": "Privacidade",
+    "impressum": "Aviso legal"
   },
   "spiel": {
     "zurueck": "Voltar",

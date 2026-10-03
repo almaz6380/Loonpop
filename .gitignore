@@ -9,10 +9,17 @@ dist-ssr
 .vercel
 .DS_Store
 
-# Capacitor (ab M4)
+# Capacitor: native Build-Artefakte (die Projekte selbst werden getrackt)
 ios/App/Pods/
+ios/App/App/public/
+android/app/src/main/assets/public/
+android/keystore.properties
+*.jks
 android/.gradle/
 android/build/
 android/app/build/
 android/local.properties
 *.keystore
+
+# Python-Zwischenstand der Bildwerkzeuge
+__pycache__/

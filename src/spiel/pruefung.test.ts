@@ -8,8 +8,9 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 
 import { pruefeLevel } from './pruefung.ts';
-import { reihe, spalte } from './nadelfeld.ts';
+import { reihe, spalte, wandernd } from './nadelfeld.ts';
 import { schritt } from './physik.ts';
+import * as physik from './physik.ts';
 import { neueWelt } from './welt.ts';
 import type { Level, Nadel } from './typen.ts';
 
@@ -127,4 +128,29 @@ test('eine Pendelnadel, die nie lange genug wegbleibt, sperrt', () => {
   }));
   const b = pruefeLevel(probe([...reihe(480, 0, 280), ...reihe(480, 490, 720), ...pendel]));
   assert.equal(b.schaffbar, false);
+});
+
+test('eine wandernde Reihe mit Luecke ist schaffbar', () => {
+  const b = pruefeLevel(probe([...reihe(850, 0, 250), ...reihe(850, 470, 720), ...wandernd(500, 120, 330, 260, 4)]));
+  assert.equal(b.schaffbar, true);
+});
+
+test('eine wandernde Reihe ohne Luecke sperrt, auch wenn jede Nadel einzeln vorbeizieht', () => {
+  // ⚠ Bis zum 02.10.2026 wurde jede bewegte Nadel fuer sich geprueft. Unter
+  // einer fahrenden Reihe ist jede Stelle von jeder EINZELNEN Nadel meist frei,
+  // also galt die Reihe als offen, obwohl sie nie eine Luecke hat.
+  const b = pruefeLevel(probe([...reihe(850, 0, 250), ...reihe(850, 470, 720), ...wandernd(500, 300, 300, 200, 4)]));
+  assert.equal(b.schaffbar, false);
+});
+
+test('eine wandernde Reihe hat am Rand nie ein Loch', () => {
+  // Faehrt sie nach rechts, muss sie links ueber den Rand hinausreichen.
+  const { nadelJetzt } = physik;
+  for (const weg of [240, -240]) {
+    const n = wandernd(500, 300, 420, weg, 4);
+    for (let t = 0; t < 4; t += 0.25) {
+      const xs = n.map((x) => nadelJetzt(x, t).von.x).sort((a, b) => a - b);
+      assert.ok(xs[0] <= 0 && xs[xs.length - 1] >= 720, `weg ${weg}, t ${t}`);
+    }
+  }
 });

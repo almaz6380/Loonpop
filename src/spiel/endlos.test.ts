@@ -39,6 +39,26 @@ for (const art of ['hoch', 'strecke'] as EndlosArt[]) {
     }
   });
 
+  if (art === 'hoch') {
+    test('hoch: wandernde Reihen kommen vor und bestehen die Pruefung', () => {
+      // Eine wandernde Reihe sind viele Pendelnadeln im Gleichschritt.
+      const wandert = (a: { nadeln: { pendel?: unknown }[] }) => a.nadeln.filter((n) => n.pendel).length > 3;
+      let gefunden = 0;
+      for (const seed of SEEDS) {
+        const e: Endlos = { art, seed, abschnitte: [], hoechste: 0 };
+        for (let i = 0; i < 80; i++) {
+          if (!wandert(abschnitt(e, i))) continue;
+          gefunden++;
+          assert.ok(i >= 15, `Seed ${seed}: wandernde Reihe schon in Abschnitt ${i}`);
+          const l = endlosStueck(art, seed, Math.max(0, i - 2), 5);
+          assert.deepEqual(pruefeLevel(l).maengel, [], l.name);
+          break;
+        }
+      }
+      assert.ok(gefunden >= SEEDS.length / 2, `nur ${gefunden} von ${SEEDS.length} Seeds mit wandernder Reihe`);
+    });
+  }
+
   test(`${art}: gleiche Eingaben ergeben denselben Lauf`, () => {
     const lauf = () => {
       const w = neueEndlosWelt(art, 7);

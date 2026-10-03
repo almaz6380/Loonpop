@@ -56,3 +56,22 @@ export function reihe(y: number, vonX: number, bisX: number): Nadel[] {
   }
   return n;
 }
+
+/**
+ * Eine Reihe, die samt Luecke seitlich hin und her faehrt (02.10.2026).
+ * Bei `zeit` = 0 liegt die Luecke bei [`vonX`, `bisX`], am Umkehrpunkt um
+ * `weg` verschoben (negativ = nach links), Hin- und Rueckweg dauern `dauer`.
+ *
+ * Gebaut aus lauter Pendelnadeln mit gleichem Weg und gleicher Dauer, so dass
+ * sie im Gleichschritt fahren — eine neue Nadelart braucht es dafuer nicht.
+ * ⚠ Die Reihe reicht um `weg` ueber den Levelrand hinaus. Sonst oeffnete sich
+ * beim Verschieben am Rand eine zweite Luecke, durch die man einfach hochsteigt.
+ */
+export function wandernd(
+  y: number, vonX: number, bisX: number, weg: number, dauer: number, breite = 720,
+): Nadel[] {
+  const pendel = { weg: { x: weg, y: 0 }, dauer };
+  const links = reihe(y, Math.min(0, -weg), vonX);
+  const rechts = reihe(y, bisX, Math.max(breite, breite - weg));
+  return [...links, ...rechts].map((n) => ({ ...n, pendel }));
+}

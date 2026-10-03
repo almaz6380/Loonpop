@@ -1,0 +1,52 @@
+{
+  "menue": {
+    "titel": "loonpop",
+    "untertitel": "Mantén el soplador de hojas bajo el globo y pulsa. Las agujas no perdonan.",
+    "level": "Nivel {{n}}",
+    "hinweis": "Desliza el soplador hacia los lados y mantén pulsado para soplar. Si te colocas desplazado, empujas el globo hacia un lado.",
+    "hoch": "arriba",
+    "strecke": "recorrido",
+    "gesperrt": "bloqueado",
+    "bestzeit": "{{s}} s",
+    "endlos": "Sin fin",
+    "endlosHoch": "Siempre hacia arriba",
+    "endlosStrecke": "Siempre adelante",
+    "bestweite": "{{m}} m",
+    "sprache": "Idioma"
+  },
+  "spiel": {
+    "zurueck": "Atrás",
+    "zeit": "{{s}} s",
+    "verbleibend": "quedan {{s}} s",
+    "nochmal": "Otra vez",
+    "levelwahl": "Niveles",
+    "gebraucht": "Lo lograste en {{s}} segundos.",
+    "trostworte": "El globo sigue flotando: sopla antes.",
+    "ende": {
+      "geschafft": "¡Llegaste!",
+      "geplatzt": "Reventó",
+      "zeit-aus": "Se acabó el tiempo"
+    },
+    "weiter": "Siguiente",
+    "neueBestzeit": "¡Nuevo mejor tiempo!",
+    "bestzeit": "Mejor: {{s}} s",
+    "meter": "{{m}} m",
+    "weit": "Llegaste a {{m}} metros.",
+    "neueBestweite": "¡Nuevo récord!",
+    "bestweite": "Récord: {{m}} m"
+  },
+  "levelname": {
+    "1": "Primer soplo",
+    "2": "Lluvia de agujas",
+    "3": "Tijeras",
+    "6": "El balancín",
+    "8": "Contra el reloj",
+    "10": "La chimenea",
+    "13": "Viento lateral",
+    "14": "El pozo",
+    "15": "Zigzag",
+    "16": "Dos péndulos",
+    "17": "Aguacero",
+    "18": "La cima"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "menue": {
+    "titel": "loonpop",
+    "untertitel": "Place le souffleur sous le ballon et appuie. Les aiguilles ne pardonnent pas.",
+    "level": "Niveau {{n}}",
+    "hinweis": "Fais glisser le souffleur sur le côté, maintiens pour souffler. Décalé, tu pousses le ballon sur le côté.",
+    "hoch": "vers le haut",
+    "strecke": "parcours",
+    "gesperrt": "verrouillé",
+    "bestzeit": "{{s}} s",
+    "endlos": "Sans fin",
+    "endlosHoch": "Toujours plus haut",
+    "endlosStrecke": "Toujours plus loin",
+    "bestweite": "{{m}} m",
+    "sprache": "Langue"
+  },
+  "spiel": {
+    "zurueck": "Retour",
+    "zeit": "{{s}} s",
+    "verbleibend": "encore {{s}} s",
+    "nochmal": "Rejouer",
+    "levelwahl": "Niveaux",
+    "gebraucht": "Réussi en {{s}} secondes.",
+    "trostworte": "Le ballon continue sur sa lancée — souffle plus tôt.",
+    "ende": {
+      "geschafft": "Arrivé !",
+      "geplatzt": "Éclaté",
+      "zeit-aus": "Temps écoulé"
+    },
+    "weiter": "Suivant",
+    "neueBestzeit": "Nouveau meilleur temps !",
+    "bestzeit": "Meilleur temps : {{s}} s",
+    "meter": "{{m}} m",
+    "weit": "Tu as parcouru {{m}} mètres.",
+    "neueBestweite": "Nouveau record !",
+    "bestweite": "Record : {{m}} m"
+  },
+  "levelname": {
+    "1": "Premier souffle",
+    "2": "Pluie d'aiguilles",
+    "3": "Les ciseaux",
+    "6": "La bascule",
+    "8": "Contre la montre",
+    "10": "La cheminée",
+    "13": "Vent de côté",
+    "14": "Le puits",
+    "15": "Zigzag",
+    "16": "Deux pendules",
+    "17": "Averse",
+    "18": "Le sommet"
+  }
+}

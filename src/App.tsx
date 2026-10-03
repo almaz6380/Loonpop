@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { LEVEL } from './spiel/level/index.ts';
 import SpielPage from './pages/SpielPage.tsx';
 import { lade, offen } from './lib/fortschritt.ts';
+import { SPRACHEN } from './lib/sprache.ts';
+import { setzeSprache } from './i18n/index.ts';
 import type { EndlosArt } from './spiel/typen.ts';
 
 const IDS = LEVEL.map((l) => l.id);
@@ -27,7 +29,7 @@ function MenueBallon() {
 }
 
 export default function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [gewaehlt, setGewaehlt] = useState<number | null>(null);
   const [endlos, setEndlos] = useState<EndlosArt | null>(null);
   const [fortschritt, setFortschritt] = useState(lade);
@@ -84,7 +86,7 @@ export default function App() {
                 <button
                   key={art}
                   onClick={() => setEndlos(art)}
-                  className="px-3 py-3 rounded-2xl text-left bg-[#ffd75e] text-[#12204f]
+                  className="px-3 py-3 rounded-2xl text-start bg-[#ffd75e] text-[#12204f]
                              shadow-lg shadow-black/15 active:scale-[0.98] transition"
                 >
                   <span className="flex items-center gap-1.5 font-black">
@@ -117,8 +119,8 @@ export default function App() {
                   key={lvl.id}
                   disabled={!frei}
                   onClick={() => setGewaehlt(i)}
-                  aria-label={frei ? undefined : `${lvl.name} (${t('menue.gesperrt')})`}
-                  className="group w-full pl-3.5 pr-4 py-2.5 rounded-2xl text-left
+                  aria-label={frei ? undefined : `${t(`levelname.${lvl.id}`, lvl.name)} (${t('menue.gesperrt')})`}
+                  className="group w-full ps-3.5 pe-4 py-2.5 rounded-2xl text-start
                              bg-white/12 enabled:hover:bg-white/20 backdrop-blur-sm
                              border border-white/15 shadow-lg shadow-black/10
                              flex items-center gap-3.5 enabled:active:scale-[0.98] transition
@@ -129,7 +131,7 @@ export default function App() {
                     {i + 1}
                   </span>
                   <span className="flex-1 min-w-0">
-                    <span className="block font-semibold truncate">{lvl.name}</span>
+                    <span className="block font-semibold truncate">{t(`levelname.${lvl.id}`, lvl.name)}</span>
                   </span>
                   {bestzeit !== undefined && (
                     <span className="shrink-0 flex items-center gap-1.5 text-sm font-semibold tabular-nums text-[#ffe48a]">
@@ -152,6 +154,28 @@ export default function App() {
           </div>
 
           <p className="mt-8 text-sm text-white/65 leading-relaxed">{t('menue.hinweis')}</p>
+
+          {/* Die Sprache folgt dem Handy; hier laesst sie sich ueberstimmen.
+              Ein natives <select>, weil das Handy dafuer seine eigene,
+              grosse Auswahlliste zeigt. */}
+          <label className="mt-5 inline-flex items-center gap-2 px-3.5 py-2 rounded-full
+                            bg-white/12 border border-white/15 text-sm text-white/85">
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor"
+                 strokeWidth="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z" />
+            </svg>
+            <span className="sr-only">{t('menue.sprache')}</span>
+            <select
+              value={i18n.resolvedLanguage}
+              onChange={(e) => setzeSprache(e.target.value)}
+              className="bg-transparent font-semibold outline-none"
+            >
+              {SPRACHEN.map((s) => (
+                <option key={s.code} value={s.code} className="text-black">{s.name}</option>
+              ))}
+            </select>
+          </label>
         </div>
       </div>
     </div>

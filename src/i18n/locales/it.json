@@ -1,0 +1,52 @@
+{
+  "menue": {
+    "titel": "loonpop",
+    "untertitel": "Tieni il soffiatore sotto il palloncino e premi. Gli aghi non perdonano.",
+    "level": "Livello {{n}}",
+    "hinweis": "Fai scorrere il soffiatore di lato e tieni premuto per soffiare. Se ti sposti di lato, spingi il palloncino di fianco.",
+    "hoch": "su",
+    "strecke": "percorso",
+    "gesperrt": "bloccato",
+    "bestzeit": "{{s}} s",
+    "endlos": "Infinito",
+    "endlosHoch": "Sempre più in alto",
+    "endlosStrecke": "Sempre più avanti",
+    "bestweite": "{{m}} m",
+    "sprache": "Lingua"
+  },
+  "spiel": {
+    "zurueck": "Indietro",
+    "zeit": "{{s}} s",
+    "verbleibend": "ancora {{s}} s",
+    "nochmal": "Ancora",
+    "levelwahl": "Livelli",
+    "gebraucht": "Completato in {{s}} secondi.",
+    "trostworte": "Il palloncino continua a muoversi: soffia prima.",
+    "ende": {
+      "geschafft": "Arrivato!",
+      "geplatzt": "Scoppiato",
+      "zeit-aus": "Tempo scaduto"
+    },
+    "weiter": "Avanti",
+    "neueBestzeit": "Nuovo miglior tempo!",
+    "bestzeit": "Migliore: {{s}} s",
+    "meter": "{{m}} m",
+    "weit": "Sei arrivato a {{m}} metri.",
+    "neueBestweite": "Nuovo record!",
+    "bestweite": "Record: {{m}} m"
+  },
+  "levelname": {
+    "1": "Primo soffio",
+    "2": "Pioggia di aghi",
+    "3": "Forbici",
+    "6": "L'altalena",
+    "8": "Contro il tempo",
+    "10": "Il camino",
+    "13": "Vento laterale",
+    "14": "Il pozzo",
+    "15": "Zigzag",
+    "16": "Due pendoli",
+    "17": "Acquazzone",
+    "18": "La vetta"
+  }
+}

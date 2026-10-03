@@ -1,0 +1,52 @@
+{
+  "menue": {
+    "titel": "loonpop",
+    "untertitel": "把吹叶机放在气球下方，按住吹气。碰到针就完了。",
+    "level": "第 {{n}} 关",
+    "hinweis": "左右滑动吹叶机，按住即可吹风。站偏一点，气球就会被吹向一侧。",
+    "hoch": "向上",
+    "strecke": "赛道",
+    "gesperrt": "未解锁",
+    "bestzeit": "{{s}} 秒",
+    "endlos": "无尽",
+    "endlosHoch": "一直向上",
+    "endlosStrecke": "一直向前",
+    "bestweite": "{{m}} 米",
+    "sprache": "语言"
+  },
+  "spiel": {
+    "zurueck": "返回",
+    "zeit": "{{s}} 秒",
+    "verbleibend": "剩余 {{s}} 秒",
+    "nochmal": "再来",
+    "levelwahl": "关卡",
+    "gebraucht": "用时 {{s}} 秒完成。",
+    "trostworte": "气球会继续飘——早点吹。",
+    "ende": {
+      "geschafft": "到达！",
+      "geplatzt": "爆了",
+      "zeit-aus": "时间到"
+    },
+    "weiter": "下一关",
+    "neueBestzeit": "新的最佳时间！",
+    "bestzeit": "最佳：{{s}} 秒",
+    "meter": "{{m}} 米",
+    "weit": "你飞了 {{m}} 米。",
+    "neueBestweite": "新纪录！",
+    "bestweite": "纪录：{{m}} 米"
+  },
+  "levelname": {
+    "1": "第一口气",
+    "2": "针雨",
+    "3": "剪刀",
+    "6": "跷跷板",
+    "8": "争分夺秒",
+    "10": "烟囱",
+    "13": "侧风",
+    "14": "下沉气流",
+    "15": "之字形",
+    "16": "双摆",
+    "17": "暴雨",
+    "18": "山顶"
+  }
+}

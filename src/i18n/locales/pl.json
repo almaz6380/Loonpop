@@ -1,0 +1,52 @@
+{
+  "menue": {
+    "titel": "loonpop",
+    "untertitel": "Trzymaj dmuchawę pod balonem i naciskaj. Igły nie wybaczają.",
+    "level": "Poziom {{n}}",
+    "hinweis": "Przesuwaj dmuchawę na boki, przytrzymaj, aby dmuchać. Stojąc z boku, spychasz balon w bok.",
+    "hoch": "w górę",
+    "strecke": "trasa",
+    "gesperrt": "zablokowany",
+    "bestzeit": "{{s}} s",
+    "endlos": "Bez końca",
+    "endlosHoch": "Coraz wyżej",
+    "endlosStrecke": "Coraz dalej",
+    "bestweite": "{{m}} m",
+    "sprache": "Język"
+  },
+  "spiel": {
+    "zurueck": "Wstecz",
+    "zeit": "{{s}} s",
+    "verbleibend": "zostało {{s}} s",
+    "nochmal": "Jeszcze raz",
+    "levelwahl": "Poziomy",
+    "gebraucht": "Ukończono w {{s}} s.",
+    "trostworte": "Balon dryfuje dalej — dmuchaj wcześniej.",
+    "ende": {
+      "geschafft": "Udało się!",
+      "geplatzt": "Pękł",
+      "zeit-aus": "Koniec czasu"
+    },
+    "weiter": "Dalej",
+    "neueBestzeit": "Nowy najlepszy czas!",
+    "bestzeit": "Najlepszy: {{s}} s",
+    "meter": "{{m}} m",
+    "weit": "Dystans: {{m}} m.",
+    "neueBestweite": "Nowy rekord!",
+    "bestweite": "Rekord: {{m}} m"
+  },
+  "levelname": {
+    "1": "Pierwszy podmuch",
+    "2": "Deszcz igieł",
+    "3": "Nożyce",
+    "6": "Huśtawka",
+    "8": "Na czas",
+    "10": "Komin",
+    "13": "Boczny wiatr",
+    "14": "Studnia",
+    "15": "Zygzak",
+    "16": "Dwa wahadła",
+    "17": "Ulewa",
+    "18": "Szczyt"
+  }
+}

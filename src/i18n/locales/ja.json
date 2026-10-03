@@ -14,7 +14,9 @@
     "bestweite": "{{m}} m",
     "sprache": "言語",
     "datenschutz": "プライバシー",
-    "impressum": "運営者情報"
+    "impressum": "運営者情報",
+    "spielen": "プレイ",
+    "alleLevel": "レベル一覧"
   },
   "spiel": {
     "zurueck": "戻る",

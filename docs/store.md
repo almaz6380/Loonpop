@@ -6,7 +6,7 @@ Datenschutz und Impressum sowie die Workflows zum Bauen und Hochladen. Was hier
 steht, kann nur Josef selbst tun, weil es sein Konto, seine Unterschrift oder
 seinen Schlüssel braucht.
 
-**App:** `at.gallab.loonpop` · Name `loonpop` · Version 1.0.0 (Android
+**App:** `at.gallab.loonpop` · Name `LoonPop` · Version 1.0 (Android
 versionCode 1, iOS Build 1) · nur Hochformat · nur iPhone (kein iPad)
 
 ## Was im Repo liegt
@@ -66,6 +66,21 @@ in beide Konsolen.
 
 ### 3. Secrets ins Repo
 
+**Vom Handy (ohne Mac, 03.10.2026):** Die Schlüssel liegen schon im Repo
+`anigosha`. Dessen Workflow **„Schluessel nach loonpop“** trägt sie hier ein.
+Dafür braucht er einmal ein Token:
+1. https://github.com/settings/personal-access-tokens/new: Name `loonpop-schluessel`,
+   Ablauf 7 Tage, *Only select repositories* → `Loonpop`, unter *Repository
+   permissions* → **Secrets: Read and write** → *Generate token* → kopieren.
+2. https://github.com/almaz6380/anigosha/settings/secrets/actions/new: Name
+   `LOONPOP_TOKEN`, Wert einfügen → *Add secret*.
+3. Den Workflow „Schluessel nach loonpop“ in anigosha starten.
+
+Das Provisioning-Profil wird nicht kopiert. `ios-release.yml` holt
+„loonpop AppStore“ selbst über die ASC-API (`scripts/profil-holen.py`).
+
+**Am Mac** geht es weiterhin so:
+
 Am Mac im Repo-Ordner: `bash scripts/setup-release-secrets.sh`. Es fragt
 nach denselben Dateien wie bei Anigosha (Keystore, Play-Dienstkonto, .p12,
 .p8) und zusätzlich nach dem neuen Profil `loonpop AppStore`.
@@ -90,8 +105,10 @@ geht auch vom Handy. Jeder Workflow startet zuerst als Trockenlauf.
    Testversion an dich freigeben und am Handy ausprobieren.
 2. `Play-Eintrag`: `texte`, dann `screenshots`, dann `grafiken`, jeweils mit
    Sprache `alle`, erst mit Trockenlauf, dann ohne.
-3. In der Play Console: interne Version → **Produktion** hochstufen und zur
-   Prüfung senden.
+3. `Play-Eintrag` mit `produktion`: legt versionCode 1 als Produktions-Release an.
+   ⚠ Solange die App nie veröffentlicht war, nimmt Google nur einen **Entwurf**
+   an. Abgeschickt wird er einmal in der Play Console (Produktion → Release
+   überprüfen → Roll-out starten → zur Überprüfung senden).
 
 ⚠ Google verlangt bei **neuen privaten Entwicklerkonten** vor der Produktion
 einen geschlossenen Test mit mindestens 12 Testern über 14 Tage. Josefs Konto
@@ -103,8 +120,18 @@ die Konsole es beim Hochstufen.
    Connect (TestFlight). ⚠ Ohne das Profil `loonpop AppStore` bricht der
    Export ab.
 2. `App Store`: `texte` → `screenshots` → `build` (Nummer 1) → `pflicht` →
-   `status`, jeweils erst als Trockenlauf.
-3. `App Store`: `einreichen`.
+   `status`, jeweils erst als Trockenlauf. `pflicht` setzt auch Copyright,
+   Kategorie (Spiele/Gelegenheit), Prüf-Kontakt (aus Josefs anderer App), Preis
+   „kostenlos“ und alle Länder.
+3. ⚠ **App-Datenschutz** geht nicht über die API: einmal in ASC „Keine Daten
+   erfasst“ wählen und **veröffentlichen**. Sonst lehnt Apple das Einreichen ab
+   (`APP_DATA_USAGES_REQUIRED`).
+4. `App Store`: `einreichen`.
+
+⚠ Das Profil muss das Zertifikat aus `IOS_CERT_P12_BASE64` enthalten.
+`ios-release.yml` gibt dessen Seriennummer an `profil-holen.py`, das ein
+passendes Profil sucht oder anlegt (03.10.2026: das erste angelegte Profil hatte
+das neueste Zertifikat des Kontos, nicht das aus dem .p12).
 
 **Vor jedem weiteren Release**: `versionCode` in `android/app/build.gradle` und
 `CURRENT_PROJECT_VERSION` (2 Stellen) in `ios/App/App.xcodeproj/project.pbxproj`

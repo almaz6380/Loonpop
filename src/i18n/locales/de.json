@@ -14,7 +14,9 @@
     "bestweite": "{{m}} m",
     "sprache": "Sprache",
     "datenschutz": "Datenschutz",
-    "impressum": "Impressum"
+    "impressum": "Impressum",
+    "spielen": "Spielen",
+    "alleLevel": "Alle Level"
   },
   "spiel": {
     "zurueck": "Zurück",

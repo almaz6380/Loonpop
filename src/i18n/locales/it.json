@@ -14,7 +14,9 @@
     "bestweite": "{{m}} m",
     "sprache": "Lingua",
     "datenschutz": "Privacy",
-    "impressum": "Note legali"
+    "impressum": "Note legali",
+    "spielen": "Gioca",
+    "alleLevel": "Tutti i livelli"
   },
   "spiel": {
     "zurueck": "Indietro",

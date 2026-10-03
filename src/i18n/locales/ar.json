@@ -14,7 +14,9 @@
     "bestweite": "{{m}} م",
     "sprache": "اللغة",
     "datenschutz": "الخصوصية",
-    "impressum": "إشعار قانوني"
+    "impressum": "إشعار قانوني",
+    "spielen": "العب",
+    "alleLevel": "كل المراحل"
   },
   "spiel": {
     "zurueck": "رجوع",

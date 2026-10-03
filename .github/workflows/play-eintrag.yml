@@ -3,6 +3,8 @@
 #
 # sprache = alle  → jede Sprache aus store-assets/texte/*.json, mit all ihren
 #                   Play-Codes (es → es-ES und es-419 usw.)
+# produktion     → versionCode 1 aus dem internen Test an alle (Produktion);
+#                   im Trockenlauf nur den internen Track anzeigen
 # ⚠ Neue Sprachen muessen in der Play Console EINMAL als Uebersetzung angelegt
 # sein, sonst antwortet die API mit 404 fuer diese Sprache.
 name: Play-Eintrag
@@ -13,7 +15,7 @@ on:
       mode:
         description: 'Was aktualisiert wird'
         type: choice
-        options: [texte, screenshots, grafiken]
+        options: [texte, screenshots, grafiken, produktion]
         default: texte
       sprache:
         description: 'alle, oder ein Play-Code wie de-DE'
@@ -60,6 +62,16 @@ jobs:
           if [ "$SPRACHE" != "alle" ]; then
             grep "^$SPRACHE " paare.txt > p2.txt || { echo "Unbekannte Sprache $SPRACHE"; exit 1; }
             mv p2.txt paare.txt
+          fi
+
+          if [ "$MODE" = "produktion" ]; then
+            if [ "$DRY_RUN" = "true" ]; then
+              python3 scripts/play-upload.py --status --track internal
+            else
+              python3 scripts/play-upload.py --promote 1 --track production --complete --entwurf \
+                --notes "Erste Version von LoonPop."
+            fi
+            exit 0
           fi
 
           if [ "$MODE" = "grafiken" ]; then

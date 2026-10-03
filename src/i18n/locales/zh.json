@@ -14,7 +14,9 @@
     "bestweite": "{{m}} 米",
     "sprache": "语言",
     "datenschutz": "隐私政策",
-    "impressum": "法律声明"
+    "impressum": "法律声明",
+    "spielen": "开始游戏",
+    "alleLevel": "全部关卡"
   },
   "spiel": {
     "zurueck": "返回",

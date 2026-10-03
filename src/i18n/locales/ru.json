@@ -14,7 +14,9 @@
     "bestweite": "{{m}} м",
     "sprache": "Язык",
     "datenschutz": "Конфиденциальность",
-    "impressum": "Правовая информация"
+    "impressum": "Правовая информация",
+    "spielen": "Играть",
+    "alleLevel": "Все уровни"
   },
   "spiel": {
     "zurueck": "Назад",

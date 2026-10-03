@@ -117,7 +117,8 @@ async function imFlug(seite, geraet, menuePos, dauer, versatz = 0) {
   return versuche(async (d) => {
     await seite.goto(URL_APP);
     await seite.waitForTimeout(400);
-    await seite.locator('.grid.gap-2 button').nth(menuePos).click();
+    // Die Levelkacheln im Raster des Menues (MenuePage). menuePos zaehlt ab 1.
+    await seite.locator('section button').nth(menuePos - 1).click();
     await seite.waitForTimeout(700);
     return fliegen(seite, geraet, d, versatz);
   }, dauer);
@@ -127,7 +128,8 @@ async function endlos(seite, geraet) {
   return versuche(async (d) => {
     await seite.goto(URL_APP);
     await seite.waitForTimeout(400);
-    await seite.locator('button').first().click();
+    // Im Menue: erst „Spielen“, dann „Endlos“.
+    await seite.locator('main > button').nth(1).click();
     await seite.waitForTimeout(700);
     return fliegen(seite, geraet, d);
   }, 1350);

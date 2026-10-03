@@ -14,7 +14,9 @@
     "bestweite": "{{m}} m",
     "sprache": "Language",
     "datenschutz": "Privacy",
-    "impressum": "Legal notice"
+    "impressum": "Legal notice",
+    "spielen": "Play",
+    "alleLevel": "All levels"
   },
   "spiel": {
     "zurueck": "Back",

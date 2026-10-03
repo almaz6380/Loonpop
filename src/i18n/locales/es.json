@@ -14,7 +14,9 @@
     "bestweite": "{{m}} m",
     "sprache": "Idioma",
     "datenschutz": "Privacidad",
-    "impressum": "Aviso legal"
+    "impressum": "Aviso legal",
+    "spielen": "Jugar",
+    "alleLevel": "Todos los niveles"
   },
   "spiel": {
     "zurueck": "Atrás",

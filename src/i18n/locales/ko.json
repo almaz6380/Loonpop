@@ -14,7 +14,9 @@
     "bestweite": "{{m}}m",
     "sprache": "언어",
     "datenschutz": "개인정보 처리방침",
-    "impressum": "법적 고지"
+    "impressum": "법적 고지",
+    "spielen": "플레이",
+    "alleLevel": "전체 레벨"
   },
   "spiel": {
     "zurueck": "뒤로",

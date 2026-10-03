@@ -14,7 +14,9 @@
     "bestweite": "{{m}} m",
     "sprache": "Dil",
     "datenschutz": "Gizlilik",
-    "impressum": "Künye"
+    "impressum": "Künye",
+    "spielen": "Oyna",
+    "alleLevel": "Tüm bölümler"
   },
   "spiel": {
     "zurueck": "Geri",

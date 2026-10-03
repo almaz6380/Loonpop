@@ -14,7 +14,9 @@
     "bestweite": "{{m}} m",
     "sprache": "Idioma",
     "datenschutz": "Privacidade",
-    "impressum": "Aviso legal"
+    "impressum": "Aviso legal",
+    "spielen": "Jogar",
+    "alleLevel": "Todas as fases"
   },
   "spiel": {
     "zurueck": "Voltar",

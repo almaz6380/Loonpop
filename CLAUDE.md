@@ -84,6 +84,15 @@ wiederholen.
 ⚠ **Nur den sichtbaren Ausschnitt bestücken.** Über eine 3500 px lange Strecke
 wären es sonst hunderte Grashalme je Bild, von denen 85 % niemand sieht.
 
+**Das Menü ist eine Szene** (`MenuePage.tsx`, seit 03.10.2026): Himmel, ziehende
+Wolken, Hügel und Wiese aus denselben Bildern wie im Spiel. In der Mitte steht das
+Gebläse, darüber schwebt der Ballon im Strahl, so erklärt der erste Blick das Spiel.
+Der große Knopf „Spielen“ startet das erste offene, noch nicht geschaffte Level
+(`naechstes` in `fortschritt.ts`). Die Level liegen als Raster aus 5 Spalten
+darunter. Titel und Knöpfe nutzen Fredoka (OFL), die Schrift liegt in
+`public/schrift/`, weil die App offline läuft. ⚠ Bewegt wird nur per CSS-`transform`
+(Falle 18), und bei `prefers-reduced-motion` steht alles still.
+
 **Der Nachklang** (Fetzen beim Platzen, Funken beim Ankommen) hängt an
 `welt.nachher`, einer eigenen Uhr. ⚠ `welt.zeit` taugt dafür nicht: Die steht ab
 dem Ende still, weil die Physik nicht weiterrechnet. Das Ende-Fenster erscheint

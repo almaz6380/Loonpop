@@ -68,6 +68,15 @@ export function offen(f: Fortschritt, ids: number[], index: number): boolean {
   return index === 0 || f.bestzeit[ids[index - 1]] !== undefined;
 }
 
+/**
+ * Welches Level der grosse Knopf im Menue startet: das erste offene, das noch
+ * nicht geschafft ist. Ist alles geschafft, das letzte — dort jagt man Bestzeiten.
+ */
+export function naechstes(f: Fortschritt, ids: number[]): number {
+  const i = ids.findIndex((id, k) => offen(f, ids, k) && f.bestzeit[id] === undefined);
+  return i >= 0 ? i : ids.length - 1;
+}
+
 /** Traegt eine Endlos-Weite ein. `neu` heisst: weiter als je zuvor. */
 export function mitWeite(f: Fortschritt, art: EndlosArt, meter: number): { f: Fortschritt; neu: boolean } {
   const alt = f.endlos?.[art];

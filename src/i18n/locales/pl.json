@@ -14,7 +14,9 @@
     "bestweite": "{{m}} m",
     "sprache": "Język",
     "datenschutz": "Prywatność",
-    "impressum": "Nota prawna"
+    "impressum": "Nota prawna",
+    "spielen": "Graj",
+    "alleLevel": "Wszystkie poziomy"
   },
   "spiel": {
     "zurueck": "Wstecz",

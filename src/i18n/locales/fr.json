@@ -14,7 +14,9 @@
     "bestweite": "{{m}} m",
     "sprache": "Langue",
     "datenschutz": "Confidentialité",
-    "impressum": "Mentions légales"
+    "impressum": "Mentions légales",
+    "spielen": "Jouer",
+    "alleLevel": "Tous les niveaux"
   },
   "spiel": {
     "zurueck": "Retour",

@@ -21,28 +21,21 @@ const IDS = LEVEL.map((l) => l.id);
 function Szene() {
   return (
     <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
-      <img src="/bilder/himmel.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
-      {/* Sonne oben rechts, wie im Spiel */}
-      <div className="absolute -top-28 -right-24 w-[30rem] h-[30rem] rounded-full
-                      bg-[radial-gradient(circle,rgba(255,240,200,0.5),rgba(255,220,150,0)_65%)]" />
-      {/* Drei Wolken, unterschiedlich schnell — ferne langsamer (Parallaxe).
+      {/* Gemini-Landschaft (scripts/bild-quellen/menue-himmel.jpg): Himmel,
+          Sonne, Huegel und Wiese in einem Bild. Unten verankert, damit die Wiese
+          auf jedem Seitenverhaeltnis am Rand bleibt. */}
+      <img src="/bilder/menue-himmel.jpg" alt=""
+           className="absolute inset-0 w-full h-full object-cover object-bottom" />
+      {/* Zwei ziehende Wolken bringen Bewegung — die im Bild stehen still.
           ⚠ Nicht hinter dem Titel: weisse Schrift auf weisser Wolke ist weg. */}
       {[
-        { bild: 1, top: '21%', breite: 'w-36', dauer: '70s', verzug: '-20s', blass: 'opacity-90' },
-        { bild: 3, top: '33%', breite: 'w-28', dauer: '95s', verzug: '-60s', blass: 'opacity-70' },
-        { bild: 2, top: '46%', breite: 'w-24', dauer: '120s', verzug: '-35s', blass: 'opacity-60' },
+        { bild: 1, top: '22%', breite: 'w-32', dauer: '80s', verzug: '-25s', blass: 'opacity-80' },
+        { bild: 3, top: '40%', breite: 'w-24', dauer: '110s', verzug: '-70s', blass: 'opacity-60' },
       ].map((w) => (
         <img key={w.bild} src={`/bilder/wolke${w.bild}.png`} alt=""
              className={`anim-ziehen absolute left-0 ${w.breite} ${w.blass}`}
              style={{ top: w.top, animationDuration: w.dauer, animationDelay: w.verzug }} />
       ))}
-      {/* Huegel und Wiese am unteren Rand */}
-      <div className="absolute inset-x-0 bottom-0 h-56 bg-repeat-x bg-bottom
-                      bg-[url('/bilder/huegel-fern.png')] bg-[length:auto_100%] opacity-90" />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-repeat-x bg-bottom
-                      bg-[url('/bilder/huegel-nah.png')] bg-[length:auto_100%]" />
-      <div className="absolute inset-x-0 bottom-0 h-20 bg-repeat-x bg-bottom
-                      bg-[url('/bilder/wiese.png')] bg-[length:auto_100%]" />
     </div>
   );
 }

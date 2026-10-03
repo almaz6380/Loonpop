@@ -112,6 +112,14 @@ def main() -> None:
         roh = roh.crop((0, oben, roh.width, roh.height))
         auf_breite(roh, breite).save(ZIEL / f'{name}.png', optimize=True)
 
+    # Der Menue-Hintergrund (03.10.2026): ganze Landschaft ohne Ballon und
+    # Geblaese, die stellt das Menue selbst davor. ⚠ Der erste Versuch
+    # (menue-hintergrund.jpg) hatte beides schon im Bild — es lag dann unter
+    # dem Level-Raster — und eine harte Kante im Himmel.
+    menue = Image.open(QUELLEN / 'menue-himmel.jpg').convert('RGB')
+    menue.resize((1080, round(menue.height * 1080 / menue.width)), Image.LANCZOS).save(
+        ZIEL / 'menue-himmel.jpg', quality=85)
+
     himmel = Image.open(QUELLEN / 'himmel.jpg').convert('RGB')
     himmel.resize((360, 728), Image.LANCZOS).save(ZIEL / 'himmel.jpg', quality=88)
 

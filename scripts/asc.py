@@ -89,7 +89,15 @@ def api(tok, pfad, method='GET', body=None, fatal=True):
 def fehler_text(res):
     try:
         d = json.loads(res.get('_detail') or '{}')
-        return '; '.join(f'{e.get("title")}: {e.get("detail")}' for e in d.get('errors', []))
+        teile = []
+        for e in d.get('errors', []):
+            teile.append(f'{e.get("title")}: {e.get("detail")}')
+            # ⚠ Warum eine Version nicht einreichbar ist, steht NICHT im Text,
+            # sondern in meta.associatedErrors (03.10.2026: nur „not in valid state“).
+            for pfad, liste in ((e.get('meta') or {}).get('associatedErrors') or {}).items():
+                for f in liste:
+                    teile.append(f'\n    - {f.get("code")}: {f.get("detail") or f.get("title")}')
+        return '; '.join(teile)
     except (ValueError, AttributeError):
         return res.get('_detail', '')
 

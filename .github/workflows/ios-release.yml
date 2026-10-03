@@ -60,17 +60,6 @@ jobs:
           ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
         run: |
           set -euo pipefail
-          # Ohne Secret holt der Lauf das Profil selbst bei Apple
-          # (scripts/profil-holen.py) — es muss dann nur im Developer-Konto
-          # unter genau diesem Namen existieren.
-          if [ -z "${PROFILE_B64:-}" ]; then
-            python3 -m venv "$RUNNER_TEMP/venv"
-            "$RUNNER_TEMP/venv/bin/pip" install --quiet pyjwt cryptography
-            ASC_KEY_P8="$(printf '%s' "$ASC_KEY_P8_BASE64" | tr -cd 'A-Za-z0-9+/=' | base64 -d)" \
-              "$RUNNER_TEMP/venv/bin/python" scripts/profil-holen.py "loonpop AppStore" "$RUNNER_TEMP/profil.mobileprovision"
-            PROFILE_B64="$(base64 < "$RUNNER_TEMP/profil.mobileprovision" | tr -d '\n')"
-            rm -f "$RUNNER_TEMP/profil.mobileprovision"
-          fi
           KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
           KEYCHAIN_PW="$(openssl rand -base64 24)"
           security create-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
@@ -83,6 +72,28 @@ jobs:
             -s -k "$KEYCHAIN_PW" "$KEYCHAIN" >/dev/null
           security list-keychains -d user -s "$KEYCHAIN" \
             $(security list-keychains -d user | sed s/\"//g)
+          PROFIL_NAME="loonpop AppStore"
+          # Ohne Secret holt der Lauf das Profil selbst bei Apple
+          # (scripts/profil-holen.py). ⚠ Es muss genau das Zertifikat aus dem
+          # .p12 enthalten (03.10.2026 brach der Build sonst ab), deshalb geht
+          # dessen Seriennummer mit.
+          if [ -z "${PROFILE_B64:-}" ]; then
+            SERIE="$(security find-certificate -c "Distribution" -p "$KEYCHAIN" \
+              | openssl x509 -noout -serial | cut -d= -f2)"
+            python3 -m venv "$RUNNER_TEMP/venv"
+            "$RUNNER_TEMP/venv/bin/pip" install --quiet pyjwt cryptography
+            ASC_KEY_P8="$(printf '%s' "$ASC_KEY_P8_BASE64" | tr -cd 'A-Za-z0-9+/=' | base64 -d)" \
+              "$RUNNER_TEMP/venv/bin/python" scripts/profil-holen.py "$PROFIL_NAME" \
+              "$RUNNER_TEMP/profil.mobileprovision" "$SERIE"
+            PROFILE_B64="$(base64 < "$RUNNER_TEMP/profil.mobileprovision" | tr -d '\n')"
+            PROFIL_NAME="$(cat "$RUNNER_TEMP/profil.mobileprovision.name")"
+            rm -f "$RUNNER_TEMP/profil.mobileprovision" "$RUNNER_TEMP/profil.mobileprovision.name"
+          fi
+          echo "PROFIL_NAME=$PROFIL_NAME" >> "$GITHUB_ENV"
+          # Heisst das Profil anders, wird nur die Release-Konfiguration im
+          # Projekt umgestellt (Kommandozeilen-Settings traefen alle Targets).
+          sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \"loonpop AppStore\";/PROVISIONING_PROFILE_SPECIFIER = \"$PROFIL_NAME\";/" \
+            ios/App/App.xcodeproj/project.pbxproj
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           printf '%s' "$PROFILE_B64" | tr -cd 'A-Za-z0-9+/=' | base64 -d \
             > ~/Library/MobileDevice/Provisioning\ Profiles/loonpop-ci.mobileprovision
@@ -103,11 +114,12 @@ jobs:
             <key>signingStyle</key><string>manual</string>
             <key>provisioningProfiles</key>
             <dict>
-              <key>at.gallab.loonpop</key><string>loonpop AppStore</string>
+              <key>at.gallab.loonpop</key><string>PROFIL_NAME</string>
             </dict>
           </dict>
           </plist>
           EOP
+          sed -i '' "s/<string>PROFIL_NAME</<string>$PROFIL_NAME</" "$RUNNER_TEMP/ExportOptions.plist"
 
       - name: Archivieren
         run: |

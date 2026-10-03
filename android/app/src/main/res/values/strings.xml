@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">loonpop</string>
-    <string name="title_activity_main">loonpop</string>
+    <string name="app_name">LoonPop</string>
+    <string name="title_activity_main">LoonPop</string>
     <string name="package_name">at.gallab.loonpop</string>
     <string name="custom_url_scheme">at.gallab.loonpop</string>
 </resources>

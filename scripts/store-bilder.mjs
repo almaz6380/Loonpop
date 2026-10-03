@@ -173,7 +173,7 @@ async function vorstellung(browser) {
       <img src="data:image/png;base64,${b64('ballon.png')}" style="position:absolute;left:640px;top:70px;width:170px;
         filter:drop-shadow(0 14px 24px rgba(0,0,0,.35))">
       <div style="position:absolute;left:90px;top:150px;color:#fff;font-weight:800;font-size:112px;
-        letter-spacing:-3px;text-shadow:0 6px 24px rgba(0,0,0,.3)">loonpop</div>
+        letter-spacing:-3px;text-shadow:0 6px 24px rgba(0,0,0,.3)">LoonPop</div>
     </div></body>`);
   await seite.waitForTimeout(200);
   mkdirSync(new URL('../store-assets/play/', import.meta.url), { recursive: true });

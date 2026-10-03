@@ -247,13 +247,6 @@ Dort, wo der Ballon ohnehin nicht durchkommt, sind sie wirkungslos.
 15. **Zonen zeigen ihre Richtung.** Die Teilchen wandern in Kraftrichtung. Bis
     zum 01.10.2026 stiegen sie immer auf, und eine Fallwind-Zone hätte das
     Gegenteil dessen gezeigt, was sie tut (siehe Falle 7).
-17. **Bewegte Nadeln prüft man GEMEINSAM.** Bis zum 02.10.2026 sah die Wegsuche
-    jede bewegte Nadel einzeln an. Unter einer wandernden Reihe ist jede Stelle
-    von jeder einzelnen Nadel meist frei, aber fast nie von allen zugleich. Eine
-    dichte wandernde Reihe galt deshalb als offen. Jetzt werden Nadeln mit
-    gleichem Umlauf zusammen geprüft (`bewegteSperren`), und ein Test hält das
-    fest. Der Bot wartet unter wandernden Reihen, bis die Lücke kommt
-    (`scripts/bot.ts`).
 16. **Cloudflare hat ZWEI Build-Einstellungen.** Production (`main`) und die
     Vorschauen für alle anderen Branches („Previews Base“) werden getrennt
     eingestellt. Am 01.10.2026 hatte nur Production einen Build-Befehl. Der
@@ -261,6 +254,24 @@ Dort, wo der Ballon ohnehin nicht durchkommt, sind sie wirkungslos.
     `"previews": {}`-Block, und ohne Build-Befehl gäbe es kein `dist/` (steht
     nicht im Repo). Seitdem baut `wrangler.jsonc` selbst (`build.command`) und
     hängt an keiner Dashboard-Einstellung mehr.
+17. **Bewegte Nadeln prüft man GEMEINSAM.** Bis zum 02.10.2026 sah die Wegsuche
+    jede bewegte Nadel einzeln an. Unter einer wandernden Reihe ist jede Stelle
+    von jeder einzelnen Nadel meist frei, aber fast nie von allen zugleich. Eine
+    dichte wandernde Reihe galt deshalb als offen. Jetzt werden Nadeln mit
+    gleichem Umlauf zusammen geprüft (`bewegteSperren`), und ein Test hält das
+    fest. Der Bot wartet unter wandernden Reihen, bis die Lücke kommt
+    (`scripts/bot.ts`).
+18. **Was ruckelt, ist das Pixelfüllen, nicht JavaScript.** Am 03.10.2026 meldete
+    Josef im Endlos-Modus (Browser): Das Bild stockt, der Ballon springt, die
+    Steuerung hakt. Laut CPU-Profil lagen über 90 % außerhalb von JavaScript. Drei
+    Ursachen: `shadowBlur` an jeder Nadel in jedem Bild (jetzt vorgezeichnete
+    Sprites, `nadelSprite` in `zeichnen.ts`), `backdrop-blur` im HUD über dem
+    Canvas (jetzt eine deckende Fläche) und die volle Pixeldichte auf schwachen
+    Geräten. Diese sinkt jetzt von selbst, sobald die Bilder zu lange dauern
+    (`dichte.ts`). Dazu zieht die Kamera nach Zeit nach statt je Bild
+    (`kamera.ts`). Gemessen mit `npm run leistung` (4-fache CPU-Drosselung): im
+    Mittel 70 → 22 ms je Bild. ⚠ Keine Unschärfe-Effekte in der Spielschleife,
+    und nach jeder Änderung am Zeichnen erst messen.
 
 ## Endlos
 

@@ -72,6 +72,51 @@ function kacheln(
  */
 const NADEL_BREITER = 1.5;
 
+/**
+ * Die Nadel samt Schatten, einmal vorgezeichnet je Variante und Laenge.
+ *
+ * ⚠ Bis zum 03.10.2026 bekam jede Nadel in jedem Bild ihren Schatten per
+ * shadowBlur, die roten Engstellen sogar zweimal. Der Canvas rechnet dabei bei
+ * jedem drawImage eine Unschaerfe. Mit den wandernden Reihen waren das ueber 100
+ * je Bild, und Josef meldete im Browser: Das Bild stockt, der Ballon springt.
+ * Gemessen bei 4-facher CPU-Drosselung (npm run leistung): Median 67 ms je Bild.
+ * Jetzt liegt der Schatten im Sprite, und je Nadel bleibt ein einfaches drawImage.
+ */
+type NadelSprite = { bild: HTMLCanvasElement; breite: number; rand: number };
+const nadelSprites = new Map<string, NadelSprite>();
+/** Pixel je Levelpixel im Sprite — die Sicht skaliert am Handy um rund 1,1. */
+const SPRITE_DICHTE = 2;
+function nadelSprite(nadelBild: HTMLImageElement, laenge: number, warnung: boolean): NadelSprite {
+  // Fallende Nadeln werden am Boden gekuerzt; auf 10 px gerundet bleiben das
+  // wenige Sprites statt eines je Bild.
+  const l = Math.max(10, Math.round(laenge / 10) * 10);
+  const schluessel = `${warnung ? 'w' : 'n'}:${l}`;
+  let s = nadelSprites.get(schluessel);
+  if (s) return s;
+  const breite = l * (nadelBild.naturalWidth / nadelBild.naturalHeight) * NADEL_BREITER;
+  const rand = warnung ? 26 : 10;
+  const c = document.createElement('canvas');
+  c.width = Math.ceil((breite + 2 * rand) * SPRITE_DICHTE);
+  c.height = Math.ceil((l + 2 * rand) * SPRITE_DICHTE);
+  const g = c.getContext('2d')!;
+  g.scale(SPRITE_DICHTE, SPRITE_DICHTE);
+  // shadowBlur und Versatz zaehlen in Geraetepixeln, nicht in Levelpixeln.
+  if (warnung) {
+    // Zweimal mit rotem Schein: Einmal war am Handy kaum zu sehen.
+    g.shadowColor = 'rgba(255,60,90,1)';
+    g.shadowBlur = 18 * SPRITE_DICHTE;
+    g.drawImage(nadelBild, rand, rand, breite, l);
+  } else {
+    g.shadowColor = 'rgba(10,20,45,0.35)';
+    g.shadowBlur = 6 * SPRITE_DICHTE;
+    g.shadowOffsetY = 2 * SPRITE_DICHTE;
+  }
+  g.drawImage(nadelBild, rand, rand, breite, l);
+  s = { bild: c, breite, rand };
+  nadelSprites.set(schluessel, s);
+  return s;
+}
+
 export type Sicht = {
   skala: number; randX: number; randY: number; breite: number; hoehe: number;
   /** Wie weit die Kamera nach rechts gewandert ist (Levelkoordinaten). */
@@ -636,8 +681,13 @@ export function zeichne(
     : endlosHoch
       ? nadelnIn(welt, oben - 100, oben + sichtHoehe + 100)
       : nadelnIn(welt, sicht.kameraX - 100, sicht.kameraX + sichtbar + 100);
+  // ⚠ Nur, was im Bild ist (03.10.2026): Wandernde Reihen ragen bis zu 220 px
+  // ueber den Levelrand, und nadelnIn sucht nur nach der Hoehe.
+  const sichtLinks = sicht.kameraX - sicht.randX / sicht.skala - 30;
+  const sichtRechts = sichtLinks + sichtbar + 60;
   for (const nadel of nadeln) {
     const n = nadelJetzt(nadel, welt.zeit, hoehe);
+    if (Math.max(n.von.x, n.bis.x) < sichtLinks || Math.min(n.von.x, n.bis.x) > sichtRechts) continue;
     // ⚠ Fallende Nadeln unterhalb der Wiese nicht mehr zeichnen — sonst sieht
     // man sie durch den Boden sinken, was wie ein Fehler aussieht. Fuer die
     // Physik ist das ohne Belang: Der Ballon kommt nie unter bodenY.
@@ -666,20 +716,8 @@ export function zeichne(
       ctx.save();
       ctx.translate(n.von.x, n.von.y);
       ctx.rotate(Math.atan2(dy, dx) - Math.PI / 2);
-      const breite = laenge * (nadelBild.naturalWidth / nadelBild.naturalHeight) * NADEL_BREITER;
-      // Engstellen im Endlos-Lauf schimmern rot — man soll sie kommen sehen.
-      if (nadel.warnung) {
-        // Zweimal mit rotem Schein: Einmal war am Handy kaum zu sehen.
-        ctx.shadowColor = 'rgba(255,60,90,1)';
-        ctx.shadowBlur = 18;
-        ctx.shadowOffsetY = 0;
-        ctx.drawImage(nadelBild, -breite / 2, 0, breite, laenge);
-      } else {
-        ctx.shadowColor = 'rgba(10,20,45,0.35)';
-        ctx.shadowBlur = 6;
-        ctx.shadowOffsetY = 2;
-      }
-      ctx.drawImage(nadelBild, -breite / 2, 0, breite, laenge);
+      const s = nadelSprite(nadelBild, laenge, !!nadel.warnung);
+      ctx.drawImage(s.bild, -s.breite / 2 - s.rand, -s.rand, s.breite + 2 * s.rand, laenge + 2 * s.rand);
       ctx.restore();
     } else {
       // Rueckfall, solange das Bild laedt.

@@ -31,8 +31,15 @@ function schluessel(): string {
   return p === 'ios' ? IOS_KEY : p === 'android' ? ANDROID_KEY : '';
 }
 
+/**
+ * `?kaufvorschau` zeigt die Kauf-Karte auch im Browser, mit festem Preis und
+ * ohne Funktion. Nur fuer das Pruefungsbild, das Apple zum Kauf verlangt
+ * (scripts/kauf-bild.mjs). Spieler sehen diese Adresse nie.
+ */
+const VORSCHAU = typeof location !== 'undefined' && new URLSearchParams(location.search).has('kaufvorschau');
+
 export function kaufMoeglich(): boolean {
-  return Capacitor.isNativePlatform() && Boolean(schluessel());
+  return VORSCHAU || (Capacitor.isNativePlatform() && Boolean(schluessel()));
 }
 
 type PurchasesPlugin = typeof import('@revenuecat/purchases-capacitor')['Purchases'];
@@ -77,6 +84,7 @@ export async function werbefreiPruefen(): Promise<boolean> {
 
 /** Preis in der Waehrung des Spielers fuer die Beschriftung, z. B. „2,99 €“. */
 export async function preisHolen(): Promise<string | null> {
+  if (VORSCHAU) return '2,99 €';
   try {
     const z = await bereitmachen();
     if (!z) return null;

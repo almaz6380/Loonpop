@@ -16,6 +16,7 @@ Zugang ueber drei Umgebungsvariablen (in der CI aus den Repo-Secrets):
     python3 scripts/asc.py --inhaberrechte  # keine Inhalte Dritter
     python3 scripts/asc.py --alter-setzen   # Alterseinstufung: alles „keine“
     python3 scripts/asc.py --vervollstaendigen  # Copyright, Kategorie, Pruef-Kontakt, Preis, Laender
+    python3 scripts/asc.py --kauf           # „Werbung entfernen“: Preis, Texte, Laender, Pruefungsbild
     python3 scripts/asc.py --einreichen
     python3 scripts/asc.py --aufraeumen     # festhaengende Einreichung zurueckziehen
 
@@ -521,6 +522,140 @@ def setze_verfuegbarkeit(tok, aid):
     print(f'    FEHLER: {fehler_text(res)}' if res.get('_fehler') else '    ok')
 
 
+# ── Kauf „Werbung entfernen“ (Version 1.1, 04.10.2026) ──────────────────────
+# RevenueCat hat das Produkt in ASC angelegt, aber nur mit ID und Typ. Apple
+# braucht dazu Preis, Namen je Sprache, Laender und ein Pruefungsbild, sonst
+# steht es auf „Missing Metadata“ und kann nicht mit 1.1 eingereicht werden.
+KAUF_ID = 'loonpop_no_ads'
+KAUF_PREIS = '2.99'
+KAUF_BASIS = 'AUT'
+KAUF_BILD = os.path.join(WURZEL, 'store-assets', 'ios', 'kauf-pruefung.png')
+KAUF_NOTIZ = ('Non-consumable "Remove ads". It is in the main menu below the level grid '
+              '("Werbung entfernen" / "Remove ads"); "Restore purchases" is right below it. '
+              'After purchase, banner and interstitial ads no longer appear.')
+# Apple erlaubt beim Kauf 30 Zeichen Name und 45 Zeichen Beschreibung.
+KAUF_KURZ = {'pt': 'Compre uma vez, sem anúncios para sempre.',
+             'it': 'Un solo acquisto, senza pubblicità per sempre.'}
+
+
+def _kauf_texte():
+    """{ASC-Sprachcode: (Name, Beschreibung)} aus den Sprachdateien der App."""
+    aus = {}
+    for pfad in sorted(glob.glob(os.path.join(WURZEL, 'store-assets', 'texte', '*.json'))):
+        code = os.path.basename(pfad)[:-5]
+        with open(pfad, encoding='utf-8') as f:
+            codes = json.load(f)['storeCodes']['appstore']
+        with open(os.path.join(WURZEL, 'src', 'i18n', 'locales', f'{code}.json'), encoding='utf-8') as f:
+            w = json.load(f)['werbung']
+        text = KAUF_KURZ.get(code, w['entfernenText'])
+        if len(text) > 45:
+            text = text[:44].rstrip() + '…'
+        for lc in codes:
+            aus[lc] = (w['entfernen'][:30], text)
+    return aus
+
+
+def kauf_einrichten(tok):
+    aid = app_id(tok)
+    treffer = [k for k in api(tok, f'apps/{aid}/inAppPurchasesV2?limit=50').get('data', [])
+               if k['attributes'].get('productId') == KAUF_ID]
+    if not treffer:
+        sys.exit(f'  Kein Kauf {KAUF_ID} in ASC — erst in RevenueCat „Create new product“.')
+    kid = treffer[0]['id']
+    a = treffer[0]['attributes']
+    print(f'  Kauf {KAUF_ID}: {a.get("name")} · {a.get("inAppPurchaseType")} · {a.get("state")}')
+
+    # Name und Hinweis fuer die Pruefung
+    if not TROCKEN:
+        res = api(tok, f'{V2}/inAppPurchases/{kid}', 'PATCH', {'data': {
+            'type': 'inAppPurchases', 'id': kid,
+            'attributes': {'name': 'Werbung entfernen', 'reviewNote': KAUF_NOTIZ}}}, fatal=False)
+        print(f'    Pruefhinweis: {"FEHLER " + fehler_text(res) if res.get("_fehler") else "ok"}')
+
+    # Texte je Sprache
+    da = {l['attributes']['locale']: l for l in
+          api(tok, f'{V2}/inAppPurchases/{kid}/inAppPurchaseLocalizations?limit=50').get('data', [])}
+    for lc, (name, text) in _kauf_texte().items():
+        alt = da.get(lc)
+        if alt and alt['attributes'].get('name') == name and alt['attributes'].get('description') == text:
+            continue
+        print(f'    {lc}: {name} / {text}')
+        if TROCKEN:
+            continue
+        if alt:
+            res = api(tok, f'inAppPurchaseLocalizations/{alt["id"]}', 'PATCH', {'data': {
+                'type': 'inAppPurchaseLocalizations', 'id': alt['id'],
+                'attributes': {'name': name, 'description': text}}}, fatal=False)
+        else:
+            res = api(tok, 'inAppPurchaseLocalizations', 'POST', {'data': {
+                'type': 'inAppPurchaseLocalizations',
+                'attributes': {'locale': lc, 'name': name, 'description': text},
+                'relationships': {'inAppPurchaseV2': {'data': {'type': 'inAppPurchases', 'id': kid}}}}},
+                fatal=False)
+        if res.get('_fehler'):
+            print(f'      FEHLER: {fehler_text(res)}')
+
+    # Preis
+    punkte, url = [], f'{V2}/inAppPurchases/{kid}/pricePoints?filter[territory]={KAUF_BASIS}&limit=200'
+    while url:
+        r = api(tok, url)
+        punkte += r.get('data', [])
+        url = (r.get('links') or {}).get('next')
+    passend = [p for p in punkte if p['attributes'].get('customerPrice') in (KAUF_PREIS, KAUF_PREIS + '0')]
+    if not passend:
+        print(f'    KEIN Preispunkt {KAUF_PREIS} in {KAUF_BASIS} — Preis in ASC von Hand setzen.')
+    else:
+        print(f'    Preis -> {KAUF_PREIS} € (Basis {KAUF_BASIS}, andere Laender rechnet Apple um)')
+        if not TROCKEN:
+            res = api(tok, 'inAppPurchasePriceSchedules', 'POST', {
+                'data': {'type': 'inAppPurchasePriceSchedules', 'relationships': {
+                    'inAppPurchase': {'data': {'type': 'inAppPurchases', 'id': kid}},
+                    'baseTerritory': {'data': {'type': 'territories', 'id': KAUF_BASIS}},
+                    'manualPrices': {'data': [{'type': 'inAppPurchasePrices', 'id': '${preis}'}]}}},
+                'included': [{'type': 'inAppPurchasePrices', 'id': '${preis}', 'attributes': {'startDate': None},
+                              'relationships': {'inAppPurchasePricePoint': {'data': {
+                                  'type': 'inAppPurchasePricePoints', 'id': passend[0]['id']}}}}]}, fatal=False)
+            print(f'      {"FEHLER " + fehler_text(res) if res.get("_fehler") else "ok"}')
+
+    # Laender
+    laender, url = [], 'territories?limit=200'
+    while url:
+        r = api(tok, url)
+        laender += [t['id'] for t in r.get('data', [])]
+        url = (r.get('links') or {}).get('next')
+    print(f'    Verfuegbar in allen {len(laender)} Laendern')
+    if not TROCKEN:
+        res = api(tok, 'inAppPurchaseAvailabilities', 'POST', {'data': {
+            'type': 'inAppPurchaseAvailabilities', 'attributes': {'availableInNewTerritories': True},
+            'relationships': {
+                'inAppPurchase': {'data': {'type': 'inAppPurchases', 'id': kid}},
+                'availableTerritories': {'data': [{'type': 'territories', 'id': t} for t in laender]}}}},
+            fatal=False)
+        print(f'      {"FEHLER " + fehler_text(res) if res.get("_fehler") else "ok"}')
+
+    # Pruefungsbild
+    vorhanden = api(tok, f'{V2}/inAppPurchases/{kid}/appStoreReviewScreenshot', fatal=False).get('data')
+    if vorhanden:
+        print('    Pruefungsbild steht schon')
+    elif not os.path.exists(KAUF_BILD):
+        print(f'    KEIN Bild {KAUF_BILD} — node scripts/kauf-bild.mjs')
+    else:
+        print(f'    Pruefungsbild -> {os.path.basename(KAUF_BILD)}')
+        if not TROCKEN:
+            res = api(tok, 'inAppPurchaseAppStoreReviewScreenshots', 'POST', {'data': {
+                'type': 'inAppPurchaseAppStoreReviewScreenshots',
+                'attributes': {'fileName': os.path.basename(KAUF_BILD), 'fileSize': os.path.getsize(KAUF_BILD)},
+                'relationships': {'inAppPurchaseV2': {'data': {'type': 'inAppPurchases', 'id': kid}}}}},
+                fatal=False)
+            if res.get('_fehler'):
+                print(f'      FEHLER: {fehler_text(res)}')
+            else:
+                fertig = _hochladen(tok, res, KAUF_BILD, 'inAppPurchaseAppStoreReviewScreenshots')
+                print(f'      {"FEHLER " + fehler_text(fertig) if fertig.get("_fehler") else "ok"}')
+    neu = api(tok, f'{V2}/inAppPurchases/{kid}')['data']['attributes'].get('state')
+    print(f'  Zustand jetzt: {neu} (READY_TO_SUBMIT = fertig, wird mit 1.1 eingereicht)')
+
+
 def vervollstaendigen(tok):
     aid = app_id(tok)
     setze_copyright(tok, aid)
@@ -608,7 +743,7 @@ def main():
     global TROCKEN
     p = argparse.ArgumentParser()
     for name in ('status', 'texte', 'screenshots', 'exportfrage', 'inhaberrechte',
-                 'alter-setzen', 'vervollstaendigen', 'einreichen', 'aufraeumen'):
+                 'alter-setzen', 'vervollstaendigen', 'kauf', 'einreichen', 'aufraeumen'):
         p.add_argument(f'--{name}', action='store_true')
     p.add_argument('--build', metavar='NUMMER')
     p.add_argument('--dry-run', action='store_true')
@@ -633,6 +768,8 @@ def main():
         alter_setzen(tok)
     if a.vervollstaendigen:
         vervollstaendigen(tok)
+    if a.kauf:
+        kauf_einrichten(tok)
     if a.einreichen:
         einreichen(tok)
     if a.aufraeumen:

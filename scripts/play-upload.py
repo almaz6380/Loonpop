@@ -357,28 +357,42 @@ def kauf_anlegen(dry_run=False):
             w = json.load(f)['werbung']
         for lc in play_codes:
             listings[lc] = {'title': w['entfernen'][:55], 'description': w['entfernenText'][:200]}
-    produkt = {'packageName': PKG, 'sku': KAUF_ID, 'status': 'active', 'purchaseType': 'managedUser',
-               'defaultPrice': {'priceMicros': KAUF_NETTO_MICROS, 'currency': 'EUR'},
-               'defaultLanguage': 'de-DE', 'listings': listings}
     print(f'Kauf {KAUF_ID}: {len(listings)} Sprachen, 2,49 € netto')
     if dry_run:
         print('--dry-run: nichts angelegt.')
         return
     tok = token()
-    basis = f'{API}/applications/{PKG}/inappproducts'
+    # ⚠ Die alte Schnittstelle (inappproducts) antwortet seit 2026 mit 403
+    # „Please migrate to the new publishing API“ (04.10.2026). Neu ist
+    # onetimeproducts mit Kaufoption und Preisen je Region.
+    basis = f'{API}/applications/{PKG}'
+    umgerechnet = call(tok, 'POST', f'{basis}/pricing:convertRegionPrices', data={
+        'price': {'currencyCode': 'EUR', 'units': '2', 'nanos': int(KAUF_NETTO_MICROS[1:]) * 1000}})
+    regionen = [{'regionCode': r, 'price': v['price'], 'availability': 'AVAILABLE'}
+                for r, v in sorted(umgerechnet.get('convertedRegionPrices', {}).items())]
+    andere = umgerechnet.get('convertedOtherRegionsPrice', {})
+    print(f'  {len(regionen)} Regionen umgerechnet')
+    produkt = {
+        'packageName': PKG, 'productId': KAUF_ID,
+        'listings': [{'languageCode': lc, **t} for lc, t in listings.items()],
+        'purchaseOptions': [{
+            'purchaseOptionId': 'standard',
+            'buyOption': {'legacyCompatible': True, 'multiQuantityEnabled': False},
+            'regionalPricingAndAvailabilityConfigs': regionen,
+            'newRegionsConfig': {'usdPrice': andere.get('usdPrice'), 'eurPrice': andere.get('eurPrice'),
+                                 'availability': 'AVAILABLE'},
+        }],
+    }
+    call(tok, 'PATCH', f'{basis}/onetimeproducts/{KAUF_ID}?allowMissing=true'
+         '&regionsVersion.version=2022/02&updateMask=listings,purchaseOptions', data=produkt)
+    print('  angelegt bzw. aktualisiert')
     try:
-        call(tok, 'GET', f'{basis}/{KAUF_ID}', fatal=False)
-        da = True
+        call(tok, 'POST', f'{basis}/onetimeproducts/{KAUF_ID}/purchaseOptions:batchUpdateStates', data={
+            'requests': [{'activatePurchaseOptionRequest': {
+                'packageName': PKG, 'productId': KAUF_ID, 'purchaseOptionId': 'standard'}}]}, fatal=False)
+        print('  Kaufoption aktiv')
     except ApiError as e:
-        if e.code != 404:
-            sys.exit(f'FEHLER {e.code} beim Lesen\n{e.detail}')
-        da = False
-    if da:
-        call(tok, 'PUT', f'{basis}/{KAUF_ID}?autoConvertMissingPrices=true', data=produkt)
-        print('  aktualisiert')
-    else:
-        call(tok, 'POST', f'{basis}?autoConvertMissingPrices=true', data=produkt)
-        print('  angelegt und aktiv')
+        print(f'  Kaufoption nicht aktiviert ({e.code}): {e.detail[:300]}')
 
 
 def zeige_status(tok, track='production'):

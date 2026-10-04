@@ -1,4 +1,4 @@
-# CLAUDE.md — loonpop (Ballon-Geschicklichkeitsspiel)
+# CLAUDE.md — LoonPop (Ballon-Geschicklichkeitsspiel)
 
 ## In einem Satz
 
@@ -11,6 +11,10 @@ Die sechste App von Josef.
 wird **nur noch nach oben** gespielt: fünfzehn Hoch-Level (IDs 1, 2, 3, 6, 8, 10, 13–21) und Endlos ↑. Strecken
 (Level 4, 5, 7, 9, 11, 12) und Endlos → sind ausgeblendet, nicht gelöscht
 (`LEVEL` in `level/index.ts` filtert, `npm test` prüft sie weiter). Siehe README für die Reihenfolge bis zum Store.
+**Store:** Version 1.0 (Android versionCode 1, iOS Build 1) am 04.10.2026 bei
+Apple (Warten auf Prüfung) und Google (zur Prüfung, verwaltete Veröffentlichung
+aus, geht nach der Freigabe von selbst live) eingereicht. Offen: 1.1 mit Werbung
+(AdMob) und/oder Kauf „Werbung entfernen“ (RevenueCat), also M6. Josef entscheidet.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
 Löschen ohne ausdrückliches „ja" im Chat.
 **Testversion im Browser:** https://loonpop.almaz6380.workers.dev (seit 01.10.2026,
@@ -365,6 +369,23 @@ selbst tun muss (Konten, Profile, Secrets) und die Antworten für die Formulare.
   `vite preview` auf Port 4173), `npm run rechtstexte`.
 - Vor jedem Release `versionCode` (Android) und `CURRENT_PROJECT_VERSION`
   (iOS, 2 Stellen) erhöhen.
+- ⚠ **Das iOS-Profil muss das Zertifikat aus dem .p12 enthalten** (03.10.2026).
+  Das erste Profil, das das Skript anlegte, hatte das neueste Zertifikat des Kontos,
+  und xcodebuild brach ab. `ios-release.yml` gibt jetzt die Seriennummer an
+  `scripts/profil-holen.py`.
+- ⚠ **Was nur in der Konsole geht** (keine API): Apple App-Datenschutz („Keine
+  Daten erfasst“ → Veröffentlichen); bei Google Länder des Produktions-Tracks,
+  Kategorie und Kontaktdaten. Alles andere setzt `app-store.yml` `pflicht`
+  (Copyright, Kategorie, Prüf-Kontakt aus Josefs anderer App, Preis kostenlos,
+  alle Länder).
+- ⚠ **Die erste Play-Produktion geht nur als Entwurf** (`play-eintrag.yml`
+  `produktion`, `--entwurf`): „Only releases with status draft may be created on
+  draft app“. Abgeschickt wird sie in der Konsole. Ab dem zweiten Release
+  entfällt `--entwurf`.
+- ⚠ Warum Apple eine Einreichung ablehnt, steht nicht im Fehlertext, sondern in
+  `meta.associatedErrors` (`fehler_text()` in `asc.py` gibt es aus). Google
+  antwortet zwischendurch mit 503; `play-upload.py` versucht es dann bis zu
+  dreimal erneut.
 
 ## Konventionen
 

@@ -14,8 +14,11 @@ wird **nur noch nach oben** gespielt: fünfzehn Hoch-Level (IDs 1, 2, 3, 6, 8, 1
 **Store:** Version 1.0 (Android versionCode 1, iOS Build 1) am 04.10.2026 bei
 Apple (Warten auf Prüfung) und Google (zur Prüfung, verwaltete Veröffentlichung
 aus, geht nach der Freigabe von selbst live) eingereicht. **1.1** (Branch `werbung`, M6): Werbung über AdMob und Kauf
-„Werbung entfernen“ über RevenueCat, im Code fertig, wartet auf Josefs Konten
-(docs/store.md, „Version 1.1“). Erst nach `main`, wenn 1.0 freigegeben ist.
+„Werbung entfernen“ über RevenueCat. Stand 04.10.2026: Code, AdMob-IDs,
+DSGVO-Nachricht, RevenueCat-Schlüssel und der Apple-Kauf sind fertig. Der
+Google-Kauf, das Verknüpfen in RevenueCat und `MIT_TESTANZEIGEN = false` warten,
+bis 1.0 freigegeben ist (Reihenfolge in docs/store.md, „Version 1.1“). Erst dann
+nach `main`, sonst stünde die neue Datenschutzerklärung schon neben der App ohne Werbung.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
 Löschen ohne ausdrückliches „ja" im Chat.
 **Testversion im Browser:** https://loonpop.almaz6380.workers.dev (seit 01.10.2026,
@@ -397,9 +400,11 @@ Vorlage ist Anigosha, dort seit August 2026 im Store.
   Tippen auf „Nochmal“/„Level“, nie im Moment des Platzens. Banner nur im Menü,
   nie über dem Spielfeld, wo der Finger das Gebläse schiebt. Im Browser keine
   Werbung und kein Kauf.
-- ⚠ **Testanzeigen, bis Josef die IDs schickt** (`MIT_TESTANZEIGEN`, Test-App-IDs
-  in `Info.plist`/`AndroidManifest.xml`). `scripts/werbung-bereit.mjs` lässt keinen
-  Upload mit Test-IDs oder ohne RevenueCat-Schlüssel durch. Eigene Live-Anzeigen
+- ⚠ **Testanzeigen bis kurz vor dem Einreichen** (`MIT_TESTANZEIGEN` in
+  `werbung.ts`). Die echten IDs (`LIVE`, `Info.plist`, `AndroidManifest.xml`) und
+  die öffentlichen RevenueCat-Schlüssel (`kauf.ts`) stehen schon drin.
+  `scripts/werbung-bereit.mjs` lässt keinen Upload zu Apple bzw. in die
+  Play-Produktion mit Testanzeigen durch; der interne Play-Test darf sie zeigen. Eigene Live-Anzeigen
   nie ansehen oder anklicken: Das AdMob-Konto teilen sich Anigosha, MyPeak und
   WELLbooked.
 - ⚠ **ATT nativ, im `SceneDelegate`** (`sceneDidBecomeActive`). LoonPop arbeitet
@@ -410,6 +415,12 @@ Vorlage ist Anigosha, dort seit August 2026 im Store.
 - ⚠ **Capacitor-Plugins nie aus async-Funktionen zurückgeben oder `await`en**,
   nur in einer Hülle `{ Purchases }`/`{ AdMob }` weiterreichen: Ihr `.then` löst
   nie auf (Anigosha, „Kauf hängt“, Build 1–10).
+- ⚠ **Google legt einen Kauf erst an, wenn ein Build mit Kauf-Berechtigung
+  hochgeladen ist**, und dieser Build (mit `AD_ID`) geht nur durch, wenn in der
+  Play Console „Werbe-ID: Ja“ steht (04.10.2026). Die alte `inappproducts`-API
+  antwortet mit 403; `play-upload.py --kauf` nutzt `onetimeproducts`.
+- Das Prüfungsbild für Apples Kauf macht `scripts/kauf-bild.mjs` aus
+  `?kaufvorschau` (zeigt die Kauf-Karte im Browser, ohne Funktion).
 - Kein Konto: RevenueCat vergibt eine anonyme Kennung, „Käufe wiederherstellen“
   holt den Kauf über das Store-Konto zurück (Apple verlangt den Knopf, 3.1.1).
 

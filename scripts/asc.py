@@ -535,7 +535,7 @@ KAUF_NOTIZ = ('Non-consumable "Remove ads". It is in the main menu below the lev
               'After purchase, banner and interstitial ads no longer appear.')
 # Apple erlaubt beim Kauf 30 Zeichen Name und 45 Zeichen Beschreibung.
 KAUF_KURZ = {'pt': 'Compre uma vez, sem anúncios para sempre.',
-             'it': 'Un solo acquisto, senza pubblicità per sempre.'}
+             'it': 'Un acquisto, niente pubblicità per sempre.'}
 
 
 def _kauf_texte():

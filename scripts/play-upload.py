@@ -338,6 +338,49 @@ def setze_listing(tok, datei, lang, dry_run=False):
     commit_edit(tok, eid)
 
 
+# ── Kauf „Werbung entfernen“ (Version 1.1, 04.10.2026) ──────────────────────
+# Einmaliger Kauf `loonpop_no_ads`. Google rechnet Preise NETTO: 2,49 € werden
+# mit 20 % USt. zu 2,99 € (Anigosha). Die anderen Laender rechnet Google um
+# (autoConvertMissingPrices). Texte aus den Sprachdateien der App.
+KAUF_ID = 'loonpop_no_ads'
+KAUF_NETTO_MICROS = '2490000'
+
+
+def kauf_anlegen(dry_run=False):
+    wurzel = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    listings = {}
+    for pfad in sorted(glob.glob(os.path.join(wurzel, 'store-assets', 'texte', '*.json'))):
+        code = os.path.basename(pfad)[:-5]
+        with open(pfad, encoding='utf-8') as f:
+            play_codes = json.load(f)['storeCodes']['play']
+        with open(os.path.join(wurzel, 'src', 'i18n', 'locales', f'{code}.json'), encoding='utf-8') as f:
+            w = json.load(f)['werbung']
+        for lc in play_codes:
+            listings[lc] = {'title': w['entfernen'][:55], 'description': w['entfernenText'][:200]}
+    produkt = {'packageName': PKG, 'sku': KAUF_ID, 'status': 'active', 'purchaseType': 'managedUser',
+               'defaultPrice': {'priceMicros': KAUF_NETTO_MICROS, 'currency': 'EUR'},
+               'defaultLanguage': 'de-DE', 'listings': listings}
+    print(f'Kauf {KAUF_ID}: {len(listings)} Sprachen, 2,49 € netto')
+    if dry_run:
+        print('--dry-run: nichts angelegt.')
+        return
+    tok = token()
+    basis = f'{API}/applications/{PKG}/inappproducts'
+    try:
+        call(tok, 'GET', f'{basis}/{KAUF_ID}', fatal=False)
+        da = True
+    except ApiError as e:
+        if e.code != 404:
+            sys.exit(f'FEHLER {e.code} beim Lesen\n{e.detail}')
+        da = False
+    if da:
+        call(tok, 'PUT', f'{basis}/{KAUF_ID}?autoConvertMissingPrices=true', data=produkt)
+        print('  aktualisiert')
+    else:
+        call(tok, 'POST', f'{basis}?autoConvertMissingPrices=true', data=produkt)
+        print('  angelegt und aktiv')
+
+
 def zeige_status(tok, track='production'):
     eid = call(tok, 'POST', f'{API}/applications/{PKG}/edits')['id']
     tr = call(tok, 'GET', f'{API}/applications/{PKG}/edits/{eid}/tracks/{track}')
@@ -356,6 +399,7 @@ def main():
                    help='nur als Entwurf anlegen (Pflicht, solange die App nie veroeffentlicht war)')
     p.add_argument('--notes', default='', help='Was-ist-neu-Text (de-DE)')
     p.add_argument('--status', action='store_true', help='nur den Track anzeigen')
+    p.add_argument('--kauf', action='store_true', help='Kauf „Werbung entfernen“ anlegen/aktualisieren')
     p.add_argument('--screenshots', metavar='VERZEICHNIS',
                    help='Store-Eintrag-Screenshots ersetzen (z. B. store-assets/android)')
     p.add_argument('--listing-lesen', nargs='?', const='-', metavar='JSON',
@@ -373,6 +417,8 @@ def main():
                    choices=['production', 'beta', 'alpha', 'internal'],
                    help='Play-Track (Standard: production)')
     a = p.parse_args()
+    if a.kauf:
+        return kauf_anlegen(a.dry_run)
 
     if not (a.aab or a.promote or a.status or a.screenshots or a.listing_lesen
             or a.listing

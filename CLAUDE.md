@@ -13,8 +13,13 @@ wird **nur noch nach oben** gespielt: fünfzehn Hoch-Level (IDs 1, 2, 3, 6, 8, 1
 (`LEVEL` in `level/index.ts` filtert, `npm test` prüft sie weiter). Siehe README für die Reihenfolge bis zum Store.
 **Store:** Version 1.0 (Android versionCode 1, iOS Build 1) am 04.10.2026 bei
 Apple (Warten auf Prüfung) und Google (zur Prüfung, verwaltete Veröffentlichung
-aus, geht nach der Freigabe von selbst live) eingereicht. Offen: 1.1 mit Werbung
-(AdMob) und/oder Kauf „Werbung entfernen“ (RevenueCat), also M6. Josef entscheidet.
+aus, geht nach der Freigabe von selbst live) eingereicht. **1.1** (M6, Branch
+`werbung`): Werbung über AdMob und Kauf „Werbung entfernen“ über RevenueCat, Josef
+hat „beides“ gewählt. Stand 04.10.2026: Code, AdMob-IDs, DSGVO-Nachricht,
+RevenueCat-Schlüssel und der Apple-Kauf sind fertig. Der Google-Kauf, das
+Verknüpfen in RevenueCat und `MIT_TESTANZEIGEN = false` warten, bis 1.0 freigegeben
+ist (Reihenfolge in docs/store.md auf `werbung`, „Version 1.1“). Erst dann nach
+`main`, sonst stünde die neue Datenschutzerklärung schon neben der App ohne Werbung.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
 Löschen ohne ausdrückliches „ja" im Chat.
 **Testversion im Browser:** https://loonpop.almaz6380.workers.dev (seit 01.10.2026,

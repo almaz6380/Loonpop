@@ -371,7 +371,10 @@ def kauf_anlegen(dry_run=False):
     regionen = [{'regionCode': r, 'price': v['price'], 'availability': 'AVAILABLE'}
                 for r, v in sorted(umgerechnet.get('convertedRegionPrices', {}).items())]
     andere = umgerechnet.get('convertedOtherRegionsPrice', {})
-    print(f'  {len(regionen)} Regionen umgerechnet')
+    # ⚠ Die Regionen-Version muss zu den umgerechneten Waehrungen passen: Mit
+    # 2022/02 verlangte Google fuer Bulgarien BGN, umgerechnet war aber EUR.
+    version = (umgerechnet.get('regionVersion') or {}).get('version') or '2025/03'
+    print(f'  {len(regionen)} Regionen umgerechnet (Regionen-Version {version})')
     produkt = {
         'packageName': PKG, 'productId': KAUF_ID,
         'listings': [{'languageCode': lc, **t} for lc, t in listings.items()],
@@ -384,7 +387,7 @@ def kauf_anlegen(dry_run=False):
         }],
     }
     call(tok, 'PATCH', f'{basis}/onetimeproducts/{KAUF_ID}?allowMissing=true'
-         '&regionsVersion.version=2022/02&updateMask=listings,purchaseOptions', data=produkt)
+         f'&regionsVersion.version={version}&updateMask=listings,purchaseOptions', data=produkt)
     print('  angelegt bzw. aktualisiert')
     try:
         call(tok, 'POST', f'{basis}/onetimeproducts/{KAUF_ID}/purchaseOptions:batchUpdateStates', data={

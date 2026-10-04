@@ -17,8 +17,11 @@ export const WERBEFREI = 'no_ads';
 /** Kennung des Produkts in beiden Stores (einmaliger Kauf). */
 export const PRODUKT_ID = 'loonpop_no_ads';
 
-const IOS_KEY = (import.meta.env.VITE_REVENUECAT_IOS_KEY as string | undefined) ?? '';
-const ANDROID_KEY = (import.meta.env.VITE_REVENUECAT_ANDROID_KEY as string | undefined) ?? '';
+// Oeffentliche SDK-Schluessel aus RevenueCat (Projekt LoonPop, 04.10.2026). Sie
+// stecken ohnehin in jedem App-Paket, deshalb stehen sie hier statt in einem
+// Secret. Eine Umgebungsvariable ueberstimmt sie (z. B. fuer ein Testprojekt).
+const IOS_KEY = (import.meta.env.VITE_REVENUECAT_IOS_KEY as string | undefined) || 'appl_qdqOcvaeAIuVWWSEYBumCDERlBh';
+const ANDROID_KEY = (import.meta.env.VITE_REVENUECAT_ANDROID_KEY as string | undefined) || 'goog_QxAWVlpxuFQzjlBuomDEbZphlYc';
 
 export type KaufGrund = 'abgebrochen' | 'kein_angebot' | 'fehler';
 export type KaufErgebnis = { ok: true; werbefrei: boolean } | { ok: false; grund: KaufGrund };

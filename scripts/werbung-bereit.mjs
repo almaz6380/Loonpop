@@ -39,11 +39,14 @@ if (nativ.includes(TEST_KONTO)) {
     : 'Info.plist: GADApplicationIdentifier ist noch Googles Test-ID');
 }
 
-const schluessel = process.env[plattform === 'android' ? 'VITE_REVENUECAT_ANDROID_KEY' : 'VITE_REVENUECAT_IOS_KEY'] ?? '';
+// Der Schluessel steht in src/lib/kauf.ts; ein Secret darf ihn ueberstimmen.
+const kauf = readFileSync('src/lib/kauf.ts', 'utf8');
 const praefix = plattform === 'android' ? 'goog_' : 'appl_';
+const variable = plattform === 'android' ? 'VITE_REVENUECAT_ANDROID_KEY' : 'VITE_REVENUECAT_IOS_KEY';
+const imCode = kauf.match(new RegExp(`${variable} as string \\| undefined\\) \\|\\| '([^']*)'`))?.[1] ?? '';
+const schluessel = process.env[variable] || imCode;
 if (!schluessel.startsWith(praefix)) {
-  fehler.push(`RevenueCat-Schluessel fuer ${plattform} fehlt oder beginnt nicht mit ${praefix} ` +
-    `(Secret REVENUECAT_${plattform.toUpperCase()}_KEY)`);
+  fehler.push(`RevenueCat-Schluessel fuer ${plattform} fehlt oder beginnt nicht mit ${praefix} (src/lib/kauf.ts)`);
 }
 
 if (fehler.length) {

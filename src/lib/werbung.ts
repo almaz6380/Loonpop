@@ -37,7 +37,8 @@ const TEST = {
 const LIVE = {
   // iOS-App ca-app-pub-8860791993288062~7035556835 (angelegt 04.10.2026)
   ios: { banner: 'ca-app-pub-8860791993288062/2004833844', vollbild: 'ca-app-pub-8860791993288062/7863665182' },
-  android: { banner: '', vollbild: '' },
+  // Android-App ca-app-pub-8860791993288062~5237501849 (angelegt 04.10.2026)
+  android: { banner: 'ca-app-pub-8860791993288062/3122474399', vollbild: 'ca-app-pub-8860791993288062/8157066812' },
 };
 
 const nativ = Capacitor.isNativePlatform();

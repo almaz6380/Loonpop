@@ -55,5 +55,18 @@
     "19": "Sürgülü kapı",
     "20": "Karşı yön",
     "21": "Değirmen"
+  },
+  "werbung": {
+    "entfernen": "Reklamları kaldır",
+    "entfernenText": "Bir kez satın al, sonsuza dek reklamsız.",
+    "wiederherstellen": "Satın alımları geri yükle",
+    "werbefrei": "Reklamsız – desteğin için teşekkürler!",
+    "einstellungen": "Reklam ayarları",
+    "wiederhergestellt": "Satın alım geri yüklendi.",
+    "nichtsGefunden": "Satın alım bulunamadı.",
+    "fehler": {
+      "kein_angebot": "Şu anda kullanılamıyor. Lütfen daha sonra tekrar dene.",
+      "fehler": "Olmadı. Lütfen daha sonra tekrar dene."
+    }
   }
 }

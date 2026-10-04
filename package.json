@@ -1,7 +1,7 @@
 {
   "name": "loonpop",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -19,9 +19,11 @@
     "leistung": "node scripts/leistung.mjs"
   },
   "dependencies": {
+    "@capacitor-community/admob": "^8.1.0",
     "@capacitor/android": "^8.5.2",
     "@capacitor/core": "^8.5.2",
     "@capacitor/ios": "^8.5.2",
+    "@revenuecat/purchases-capacitor": "^13.7.0",
     "@tailwindcss/vite": "^4.3.3",
     "i18next": "^26.3.6",
     "react": "^19.2.7",

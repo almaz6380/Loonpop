@@ -13,8 +13,9 @@ wird **nur noch nach oben** gespielt: fünfzehn Hoch-Level (IDs 1, 2, 3, 6, 8, 1
 (`LEVEL` in `level/index.ts` filtert, `npm test` prüft sie weiter). Siehe README für die Reihenfolge bis zum Store.
 **Store:** Version 1.0 (Android versionCode 1, iOS Build 1) am 04.10.2026 bei
 Apple (Warten auf Prüfung) und Google (zur Prüfung, verwaltete Veröffentlichung
-aus, geht nach der Freigabe von selbst live) eingereicht. Offen: 1.1 mit Werbung
-(AdMob) und/oder Kauf „Werbung entfernen“ (RevenueCat), also M6. Josef entscheidet.
+aus, geht nach der Freigabe von selbst live) eingereicht. **1.1** (Branch `werbung`, M6): Werbung über AdMob und Kauf
+„Werbung entfernen“ über RevenueCat, im Code fertig, wartet auf Josefs Konten
+(docs/store.md, „Version 1.1“). Erst nach `main`, wenn 1.0 freigegeben ist.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
 Löschen ohne ausdrückliches „ja" im Chat.
 **Testversion im Browser:** https://loonpop.almaz6380.workers.dev (seit 01.10.2026,
@@ -361,9 +362,9 @@ selbst tun muss (Konten, Profile, Secrets) und die Antworten für die Formulare.
   aus, Store-Workflows starten als Trockenlauf. Vorlage war `almaz6380/anigosha`.
 - Nur **Hochformat** und nur **iPhone** (`TARGETED_DEVICE_FAMILY = 1`). Sonst
   verlangt Apple iPad-Screenshots.
-- ⚠ **Was die Texte versprechen, muss stimmen:** „ohne Werbung, ohne Käufe,
-  ohne Konto, keine Daten“. Kommt M5 oder M6, ändern sich Store-Texte,
-  `scripts/rechtstexte.py` und beide Datenschutz-Formulare mit.
+- ⚠ **Was die Texte versprechen, muss stimmen.** Seit 1.1 gibt es Werbung und
+  einen Kauf; versprochen wird nur noch „kein Konto“. Kommt M5, ändern sich
+  Store-Texte, `scripts/rechtstexte.py` und beide Datenschutz-Formulare mit.
 - Bilder und Texte werden **erzeugt**, nicht von Hand gepflegt:
   `npm run app:bilder`, `npm run store:texte`, `npm run store:bilder` (braucht
   `vite preview` auf Port 4173), `npm run rechtstexte`.
@@ -386,6 +387,31 @@ selbst tun muss (Konten, Profile, Secrets) und die Antworten für die Formulare.
   `meta.associatedErrors` (`fehler_text()` in `asc.py` gibt es aus). Google
   antwortet zwischendurch mit 503; `play-upload.py` versucht es dann bis zu
   dreimal erneut.
+
+## Werbung und Kauf (1.1, seit 04.10.2026)
+
+Vorlage ist Anigosha, dort seit August 2026 im Store.
+
+- **Wann Werbung kommt**, steht in `werbetakt.ts` (rein, mit Tests): Vollbild
+  nur nach jedem 3. Platzen, frühestens 90 s nach der letzten, und erst beim
+  Tippen auf „Nochmal“/„Level“, nie im Moment des Platzens. Banner nur im Menü,
+  nie über dem Spielfeld, wo der Finger das Gebläse schiebt. Im Browser keine
+  Werbung und kein Kauf.
+- ⚠ **Testanzeigen, bis Josef die IDs schickt** (`MIT_TESTANZEIGEN`, Test-App-IDs
+  in `Info.plist`/`AndroidManifest.xml`). `scripts/werbung-bereit.mjs` lässt keinen
+  Upload mit Test-IDs oder ohne RevenueCat-Schlüssel durch. Eigene Live-Anzeigen
+  nie ansehen oder anklicken: Das AdMob-Konto teilen sich Anigosha, MyPeak und
+  WELLbooked.
+- ⚠ **ATT nativ, im `SceneDelegate`** (`sceneDidBecomeActive`). LoonPop arbeitet
+  mit Szenen, `applicationDidBecomeActive` kommt hier nicht. Über das
+  AdMob-Plugin gefragt, zeigt iOS nichts (Anigosha, Ablehnung 2.1 am 12.08.2026).
+  `NSUserTrackingUsageDescription`, diese Abfrage und „Tracking: ja“ in ASC
+  müssen zusammen stimmen.
+- ⚠ **Capacitor-Plugins nie aus async-Funktionen zurückgeben oder `await`en**,
+  nur in einer Hülle `{ Purchases }`/`{ AdMob }` weiterreichen: Ihr `.then` löst
+  nie auf (Anigosha, „Kauf hängt“, Build 1–10).
+- Kein Konto: RevenueCat vergibt eine anonyme Kennung, „Käufe wiederherstellen“
+  holt den Kauf über das Store-Konto zurück (Apple verlangt den Knopf, 3.1.1).
 
 ## Konventionen
 

@@ -60,7 +60,18 @@ jobs:
           echo "VC=$VC" >> "$GITHUB_ENV"
           echo "VN=$VN" >> "$GITHUB_ENV"
 
+      - name: Werbung und Kauf scharf?
+        # Nur vor einem Upload: Testanzeigen oder ein fehlender Kauf-Schluessel
+        # duerfen nicht in den Store (scripts/werbung-bereit.mjs).
+        if: ${{ inputs.upload }}
+        env:
+          VITE_REVENUECAT_ANDROID_KEY: ${{ secrets.REVENUECAT_ANDROID_KEY }}
+        run: node scripts/werbung-bereit.mjs android
+
       - name: Web-Bundle + Capacitor-Sync
+        env:
+          # Oeffentliche SDK-Schluessel; sie landen ohnehin im App-Paket.
+          VITE_REVENUECAT_ANDROID_KEY: ${{ secrets.REVENUECAT_ANDROID_KEY }}
         run: |
           npm run build
           npx cap sync android

@@ -55,5 +55,18 @@
     "19": "推拉门",
     "20": "逆行",
     "21": "磨坊"
+  },
+  "werbung": {
+    "entfernen": "移除广告",
+    "entfernenText": "一次购买，永久无广告。",
+    "wiederherstellen": "恢复购买",
+    "werbefrei": "已无广告 – 感谢你的支持！",
+    "einstellungen": "广告设置",
+    "wiederhergestellt": "购买已恢复。",
+    "nichtsGefunden": "未找到购买记录。",
+    "fehler": {
+      "kein_angebot": "暂时不可用，请稍后再试。",
+      "fehler": "没有成功，请稍后再试。"
+    }
   }
 }

@@ -55,5 +55,18 @@
     "19": "Porta scorrevole",
     "20": "Controsenso",
     "21": "Il mulino"
+  },
+  "werbung": {
+    "entfernen": "Rimuovi pubblicità",
+    "entfernenText": "Acquista una volta, senza pubblicità per sempre.",
+    "wiederherstellen": "Ripristina acquisti",
+    "werbefrei": "Senza pubblicità – grazie per il supporto!",
+    "einstellungen": "Impostazioni pubblicità",
+    "wiederhergestellt": "Acquisto ripristinato.",
+    "nichtsGefunden": "Nessun acquisto trovato.",
+    "fehler": {
+      "kein_angebot": "Non disponibile ora. Riprova più tardi.",
+      "fehler": "Non ha funzionato. Riprova più tardi."
+    }
   }
 }

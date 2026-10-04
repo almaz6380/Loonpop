@@ -45,7 +45,18 @@ jobs:
           echo "B=$B" >> "$GITHUB_ENV"
           echo "V=$V" >> "$GITHUB_ENV"
 
+      - name: Werbung und Kauf scharf?
+        # Nur vor einem Upload: Testanzeigen oder ein fehlender Kauf-Schluessel
+        # duerfen nicht in den Store (scripts/werbung-bereit.mjs).
+        if: ${{ inputs.upload }}
+        env:
+          VITE_REVENUECAT_IOS_KEY: ${{ secrets.REVENUECAT_IOS_KEY }}
+        run: node scripts/werbung-bereit.mjs ios
+
       - name: Web-Bundle + Capacitor-Sync
+        env:
+          # Oeffentliche SDK-Schluessel; sie landen ohnehin im App-Paket.
+          VITE_REVENUECAT_IOS_KEY: ${{ secrets.REVENUECAT_IOS_KEY }}
         run: |
           npm run build
           npx cap sync ios

@@ -55,5 +55,18 @@
     "19": "引き戸",
     "20": "すれ違い",
     "21": "風車"
+  },
+  "werbung": {
+    "entfernen": "広告を削除",
+    "entfernenText": "一度の購入で、ずっと広告なし。",
+    "wiederherstellen": "購入を復元",
+    "werbefrei": "広告なし – ご支援ありがとうございます！",
+    "einstellungen": "広告の設定",
+    "wiederhergestellt": "購入を復元しました。",
+    "nichtsGefunden": "購入が見つかりません。",
+    "fehler": {
+      "kein_angebot": "現在ご利用いただけません。後でもう一度お試しください。",
+      "fehler": "うまくいきませんでした。後でもう一度お試しください。"
+    }
   }
 }

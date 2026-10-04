@@ -55,5 +55,18 @@
     "19": "Drzwi przesuwne",
     "20": "Pod prąd",
     "21": "Młyn"
+  },
+  "werbung": {
+    "entfernen": "Usuń reklamy",
+    "entfernenText": "Kup raz i graj bez reklam na zawsze.",
+    "wiederherstellen": "Przywróć zakupy",
+    "werbefrei": "Bez reklam – dzięki za wsparcie!",
+    "einstellungen": "Ustawienia reklam",
+    "wiederhergestellt": "Zakup przywrócony.",
+    "nichtsGefunden": "Nie znaleziono zakupu.",
+    "fehler": {
+      "kein_angebot": "Teraz niedostępne. Spróbuj później.",
+      "fehler": "Nie udało się. Spróbuj później."
+    }
   }
 }

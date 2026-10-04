@@ -25,6 +25,13 @@
 
         </activity>
 
+        <!-- AdMob-App-ID. Bis Josef LoonPop in AdMob anlegt, steht hier Googles
+             Test-ID; ohne Eintrag stuerzt das SDK beim Start ab.
+             android-release.yml bricht ab, solange die Test-ID drin ist. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

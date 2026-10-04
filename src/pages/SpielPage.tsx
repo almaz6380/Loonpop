@@ -18,6 +18,7 @@ import {
 import { neueEndlosWelt, neuerSeed, meter } from '../spiel/endlos.ts';
 import type { Ausgang, EndlosArt, Level, Welt } from '../spiel/typen.ts';
 import { lade, speichere, mitSieg, mitWeite } from '../lib/fortschritt.ts';
+import { platzerGezaehlt, vielleichtVollbild } from '../lib/werbung.ts';
 
 /**
  * Wie der Lauf zur bisherigen Bestmarke steht — fuers Ende-Fenster. Bei
@@ -148,6 +149,8 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
       // Fenster, das sofort darueberfaellt, verdeckt genau den Moment, auf den
       // man gewartet hat.
       (w) => {
+        // Nur zaehlen — gezeigt wird erst beim Weitertippen (werbetakt.ts).
+        if (w.ausgang === 'geplatzt') platzerGezaehlt();
         // Sofort speichern, nicht erst mit dem Fenster: Wer gleich nach dem
         // Ankommen zurueck tippt, soll den Sieg trotzdem behalten.
         if (endlos) {
@@ -205,7 +208,11 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
     fingerRef.current = null;
   };
 
-  const nochmal = () => setVersuch((v) => v + 1);
+  // Eine faellige Vollbild-Anzeige laeuft beim Verlassen des Ende-Fensters,
+  // nie mitten im Platzen. Das Spiel wartet nicht auf sie: Sie legt sich
+  // ueber die WebView, und danach geht es genau dort weiter.
+  const nochmal = () => { void vielleichtVollbild(); setVersuch((v) => v + 1); };
+  const zurLevelwahl = () => { void vielleichtVollbild(); zurueck(); };
 
   return (
     <div className="fixed inset-0 bg-[#0d1330] select-none">
@@ -284,7 +291,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
                            shadow-lg shadow-black/25 active:scale-95 transition">
                 {t('spiel.nochmal')}
               </button>
-              <button onClick={zurueck}
+              <button onClick={zurLevelwahl}
                 className="px-6 py-3.5 rounded-2xl bg-white/12 border border-white/20
                            font-semibold active:scale-95 transition">
                 {t('spiel.levelwahl')}

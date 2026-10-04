@@ -55,5 +55,18 @@
     "19": "Sliding Door",
     "20": "Oncoming Traffic",
     "21": "The Mill"
+  },
+  "werbung": {
+    "entfernen": "Remove ads",
+    "entfernenText": "Buy once, ad-free forever.",
+    "wiederherstellen": "Restore purchases",
+    "werbefrei": "Ad-free – thanks for your support!",
+    "einstellungen": "Ad settings",
+    "wiederhergestellt": "Purchase restored.",
+    "nichtsGefunden": "No purchase found.",
+    "fehler": {
+      "kein_angebot": "Not available right now. Please try again later.",
+      "fehler": "That didn't work. Please try again later."
+    }
   }
 }

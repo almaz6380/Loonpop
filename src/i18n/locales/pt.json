@@ -55,5 +55,18 @@
     "19": "Porta de correr",
     "20": "Contramão",
     "21": "O moinho"
+  },
+  "werbung": {
+    "entfernen": "Remover anúncios",
+    "entfernenText": "Compre uma vez e fique sem anúncios para sempre.",
+    "wiederherstellen": "Restaurar compras",
+    "werbefrei": "Sem anúncios – obrigado pelo apoio!",
+    "einstellungen": "Configurações de anúncios",
+    "wiederhergestellt": "Compra restaurada.",
+    "nichtsGefunden": "Nenhuma compra encontrada.",
+    "fehler": {
+      "kein_angebot": "Indisponível no momento. Tente novamente mais tarde.",
+      "fehler": "Não funcionou. Tente novamente mais tarde."
+    }
   }
 }

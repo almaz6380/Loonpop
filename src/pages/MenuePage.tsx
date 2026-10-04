@@ -9,12 +9,15 @@
 // ⚠ Dieselben Bilder wie im Spiel (public/bilder/), damit der Wechsel ins
 // Level nicht wie ein Szenenwechsel wirkt.
 
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LEVEL } from '../spiel/level/index.ts';
 import { naechstes as naechstesLevel, offen, type Fortschritt } from '../lib/fortschritt.ts';
 import { SPRACHEN } from '../lib/sprache.ts';
 import { setzeSprache } from '../i18n/index.ts';
+import { aufBannerHoehe, einwilligungAendern, einwilligungAenderbar } from '../lib/werbung.ts';
+import { kaeufeWiederherstellen, kaufMoeglich, preisHolen, werbungEntfernen } from '../lib/kauf.ts';
 
 const IDS = LEVEL.map((l) => l.id);
 
@@ -56,8 +59,80 @@ function Held() {
   );
 }
 
-export default function MenuePage({ fortschritt, spieleLevel, spieleEndlos }: {
+/**
+ * „Werbung entfernen“ (Version 1.1). Nur in der App mit RevenueCat-Schluessel;
+ * im Browser gibt es keinen Store. ⚠ „Kaeufe wiederherstellen“ muss sichtbar
+ * sein, sonst lehnt Apple ab (Richtlinie 3.1.1).
+ */
+function Werbefrei({ werbefrei, setWerbefrei }: { werbefrei: boolean; setWerbefrei: (f: boolean) => void }) {
+  const { t } = useTranslation();
+  const [preis, setPreis] = useState<string | null>(null);
+  const [beschaeftigt, setBeschaeftigt] = useState(false);
+  const [meldung, setMeldung] = useState<string | null>(null);
+  const [einwilligung, setEinwilligung] = useState(false);
+
+  useEffect(() => {
+    if (kaufMoeglich() && !werbefrei) void preisHolen().then(setPreis);
+    void einwilligungAenderbar().then(setEinwilligung);
+  }, [werbefrei]);
+
+  if (!kaufMoeglich() && !einwilligung) return null;
+
+  const kaufen = async () => {
+    setBeschaeftigt(true);
+    setMeldung(null);
+    const r = await werbungEntfernen();
+    setBeschaeftigt(false);
+    if (r.ok) setWerbefrei(r.werbefrei);
+    else if (r.grund !== 'abgebrochen') setMeldung(t(`werbung.fehler.${r.grund}`));
+  };
+  const zurueckholen = async () => {
+    setBeschaeftigt(true);
+    setMeldung(null);
+    const r = await kaeufeWiederherstellen();
+    setBeschaeftigt(false);
+    if (r.ok) {
+      setWerbefrei(r.werbefrei);
+      setMeldung(t(r.werbefrei ? 'werbung.wiederhergestellt' : 'werbung.nichtsGefunden'));
+    } else setMeldung(t('werbung.fehler.fehler'));
+  };
+
+  return (
+    <section className="mt-5 rounded-3xl bg-[#12204f]/55 border border-white/20 p-4 text-start">
+      {kaufMoeglich() && (werbefrei ? (
+        <p className="schrift-rund text-center font-bold text-[#ffe48a]">{t('werbung.werbefrei')}</p>
+      ) : (
+        <>
+          <button onClick={kaufen} disabled={beschaeftigt}
+            className="schrift-rund w-full rounded-2xl bg-white text-[#12204f] px-4 py-3 font-bold
+                       flex items-center justify-between gap-3 active:scale-[0.98] transition disabled:opacity-60">
+            <span>{t('werbung.entfernen')}</span>
+            {preis && <span className="tabular-nums">{preis}</span>}
+          </button>
+          <p className="mt-2 text-xs text-white/75">{t('werbung.entfernenText')}</p>
+        </>
+      ))}
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-white/85">
+        {kaufMoeglich() && (
+          <button onClick={zurueckholen} disabled={beschaeftigt} className="underline underline-offset-2">
+            {t('werbung.wiederherstellen')}
+          </button>
+        )}
+        {einwilligung && (
+          <button onClick={() => void einwilligungAendern()} className="underline underline-offset-2">
+            {t('werbung.einstellungen')}
+          </button>
+        )}
+      </div>
+      {meldung && <p className="mt-2 text-xs text-[#ffe48a]" role="status">{meldung}</p>}
+    </section>
+  );
+}
+
+export default function MenuePage({ fortschritt, werbefrei, setWerbefrei, spieleLevel, spieleEndlos }: {
   fortschritt: Fortschritt;
+  werbefrei: boolean;
+  setWerbefrei: (frei: boolean) => void;
   spieleLevel: (index: number) => void;
   spieleEndlos: () => void;
 }) {
@@ -66,13 +141,18 @@ export default function MenuePage({ fortschritt, spieleLevel, spieleEndlos }: {
   const geschafft = LEVEL.filter((l) => fortschritt.bestzeit[l.id] !== undefined).length;
   const weite = fortschritt.endlos?.hoch;
   const name = (i: number) => t(`levelname.${LEVEL[i].id}`, LEVEL[i].name);
+  // Der Banner liegt nativ ueber der WebView. So viel Platz bleibt unten frei,
+  // sonst verdeckt er Sprachwahl und Rechtstexte.
+  const [banner, setBanner] = useState(0);
+  useEffect(() => aufBannerHoehe(setBanner), []);
 
   return (
     <div className="min-h-dvh relative bg-[#2f5cb4] text-white">
       <Szene />
 
       {/* ⚠ pb-24: Unten liegt die Wiese; weiss auf hellgruen waere kaum lesbar. */}
-      <main className="relative mx-auto w-full max-w-sm px-6 pt-[max(1.75rem,env(safe-area-inset-top))] pb-24 text-center">
+      <main className="relative mx-auto w-full max-w-sm px-6 pt-[max(1.75rem,env(safe-area-inset-top))] pb-24 text-center"
+            style={banner ? { paddingBottom: `calc(6rem + ${banner}px)` } : undefined}>
         {/* Der Schriftzug aus Gemini (public/bilder/logo.png). Laedt er noch,
             steht der Name als Text da — alt ist zugleich die Ueberschrift. */}
         <h1 className="schrift-rund text-5xl font-bold">
@@ -170,6 +250,8 @@ export default function MenuePage({ fortschritt, spieleLevel, spieleEndlos }: {
             })}
           </div>
         </section>
+
+        <Werbefrei werbefrei={werbefrei} setWerbefrei={setWerbefrei} />
 
         <p className="mt-5 text-xs text-white/85 leading-relaxed drop-shadow-[0_1px_4px_rgba(10,20,60,0.6)]">
           {t('menue.hinweis')}

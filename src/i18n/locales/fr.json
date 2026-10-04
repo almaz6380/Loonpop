@@ -55,5 +55,18 @@
     "19": "Porte coulissante",
     "20": "À contresens",
     "21": "Le moulin"
+  },
+  "werbung": {
+    "entfernen": "Supprimer les pubs",
+    "entfernenText": "Un seul achat, sans pub pour toujours.",
+    "wiederherstellen": "Restaurer les achats",
+    "werbefrei": "Sans pub – merci pour ton soutien !",
+    "einstellungen": "Réglages des pubs",
+    "wiederhergestellt": "Achat restauré.",
+    "nichtsGefunden": "Aucun achat trouvé.",
+    "fehler": {
+      "kein_angebot": "Indisponible pour le moment. Réessaie plus tard.",
+      "fehler": "Ça n'a pas marché. Réessaie plus tard."
+    }
   }
 }

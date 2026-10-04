@@ -55,5 +55,18 @@
     "19": "Puerta corredera",
     "20": "En sentido contrario",
     "21": "El molino"
+  },
+  "werbung": {
+    "entfernen": "Quitar anuncios",
+    "entfernenText": "Compra una vez y sin anuncios para siempre.",
+    "wiederherstellen": "Restaurar compras",
+    "werbefrei": "Sin anuncios: ¡gracias por tu apoyo!",
+    "einstellungen": "Ajustes de anuncios",
+    "wiederhergestellt": "Compra restaurada.",
+    "nichtsGefunden": "No se encontró ninguna compra.",
+    "fehler": {
+      "kein_angebot": "No disponible ahora. Inténtalo más tarde.",
+      "fehler": "No ha funcionado. Inténtalo más tarde."
+    }
   }
 }

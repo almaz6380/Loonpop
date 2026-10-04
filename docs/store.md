@@ -158,6 +158,20 @@ und `android-release.yml` brechen beim Upload ab, bis alles unten erledigt ist
 6. `app-ads.txt` liegt in `public/` und ist unter der Website erreichbar, sobald
    der Stand in `main` ist.
 
+**Stand 04.10.2026:** AdMob-IDs, DSGVO-Nachricht, RevenueCat (Apps, Schlüssel,
+Produkt) erledigt. Apple-Kauf eingerichtet (`app-store.yml` `kauf`: Preis,
+Texte, Länder, Prüfungsbild). Google-Kauf wartet, siehe unten.
+
+⚠ **Google legt den Kauf erst an, wenn ein Build mit Kauf-Berechtigung
+hochgeladen ist** („Can't create product. To fix, request billing permission“).
+Und dieser Build enthält die Werbe-ID (`AD_ID`), was Google nur annimmt, wenn
+unter App-Inhalte → **Werbe-ID: Ja** steht. Das geht erst nach der Freigabe von
+1.0, sonst passt die Angabe nicht zur Version in der Prüfung. Reihenfolge danach:
+1. App-Inhalte: Werbe-ID **Ja**, Werbung **Ja**, Datensicherheit neu (Teil D).
+2. `Android Release`, Track `internal`, upload an (Testanzeigen sind dort erlaubt).
+3. `Play-Eintrag` → `kauf` (neue `onetimeproducts`-Schnittstelle; die alte
+   `inappproducts` antwortet mit 403 „Please migrate to the new publishing API“).
+
 **B. Produkt „Werbung entfernen“ in beiden Stores**
 - Apple: App Store Connect → LoonPop → Monetarisierung → In-App-Käufe → **Nicht
   verbrauchbar**, Referenzname `Werbung entfernen`, Produkt-ID `loonpop_no_ads`,

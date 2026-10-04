@@ -35,7 +35,8 @@ const TEST = {
 // Die echten LoonPop-Bloecke traegt Josef nach dem Anlegen in AdMob ein
 // (docs/store.md, „Werbung einrichten“).
 const LIVE = {
-  ios: { banner: '', vollbild: '' },
+  // iOS-App ca-app-pub-8860791993288062~7035556835 (angelegt 04.10.2026)
+  ios: { banner: 'ca-app-pub-8860791993288062/2004833844', vollbild: 'ca-app-pub-8860791993288062/7863665182' },
   android: { banner: '', vollbild: '' },
 };
 

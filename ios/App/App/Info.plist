@@ -58,10 +58,9 @@
 	<key>UIRequiresFullScreen</key>
 	<true/>
 	<key>GADApplicationIdentifier</key>
-	<!-- AdMob-App-ID. Bis Josef die LoonPop-App in AdMob anlegt, steht hier
-	     Googles Test-ID; ohne Eintrag stuerzt das SDK beim Start ab.
-	     ios-release.yml bricht ab, solange die Test-ID drin ist. -->
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<!-- AdMob-App-ID von LoonPop (iOS, angelegt 04.10.2026). Ohne Eintrag
+	     stuerzt das SDK beim Start ab. -->
+	<string>ca-app-pub-8860791993288062~7035556835</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Your consent lets us show you more relevant ads. The game itself stays the same.</string>
 	<key>SKAdNetworkItems</key>

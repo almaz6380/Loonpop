@@ -200,7 +200,9 @@ for (const [name, format] of Object.entries(FORMATE)) {
     }, [FORTSCHRITT, code]);
     const seite = await ctx.newPage();
     await seite.goto(URL_APP);
-    await seite.waitForTimeout(800);
+    // ⚠ Das Menue blendet seine Teile nacheinander ein (knapp 1 s). Frueher
+    // fotografiert, ist das Level-Raster noch halb durchsichtig.
+    await seite.waitForTimeout(1500);
     const bilder = [
       await seite.screenshot({ type: 'png' }),
       await imFlug(seite, format.geraet, 8, 1500, 6),     // 9  Zickzack

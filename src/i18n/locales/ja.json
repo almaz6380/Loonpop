@@ -16,7 +16,9 @@
     "datenschutz": "プライバシー",
     "impressum": "運営者情報",
     "spielen": "プレイ",
-    "alleLevel": "レベル一覧"
+    "alleLevel": "レベル一覧",
+    "tonAn": "サウンド オン",
+    "tonAus": "サウンド オフ"
   },
   "spiel": {
     "zurueck": "戻る",
@@ -37,7 +39,11 @@
     "meter": "{{m}} m",
     "weit": "{{m}} m 進んだ。",
     "neueBestweite": "新記録！",
-    "bestweite": "記録: {{m}} m"
+    "bestweite": "記録: {{m}} m",
+    "tipp": {
+      "halten": "指を押したままにすると、ブロワーが真上に風を送ります。",
+      "versetzt": "次は風船の少し横に立ってみよう。風の端が風船を横へ押し出します。"
+    }
   },
   "levelname": {
     "1": "はじめての風",

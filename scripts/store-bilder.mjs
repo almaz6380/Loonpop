@@ -30,20 +30,22 @@ const FORMATE = {
   ios: { breite: 1320, hoehe: 2868, geraet: { width: 402, height: 744 } },
 };
 
+// ⚠ 30.10.2026 (Apple 4.3(a)): Die ersten beiden Bilder nennen, was es so nur
+// hier gibt. „Fünfzehn Level“ und „durch die Nadeln“ sagen viele Spiele.
 const UEBERSCHRIFT = {
-  de: ['Fünfzehn Level und ein Endlos-Modus', 'Lenke den Ballon durch die Nadeln', 'Wie hoch kommst du?', 'Nadelreihen, die wandern'],
-  en: ['Fifteen levels and an endless mode', 'Guide the balloon through the needles', 'How high can you go?', 'Rows of needles on the move'],
-  es: ['Quince niveles y un modo infinito', 'Guía el globo entre las agujas', '¿Hasta dónde llegarás?', 'Filas de agujas en movimiento'],
-  fr: ['Quinze niveaux et un mode infini', 'Guide le ballon entre les aiguilles', 'Jusqu’où monteras-tu ?', 'Des rangées d’aiguilles qui bougent'],
-  it: ['Quindici livelli e una modalità infinita', 'Guida il palloncino tra gli aghi', 'Fin dove arriverai?', 'File di aghi in movimento'],
-  pt: ['Quinze fases e um modo infinito', 'Guie o balão entre as agulhas', 'Até onde você consegue subir?', 'Fileiras de agulhas em movimento'],
-  tr: ['On beş bölüm ve sonsuz mod', 'Balonu iğnelerin arasından geçir', 'Ne kadar yükseğe çıkabilirsin?', 'Hareket eden iğne sıraları'],
-  pl: ['Piętnaście poziomów i tryb bez końca', 'Przeprowadź balon między igłami', 'Jak wysoko dolecisz?', 'Ruchome rzędy igieł'],
-  ru: ['15 уровней и бесконечный режим', 'Проведи шарик сквозь иглы', 'Как высоко ты поднимешься?', 'Движущиеся ряды игл'],
-  ja: ['15レベルとエンドレス', '針のすき間を抜けて風船を導こう', 'どこまで高く行ける？', '動く針の列'],
-  ko: ['15개 레벨 + 무한 모드', '바늘 사이로 풍선을 이끄세요', '얼마나 높이 갈 수 있을까요?', '움직이는 바늘 줄'],
-  zh: ['15 个关卡 + 无尽模式', '引导气球穿过针阵', '你能飞多高？', '移动的针排'],
-  ar: ['خمس عشرة مرحلة ووضع بلا نهاية', 'قُد البالون بين الإبر', 'إلى أي ارتفاع ستصل؟', 'صفوف إبر متحركة'],
+  de: ['Ein Gebläse, das nur nach oben bläst', 'Lenke mit dem Rand des Luftstrahls', 'Wie hoch kommst du?', 'Nadelreihen, die wandern'],
+  en: ['A blower that only blows straight up', 'Steer with the edge of the air stream', 'How high can you go?', 'Rows of needles on the move'],
+  es: ['Un soplador que solo sopla hacia arriba', 'Dirige con el borde del chorro de aire', '¿Hasta dónde llegarás?', 'Filas de agujas en movimiento'],
+  fr: ['Un souffleur qui ne souffle que vers le haut', 'Dirige avec le bord du jet d’air', 'Jusqu’où monteras-tu ?', 'Des rangées d’aiguilles qui bougent'],
+  it: ['Un soffiatore che soffia solo verso l’alto', 'Guida con il bordo del getto d’aria', 'Fin dove arriverai?', 'File di aghi in movimento'],
+  pt: ['Um soprador que só sopra para cima', 'Guie com a borda do jato de ar', 'Até onde você consegue subir?', 'Fileiras de agulhas em movimento'],
+  tr: ['Sadece yukarı üfleyen bir üfleyici', 'Hava akımının kenarıyla yön ver', 'Ne kadar yükseğe çıkabilirsin?', 'Hareket eden iğne sıraları'],
+  pl: ['Dmuchawa, która dmucha tylko w górę', 'Steruj krawędzią strumienia powietrza', 'Jak wysoko dolecisz?', 'Ruchome rzędy igieł'],
+  ru: ['Воздуходувка дует только вверх', 'Управляй краем воздушной струи', 'Как высоко ты поднимешься?', 'Движущиеся ряды игл'],
+  ja: ['真上にしか吹かないブロワー', '風の端で風船を操ろう', 'どこまで高く行ける？', '動く針の列'],
+  ko: ['위로만 부는 송풍기', '바람의 가장자리로 조종하세요', '얼마나 높이 갈 수 있을까요?', '움직이는 바늘 줄'],
+  zh: ['只能向上吹的吹叶机', '用气流的边缘来引导', '你能飞多高？', '移动的针排'],
+  ar: ['منفاخ لا ينفخ إلا إلى الأعلى', 'وجّه بحافة تيار الهواء', 'إلى أي ارتفاع ستصل؟', 'صفوف إبر متحركة'],
 };
 
 // ⚠ Die Nummer vorn legt die Reihenfolge im Store fest, und play-upload.py
@@ -183,7 +185,7 @@ async function vorstellung(browser) {
   await seite.close();
 }
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
 await vorstellung(browser);
 for (const [name, format] of Object.entries(FORMATE)) {
   for (const code of SPRACHEN) {
@@ -198,7 +200,9 @@ for (const [name, format] of Object.entries(FORMATE)) {
     }, [FORTSCHRITT, code]);
     const seite = await ctx.newPage();
     await seite.goto(URL_APP);
-    await seite.waitForTimeout(800);
+    // ⚠ Das Menue blendet seine Teile nacheinander ein (knapp 1 s). Frueher
+    // fotografiert, ist das Level-Raster noch halb durchsichtig.
+    await seite.waitForTimeout(1500);
     const bilder = [
       await seite.screenshot({ type: 'png' }),
       await imFlug(seite, format.geraet, 8, 1500, 6),     // 9  Zickzack

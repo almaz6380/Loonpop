@@ -137,6 +137,63 @@ das neueste Zertifikat des Kontos, nicht das aus dem .p12).
 `CURRENT_PROJECT_VERSION` (2 Stellen) in `ios/App/App.xcodeproj/project.pbxproj`
 um eins erhöhen, dazu `versionName` bzw. `MARKETING_VERSION`.
 
+## Ablehnung 4.3(a) „Spam“ (30.10.2026)
+
+Apple lehnte 1.0 (Build 1) ab: „shares a similar binary, metadata, and/or concept
+as apps submitted … by you or other developers“. LoonPop ist selbst gebaut, ohne
+Vorlage. Der Prüfer sah offenbar „Ballon steigt durch Nadeln“ und hielt es für
+eines der vielen Spiele dieser Art. Die eigene Idee (Gebläse bläst nur nach oben,
+gelenkt wird mit dem Strahlrand) sah man weder in den Store-Bildern noch in den
+ersten Sekunden im Spiel.
+
+Was sich deshalb geändert hat (Build 2):
+- **Anleitung im ersten Level**: erst „halten“, dann „stell dich seitlich, der
+  Strahlrand schiebt den Ballon“ (`SpielPage.tsx`, `spiel.tipp.*`).
+- **Ton**: Das Gebläse rauscht je nach Stärke, Platzen knallt, Ankommen klingt.
+  Alles mit WebAudio erzeugt, ohne Tondateien. **Vibration** über
+  `@capacitor/haptics`. Ein Schalter im Menü stellt beides ab.
+- **Store-Texte**: Einstieg und Werbetext nennen zuerst die Steuerung.
+- **Screenshots**: Die ersten beiden Überschriften zeigen die Steuerung, nicht
+  „15 Level“.
+
+Reihenfolge:
+1. Branch nach `main`, dann `iOS Release` (upload an), Build 2 abwarten.
+2. `App Store`: `texte` → `screenshots` → `build` (Nummer **2**).
+3. In ASC unter App-Prüfung → **Auf App-Prüfung antworten** den Text unten
+   schicken, am besten mit einem kurzen Bildschirmvideo (Level 1 und 13).
+4. `App Store`: `einreichen` bzw. in ASC „Prüfung aktualisieren“.
+5. Lehnt Apple wieder ab: Einspruch beim App Review Board
+   (developer.apple.com/contact/app-store/?topic=appeal) mit demselben Text.
+
+Antwort an die Prüfung (Englisch, zum Einfügen):
+
+> Hello App Review team,
+>
+> thank you for the feedback. LoonPop is an original game that I designed and
+> programmed myself. It is not based on a template, purchased code or another
+> app, and none of my other apps is similar to it.
+>
+> What makes it different from other balloon games is the control scheme. You
+> do not move the balloon directly. You move a leaf blower along the ground, and
+> it can only blow straight up. The air stream widens and weakens with height.
+> To steer the balloon sideways, you stand off-centre beneath it, so that the
+> edge of the stream pushes it. The balloon has real inertia and keeps drifting
+> after you let go, so every move has to be planned ahead. The physics runs at a
+> fixed time step and is deterministic.
+>
+> The game has 15 hand-designed levels (crosswinds, downdrafts, swinging,
+> falling and sliding rows of needles, time trials) and an endless mode that is
+> generated from a seed for every run. With build 2 we added an in-game tutorial
+> in level 1 that explains the steering, generated blower sound effects and
+> haptic feedback, and we rewrote the store description and screenshots so the
+> mechanic is clear at first glance.
+>
+> The app has no ads, no purchases, no account and collects no data. A short
+> screen recording of the gameplay is attached.
+>
+> Best regards,
+> Josef Gallab
+
 ## Antworten für die Formulare
 
 loonpop hat kein Konto, keine Werbung, keine Käufe und keine Analyse, und es
@@ -173,8 +230,10 @@ Geräts.
 **Apple → Hinweise für die Prüfung** (Vorschlag zum Einfügen)
 > loonpop is a single-player skill game. No account, no login, no network
 > access, no in-app purchases and no ads. Touch and hold to blow the leaf
-> blower; slide to move it. All levels are reachable by playing; the endless
-> mode is available from the start.
+> blower; slide to move it. The blower only blows straight up: to steer the
+> balloon sideways, stand off-centre beneath it (level 1 shows this). All
+> levels are reachable by playing; the endless mode is available from the
+> start.
 
 ## Was noch nicht drin ist (bewusst)
 
@@ -183,4 +242,5 @@ Geräts.
   Store-Texte („ohne Werbung, ohne Konto“) mit.
 - **iPad**: Die App ist auf iPhone beschränkt. Für iPad bräuchte es eigene
   Screenshots (2048×2732) und ein Querformat-Konzept.
-- **Ton und Vibration**.
+- ~~Ton und Vibration~~: seit 30.10.2026 drin (`src/lib/ton.ts`, `src/lib/haptik.ts`),
+  im Menü abschaltbar.

@@ -20,6 +20,11 @@ RevenueCat-Schlüssel und der Apple-Kauf sind fertig. Der Google-Kauf, das
 Verknüpfen in RevenueCat und `MIT_TESTANZEIGEN = false` warten, bis 1.0 freigegeben
 ist (Reihenfolge in docs/store.md auf `werbung`, „Version 1.1“). Erst dann nach
 `main`, sonst stünde die neue Datenschutzerklärung schon neben der App ohne Werbung.
+⚠ **30.10.2026: Apple lehnte 1.0 nach 4.3(a) ab** („ähnliches Konzept wie andere
+Apps“). Google prüft getrennt davon. Darauf folgten Build 2 (iOS) bzw.
+versionCode 2: Anleitung in Level 1, Ton, Vibration, Store-Texte und -Bilder,
+die die Steuerung zuerst zeigen. Antwort an Apple und Reihenfolge stehen in
+docs/store.md, „Ablehnung 4.3(a)“.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
 Löschen ohne ausdrückliches „ja" im Chat.
 **Testversion im Browser:** https://loonpop.almaz6380.workers.dev (seit 01.10.2026,
@@ -290,6 +295,20 @@ Dort, wo der Ballon ohnehin nicht durchkommt, sind sie wirkungslos.
     (`kamera.ts`). Gemessen mit `npm run leistung` (4-fache CPU-Drosselung): im
     Mittel 70 → 22 ms je Bild. ⚠ Keine Unschärfe-Effekte in der Spielschleife,
     und nach jeder Änderung am Zeichnen erst messen.
+
+## Ton und Vibration
+
+Seit 30.10.2026 (`src/lib/ton.ts`, `src/lib/haptik.ts`). Das Gebläse rauscht
+lauter und heller, je stärker es bläst (`geblaeseKlang`, getestet). Platzen
+knallt, Ankommen klingt, dazu Vibration über `@capacitor/haptics`. Ein Schalter
+im Menü stellt Ton und Vibration gemeinsam ab (`localStorage` „ton“).
+
+- ⚠ **Keine Tondateien.** Alles wird mit WebAudio erzeugt, aus Rauschen und
+  Oszillatoren.
+- ⚠ **iOS spielt erst nach einer Berührung Ton.** `ton.wecken()` hängt am
+  pointerdown der Spielseite.
+- Der Spielkern weiß davon nichts (Regel 3). Die Spielseite reicht
+  `geblaese.staerke` und den Ausgang weiter.
 
 ## Endlos
 

@@ -16,7 +16,9 @@
     "datenschutz": "개인정보 처리방침",
     "impressum": "법적 고지",
     "spielen": "플레이",
-    "alleLevel": "전체 레벨"
+    "alleLevel": "전체 레벨",
+    "tonAn": "소리 켜짐",
+    "tonAus": "소리 꺼짐"
   },
   "spiel": {
     "zurueck": "뒤로",
@@ -37,7 +39,11 @@
     "meter": "{{m}}m",
     "weit": "{{m}}m 날아갔어요.",
     "neueBestweite": "신기록!",
-    "bestweite": "기록: {{m}}m"
+    "bestweite": "기록: {{m}}m",
+    "tipp": {
+      "halten": "손가락을 누르고 있으면 송풍기가 똑바로 위로 바람을 불어요.",
+      "versetzt": "이제 풍선 아래에서 살짝 옆으로 서 보세요. 바람의 가장자리가 풍선을 옆으로 밀어 줘요."
+    }
   },
   "levelname": {
     "1": "첫 바람",

@@ -16,7 +16,9 @@
     "datenschutz": "隐私政策",
     "impressum": "法律声明",
     "spielen": "开始游戏",
-    "alleLevel": "全部关卡"
+    "alleLevel": "全部关卡",
+    "tonAn": "声音开",
+    "tonAus": "声音关"
   },
   "spiel": {
     "zurueck": "返回",
@@ -37,7 +39,11 @@
     "meter": "{{m}} 米",
     "weit": "你飞了 {{m}} 米。",
     "neueBestweite": "新纪录！",
-    "bestweite": "纪录：{{m}} 米"
+    "bestweite": "纪录：{{m}} 米",
+    "tipp": {
+      "halten": "按住手指，吹叶机就会垂直向上吹。",
+      "versetzt": "现在站到气球下方稍偏一点的位置：气流的边缘会把它推向侧面。"
+    }
   },
   "levelname": {
     "1": "第一口气",

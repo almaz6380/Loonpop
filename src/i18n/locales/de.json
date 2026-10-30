@@ -16,7 +16,9 @@
     "datenschutz": "Datenschutz",
     "impressum": "Impressum",
     "spielen": "Spielen",
-    "alleLevel": "Alle Level"
+    "alleLevel": "Alle Level",
+    "tonAn": "Ton an",
+    "tonAus": "Ton aus"
   },
   "spiel": {
     "zurueck": "Zurück",
@@ -37,7 +39,11 @@
     "meter": "{{m}} m",
     "weit": "{{m}} Meter weit gekommen.",
     "neueBestweite": "Neue Bestweite!",
-    "bestweite": "Bestweite: {{m}} m"
+    "bestweite": "Bestweite: {{m}} m",
+    "tipp": {
+      "halten": "Halte den Finger gedrückt – das Gebläse bläst senkrecht nach oben.",
+      "versetzt": "Jetzt stell dich etwas seitlich unter den Ballon: Der Rand des Luftstrahls schiebt ihn zur Seite."
+    }
   },
   "levelname": {
     "1": "Erste Luft",

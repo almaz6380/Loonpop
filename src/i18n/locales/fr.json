@@ -16,7 +16,9 @@
     "datenschutz": "Confidentialité",
     "impressum": "Mentions légales",
     "spielen": "Jouer",
-    "alleLevel": "Tous les niveaux"
+    "alleLevel": "Tous les niveaux",
+    "tonAn": "Son activé",
+    "tonAus": "Son coupé"
   },
   "spiel": {
     "zurueck": "Retour",
@@ -37,7 +39,11 @@
     "meter": "{{m}} m",
     "weit": "Tu as parcouru {{m}} mètres.",
     "neueBestweite": "Nouveau record !",
-    "bestweite": "Record : {{m}} m"
+    "bestweite": "Record : {{m}} m",
+    "tipp": {
+      "halten": "Garde le doigt appuyé : le souffleur souffle tout droit vers le haut.",
+      "versetzt": "Place-toi maintenant un peu à côté du ballon : le bord du jet d’air le pousse sur le côté."
+    }
   },
   "levelname": {
     "1": "Premier souffle",

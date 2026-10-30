@@ -9,12 +9,14 @@
 // ⚠ Dieselben Bilder wie im Spiel (public/bilder/), damit der Wechsel ins
 // Level nicht wie ein Szenenwechsel wirkt.
 
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LEVEL } from '../spiel/level/index.ts';
 import { naechstes as naechstesLevel, offen, type Fortschritt } from '../lib/fortschritt.ts';
 import { SPRACHEN } from '../lib/sprache.ts';
 import { setzeSprache } from '../i18n/index.ts';
+import { setzeTon, tonAn } from '../lib/ton.ts';
 
 const IDS = LEVEL.map((l) => l.id);
 
@@ -40,18 +42,42 @@ function Szene() {
   );
 }
 
-/** Geblaese, Luftstrahl und Ballon — das ganze Spiel in einem Bild. */
+/**
+ * Wo im Strahl die Luftstreifen aufsteigen: Versatz zur Mitte (px), Dauer,
+ * Verzug. Feste Werte statt Zufall, damit jeder Screenshot gleich aussieht.
+ */
+const STREIFEN = [
+  { x: -14, dauer: '1.5s', verzug: '0s' },
+  { x: 10, dauer: '1.8s', verzug: '-0.6s' },
+  { x: -3, dauer: '1.3s', verzug: '-1.1s' },
+  { x: 18, dauer: '1.7s', verzug: '-0.3s' },
+  { x: -22, dauer: '1.9s', verzug: '-1.4s' },
+];
+
+/**
+ * Geblaese, Luftstrahl und Ballon — das ganze Spiel in einem Bild.
+ * ⚠ Die Luftstreifen steigen sichtbar aus der Duese (30.10.2026): Ohne sie sah
+ * der Strahl wie ein Lichtkegel aus, und man verstand nicht, dass hier Luft
+ * blaest. Bewegt wird nur per transform (Falle 18).
+ */
 function Held() {
   return (
-    <div className="relative mx-auto w-36 h-44" aria-hidden="true">
-      <div className="anim-atmen absolute left-1/2 -translate-x-1/2 bottom-12 w-32 h-36
-                      [clip-path:polygon(38%_100%,62%_100%,100%_0,0_0)]
-                      bg-gradient-to-t from-white/45 via-white/15 to-transparent" />
-      <div className="anim-schweben absolute left-1/2 -ml-8 top-0 w-16 drop-shadow-[0_10px_18px_rgba(0,0,0,0.3)]">
+    <div className="relative mx-auto w-44 h-52" aria-hidden="true">
+      <div className="anim-atmen absolute left-1/2 -translate-x-1/2 bottom-14 w-40 h-40
+                      [clip-path:polygon(40%_100%,60%_100%,100%_0,0_0)]
+                      bg-gradient-to-t from-white/50 via-white/15 to-transparent" />
+      {STREIFEN.map((st, i) => (
+        <span key={i}
+              className="anim-luft absolute bottom-16 left-1/2 w-1 h-6 rounded-full bg-white/80"
+              style={{ marginLeft: st.x, animationDuration: st.dauer, animationDelay: st.verzug }} />
+      ))}
+      <div className="anim-schweben absolute left-1/2 -ml-10 top-0 w-20 drop-shadow-[0_12px_20px_rgba(0,0,0,0.3)]">
         <img src="/bilder/ballon.png" alt="" className="w-full h-auto" />
       </div>
+      {/* Ein weicher Schatten auf der Wiese, damit das Geblaese steht statt schwebt */}
+      <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-20 h-3 rounded-[50%] bg-black/25 blur-[3px]" />
       <img src="/bilder/geblaese.png" alt=""
-           className="absolute left-1/2 -translate-x-1/2 bottom-0 w-14 drop-shadow-[0_6px_10px_rgba(0,0,0,0.35)]" />
+           className="absolute left-1/2 -translate-x-1/2 bottom-0 w-16 drop-shadow-[0_6px_10px_rgba(0,0,0,0.35)]" />
     </div>
   );
 }
@@ -62,6 +88,7 @@ export default function MenuePage({ fortschritt, spieleLevel, spieleEndlos }: {
   spieleEndlos: () => void;
 }) {
   const { t, i18n } = useTranslation();
+  const [ton, setTon] = useState(tonAn);
   const naechstes = naechstesLevel(fortschritt, IDS);
   const geschafft = LEVEL.filter((l) => fortschritt.bestzeit[l.id] !== undefined).length;
   const weite = fortschritt.endlos?.hoch;
@@ -75,20 +102,21 @@ export default function MenuePage({ fortschritt, spieleLevel, spieleEndlos }: {
       <main className="relative mx-auto w-full max-w-sm px-6 pt-[max(1.75rem,env(safe-area-inset-top))] pb-24 text-center">
         {/* Der Schriftzug aus Gemini (public/bilder/logo.png). Laedt er noch,
             steht der Name als Text da — alt ist zugleich die Ueberschrift. */}
-        <h1 className="schrift-rund text-5xl font-bold">
+        <h1 className="anim-auftauchen schrift-rund text-5xl font-bold">
           <img src="/bilder/logo.png" alt={t('menue.titel')}
                className="mx-auto w-72 h-auto drop-shadow-[0_6px_14px_rgba(10,20,60,0.4)]" />
         </h1>
-        <p className="mt-1.5 text-sm font-medium text-white leading-relaxed drop-shadow-[0_1px_6px_rgba(10,20,60,0.8)]">
+        <p className="anim-auftauchen [animation-delay:80ms] mt-1.5 text-sm font-medium text-white leading-relaxed drop-shadow-[0_1px_6px_rgba(10,20,60,0.8)]">
           {t('menue.untertitel')}
         </p>
 
-        <div className="mt-4"><Held /></div>
+        <div className="anim-auftauchen [animation-delay:160ms] mt-4"><Held /></div>
 
         {/* Der grosse Knopf: weiter, wo man aufgehoert hat */}
         <button
           onClick={() => spieleLevel(naechstes)}
-          className="schrift-rund mt-5 w-full rounded-3xl bg-[#ffd75e] text-[#12204f] px-5 py-3.5
+          className="anim-auftauchen [animation-delay:240ms] glanz schrift-rund relative overflow-hidden mt-5 w-full rounded-3xl
+                     bg-gradient-to-b from-[#ffe27e] to-[#ffd04a] text-[#12204f] px-5 py-3.5
                      shadow-[0_8px_0_#d9a92e,0_14px_24px_rgba(0,0,0,0.25)]
                      active:translate-y-1 active:shadow-[0_4px_0_#d9a92e,0_8px_16px_rgba(0,0,0,0.25)] transition"
         >
@@ -105,7 +133,8 @@ export default function MenuePage({ fortschritt, spieleLevel, spieleEndlos }: {
 
         <button
           onClick={spieleEndlos}
-          className="mt-3 w-full rounded-3xl bg-[#12204f]/55 border border-white/25 px-5 py-3
+          className="anim-auftauchen [animation-delay:320ms] mt-3 w-full rounded-3xl bg-gradient-to-b from-[#24418f]/90 to-[#162a66]/90 border border-white/25 px-5 py-3
+                     shadow-[0_6px_0_rgba(10,20,60,0.35),0_12px_24px_rgba(10,20,60,0.25)]
                      flex items-center gap-3 text-start active:scale-[0.98] transition"
         >
           <span className="shrink-0 w-10 h-10 rounded-2xl bg-white/15 grid place-items-center">
@@ -125,7 +154,8 @@ export default function MenuePage({ fortschritt, spieleLevel, spieleEndlos }: {
         </button>
 
         {/* Alle Level als Raster: geschafft (gelb), naechstes (pulsiert), gesperrt */}
-        <section className="mt-5 rounded-3xl bg-[#12204f]/55 border border-white/20 p-4">
+        <section className="anim-auftauchen [animation-delay:400ms] mt-5 rounded-3xl bg-[#12204f]/75 border border-white/20 p-4
+                            shadow-[0_12px_30px_rgba(10,20,60,0.25)]">
           <div className="flex items-baseline justify-between">
             <h2 className="schrift-rund text-lg font-bold">{t('menue.alleLevel')}</h2>
             <span className="text-sm font-semibold tabular-nums text-white/80">
@@ -192,6 +222,22 @@ export default function MenuePage({ fortschritt, spieleLevel, spieleEndlos }: {
               ))}
             </select>
           </label>
+          {/* Ton und Vibration gemeinsam (ton.ts, haptik.ts). ⚠ Nicht als
+              direktes Kind von <main>: store-bilder.mjs zaehlt dort die Knoepfe. */}
+          <button
+            onClick={() => { setzeTon(!ton); setTon(!ton); }}
+            aria-pressed={ton}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#12204f]/55 border border-white/20 font-semibold"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"
+                 strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+              {ton
+                ? <path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11" />
+                : <path d="M16 9.5l5 5M21 9.5l-5 5" />}
+            </svg>
+            {t(ton ? 'menue.tonAn' : 'menue.tonAus')}
+          </button>
           {/* Statische Seiten (scripts/rechtstexte.py): Die Stores verlangen
               sie ohne App erreichbar, im App-Paket liegen sie trotzdem. */}
           <a href="datenschutz.html" className="underline underline-offset-2">{t('menue.datenschutz')}</a>

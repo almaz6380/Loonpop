@@ -95,6 +95,70 @@ def motiv(b: int, h: int, ballon_hoehe: float, mitte_y: float, mit_schnur=True) 
     return grund.convert('RGB')
 
 
+def startbild(b: int, h: int) -> Image.Image:
+    """Das Startbild wie das Menue (30.10.2026): Landschaft, Schriftzug, darunter
+    der Ballon im Strahl des Geblaeses.
+
+    ⚠ Vorher stand nur ein Ballon auf blauem Verlauf. Das sah aus wie jedes
+    andere Ballon-Spiel, und das Erste, was man sah, war nicht das Geblaese.
+    ⚠ iOS fuellt das 2732er-Quadrat seitenfuellend (scaleAspectFill): Auf dem
+    iPhone bleibt nur die mittlere Spalte von gut 45 % der Breite stehen. Alles
+    Wichtige richtet sich deshalb nach `spalte`, nicht nach der Bildbreite.
+    """
+    land = Image.open('scripts/bild-quellen/menue-himmel.jpg').convert('RGB')
+    # Seitenfuellend, unten verankert wie im Menue (object-bottom)
+    f = max(b / land.width, h / land.height)
+    land = land.resize((round(land.width * f), round(land.height * f)), Image.LANCZOS)
+    grund = land.crop(((land.width - b) // 2, land.height - h,
+                       (land.width - b) // 2 + b, land.height)).convert('RGBA')
+
+    spalte = min(b, round(h * 0.45))
+    mitte = b // 2
+
+    logo = fs.zuschneiden(fs.freistellen(Image.open('scripts/bild-quellen/logo.jpg'), 'gruen'))
+    lb = round(spalte * 0.86)
+    logo = logo.resize((lb, round(logo.height * lb / logo.width)), Image.LANCZOS)
+    schatten = Image.new('RGBA', (logo.width + 80, logo.height + 80), (0, 0, 0, 0))
+    m = Image.new('L', schatten.size, 0)
+    m.paste(logo.getchannel('A').point(lambda v: v * 0.35), (40, 40))
+    schatten.putalpha(m.filter(ImageFilter.GaussianBlur(lb * 0.02)))
+    oben = round(h * 0.17)
+    grund.alpha_composite(schatten, (mitte - logo.width // 2 - 40, oben - 40 + round(lb * 0.015)))
+    grund.alpha_composite(logo, (mitte - logo.width // 2, oben))
+
+    geb = fs.zuschneiden(fs.freistellen(Image.open('scripts/bild-quellen/geblaese.jpg'), 'gruen'))
+    gb = round(spalte * 0.2)
+    geb = geb.resize((gb, round(geb.height * gb / geb.width)), Image.LANCZOS)
+    # Das Geblaese steht auf der Wiese, nicht in den Huegeln.
+    geb_y = round(h * 0.885) - geb.height
+
+    # Der Luftstrahl: unten schmal an der Duese, nach oben breiter und blasser,
+    # wie im Spiel (Regel 1a) — vierfach gerechnet gegen Treppen.
+    s = 4
+    strahl_oben = round(h * 0.5)
+    lage = Image.new('L', (b * s, h * s), 0)
+    d = ImageDraw.Draw(lage)
+    unten_b, oben_b = gb * 0.38, spalte * 0.34
+    for i in range(60):
+        t = i / 59
+        y0 = geb_y + 6 - (geb_y + 6 - strahl_oben) * t
+        halb = unten_b + (oben_b - unten_b) * t
+        d.rectangle(((mitte - halb) * s, (y0 - (geb_y - strahl_oben) / 59 - 1) * s,
+                     (mitte + halb) * s, y0 * s), fill=round(115 * (1 - t) ** 1.3))
+    lage = lage.resize((b, h), Image.LANCZOS).filter(ImageFilter.GaussianBlur(spalte * 0.01))
+    weiss = Image.new('RGBA', (b, h), (255, 255, 255, 255))
+    weiss.putalpha(lage)
+    grund.alpha_composite(weiss)
+
+    bh = round(spalte * 0.3)
+    bl = ballon(bh)
+    by = round(h * 0.46)
+    schnur(grund, mitte, by + bh - 2, round(bh * 0.3), max(2, round(bh * 0.012)))
+    grund.alpha_composite(bl, (mitte - bl.width // 2, by))
+    grund.alpha_composite(geb, (mitte - geb.width // 2, geb_y))
+    return grund.convert('RGB')
+
+
 def runde_maske(bild: Image.Image, kreis: bool) -> Image.Image:
     s = bild.width
     m = Image.new('L', (s * 4, s * 4), 0)
@@ -140,7 +204,7 @@ def main() -> None:
     starts = list(RES.glob('drawable*/splash.png')) + list((IOS / 'Splash.imageset').glob('*.png'))
     for p in starts:
         b, h = Image.open(p).size
-        motiv(b, h, 0.26, 0.45).save(p)
+        startbild(b, h).save(p)
     print('Icon, Android-Symbole und', len(starts), 'Startbilder geschrieben')
 
 

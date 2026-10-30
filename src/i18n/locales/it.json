@@ -16,7 +16,9 @@
     "datenschutz": "Privacy",
     "impressum": "Note legali",
     "spielen": "Gioca",
-    "alleLevel": "Tutti i livelli"
+    "alleLevel": "Tutti i livelli",
+    "tonAn": "Audio sì",
+    "tonAus": "Audio no"
   },
   "spiel": {
     "zurueck": "Indietro",
@@ -37,7 +39,11 @@
     "meter": "{{m}} m",
     "weit": "Sei arrivato a {{m}} metri.",
     "neueBestweite": "Nuovo record!",
-    "bestweite": "Record: {{m}} m"
+    "bestweite": "Record: {{m}} m",
+    "tipp": {
+      "halten": "Tieni premuto: il soffiatore soffia dritto verso l’alto.",
+      "versetzt": "Ora mettiti un po’ di lato sotto il palloncino: il bordo del getto d’aria lo spinge di fianco."
+    }
   },
   "levelname": {
     "1": "Primo soffio",

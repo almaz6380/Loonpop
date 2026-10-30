@@ -16,7 +16,9 @@
     "datenschutz": "Prywatność",
     "impressum": "Nota prawna",
     "spielen": "Graj",
-    "alleLevel": "Wszystkie poziomy"
+    "alleLevel": "Wszystkie poziomy",
+    "tonAn": "Dźwięk wł.",
+    "tonAus": "Dźwięk wył."
   },
   "spiel": {
     "zurueck": "Wstecz",
@@ -37,7 +39,11 @@
     "meter": "{{m}} m",
     "weit": "Dystans: {{m}} m.",
     "neueBestweite": "Nowy rekord!",
-    "bestweite": "Rekord: {{m}} m"
+    "bestweite": "Rekord: {{m}} m",
+    "tipp": {
+      "halten": "Przytrzymaj palec – dmuchawa dmucha pionowo w górę.",
+      "versetzt": "Teraz stań trochę z boku pod balonem: krawędź strumienia powietrza zepchnie go w bok."
+    }
   },
   "levelname": {
     "1": "Pierwszy podmuch",

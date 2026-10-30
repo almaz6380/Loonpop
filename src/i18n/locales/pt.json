@@ -16,7 +16,9 @@
     "datenschutz": "Privacidade",
     "impressum": "Aviso legal",
     "spielen": "Jogar",
-    "alleLevel": "Todas as fases"
+    "alleLevel": "Todas as fases",
+    "tonAn": "Som ligado",
+    "tonAus": "Som desligado"
   },
   "spiel": {
     "zurueck": "Voltar",
@@ -37,7 +39,11 @@
     "meter": "{{m}} m",
     "weit": "Você chegou a {{m}} metros.",
     "neueBestweite": "Novo recorde!",
-    "bestweite": "Recorde: {{m}} m"
+    "bestweite": "Recorde: {{m}} m",
+    "tipp": {
+      "halten": "Mantenha o dedo pressionado: o soprador sopra reto para cima.",
+      "versetzt": "Agora fique um pouco de lado embaixo do balão: a borda do jato de ar o empurra para o lado."
+    }
   },
   "levelname": {
     "1": "Primeiro sopro",

@@ -454,6 +454,17 @@ def setze_pruefkontakt(tok, aid):
     da = api(tok, f'appStoreVersions/{v["id"]}/appStoreReviewDetail', fatal=False).get('data')
     if da and da['attributes'].get('contactPhone'):
         print('  Pruef-Kontakt steht schon')
+        # ⚠ Die Notiz trotzdem nachziehen (30.10.2026): Nach der Ablehnung 4.3(a)
+        # sollte der Pruefer die neue Notiz zur Steuerung lesen, und das Skript
+        # liess sie stehen, weil der Kontakt schon da war.
+        if da['attributes'].get('notes') == PRUEF_NOTIZ:
+            return
+        print('  Pruef-Notiz -> neu')
+        if TROCKEN:
+            return
+        res = api(tok, f'appStoreReviewDetails/{da["id"]}', 'PATCH', {'data': {
+            'type': 'appStoreReviewDetails', 'id': da['id'], 'attributes': {'notes': PRUEF_NOTIZ}}}, fatal=False)
+        print(f'    FEHLER: {fehler_text(res)}' if res.get('_fehler') else '    ok')
         return
     k = _kontakt_von_anderer_app(tok, aid)
     if not k:

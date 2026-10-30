@@ -395,8 +395,10 @@ COPYRIGHT = '2026 Josef Gallab'
 KATEGORIE, UNTERKATEGORIE = 'GAMES', 'GAMES_CASUAL'
 PRUEF_NOTIZ = ('LoonPop is a single-player skill game. No account, no login, no network '
                'access, no in-app purchases and no ads. Touch and hold to blow the leaf '
-               'blower; slide to move it. All levels are reachable by playing; the endless '
-               'mode is available from the start.')
+               'blower; slide to move it. The blower only blows straight up: to steer the '
+               'balloon sideways, stand off-centre beneath it, so the edge of the air stream '
+               'pushes it (level 1 shows this). All levels are reachable by playing; the '
+               'endless mode is available from the start.')
 V2 = 'https://api.appstoreconnect.apple.com/v2'
 
 

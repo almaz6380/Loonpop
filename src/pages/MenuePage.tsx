@@ -9,12 +9,14 @@
 // ⚠ Dieselben Bilder wie im Spiel (public/bilder/), damit der Wechsel ins
 // Level nicht wie ein Szenenwechsel wirkt.
 
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LEVEL } from '../spiel/level/index.ts';
 import { naechstes as naechstesLevel, offen, type Fortschritt } from '../lib/fortschritt.ts';
 import { SPRACHEN } from '../lib/sprache.ts';
 import { setzeSprache } from '../i18n/index.ts';
+import { setzeTon, tonAn } from '../lib/ton.ts';
 
 const IDS = LEVEL.map((l) => l.id);
 
@@ -62,6 +64,7 @@ export default function MenuePage({ fortschritt, spieleLevel, spieleEndlos }: {
   spieleEndlos: () => void;
 }) {
   const { t, i18n } = useTranslation();
+  const [ton, setTon] = useState(tonAn);
   const naechstes = naechstesLevel(fortschritt, IDS);
   const geschafft = LEVEL.filter((l) => fortschritt.bestzeit[l.id] !== undefined).length;
   const weite = fortschritt.endlos?.hoch;
@@ -192,6 +195,22 @@ export default function MenuePage({ fortschritt, spieleLevel, spieleEndlos }: {
               ))}
             </select>
           </label>
+          {/* Ton und Vibration gemeinsam (ton.ts, haptik.ts). ⚠ Nicht als
+              direktes Kind von <main>: store-bilder.mjs zaehlt dort die Knoepfe. */}
+          <button
+            onClick={() => { setzeTon(!ton); setTon(!ton); }}
+            aria-pressed={ton}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#12204f]/55 border border-white/20 font-semibold"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"
+                 strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+              {ton
+                ? <path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11" />
+                : <path d="M16 9.5l5 5M21 9.5l-5 5" />}
+            </svg>
+            {t(ton ? 'menue.tonAn' : 'menue.tonAus')}
+          </button>
           {/* Statische Seiten (scripts/rechtstexte.py): Die Stores verlangen
               sie ohne App erreichbar, im App-Paket liegen sie trotzdem. */}
           <a href="datenschutz.html" className="underline underline-offset-2">{t('menue.datenschutz')}</a>

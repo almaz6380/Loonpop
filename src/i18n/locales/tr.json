@@ -16,7 +16,9 @@
     "datenschutz": "Gizlilik",
     "impressum": "Künye",
     "spielen": "Oyna",
-    "alleLevel": "Tüm bölümler"
+    "alleLevel": "Tüm bölümler",
+    "tonAn": "Ses açık",
+    "tonAus": "Ses kapalı"
   },
   "spiel": {
     "zurueck": "Geri",
@@ -37,7 +39,11 @@
     "meter": "{{m}} m",
     "weit": "{{m}} metre ilerledin.",
     "neueBestweite": "Yeni rekor!",
-    "bestweite": "Rekor: {{m}} m"
+    "bestweite": "Rekor: {{m}} m",
+    "tipp": {
+      "halten": "Parmağını basılı tut – üfleyici dümdüz yukarı üfler.",
+      "versetzt": "Şimdi balonun biraz yanına geç: hava akımının kenarı onu yana iter."
+    }
   },
   "levelname": {
     "1": "İlk nefes",

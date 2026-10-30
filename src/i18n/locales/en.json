@@ -16,7 +16,9 @@
     "datenschutz": "Privacy",
     "impressum": "Legal notice",
     "spielen": "Play",
-    "alleLevel": "All levels"
+    "alleLevel": "All levels",
+    "tonAn": "Sound on",
+    "tonAus": "Sound off"
   },
   "spiel": {
     "zurueck": "Back",
@@ -37,7 +39,11 @@
     "meter": "{{m}} m",
     "weit": "You made it {{m}} metres.",
     "neueBestweite": "New record!",
-    "bestweite": "Record: {{m}} m"
+    "bestweite": "Record: {{m}} m",
+    "tipp": {
+      "halten": "Press and hold – the blower blows straight up.",
+      "versetzt": "Now stand slightly to the side of the balloon: the edge of the air stream pushes it sideways."
+    }
   },
   "levelname": {
     "1": "First Breath",

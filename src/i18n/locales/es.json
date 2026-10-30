@@ -16,7 +16,9 @@
     "datenschutz": "Privacidad",
     "impressum": "Aviso legal",
     "spielen": "Jugar",
-    "alleLevel": "Todos los niveles"
+    "alleLevel": "Todos los niveles",
+    "tonAn": "Sonido sí",
+    "tonAus": "Sonido no"
   },
   "spiel": {
     "zurueck": "Atrás",
@@ -37,7 +39,11 @@
     "meter": "{{m}} m",
     "weit": "Llegaste a {{m}} metros.",
     "neueBestweite": "¡Nuevo récord!",
-    "bestweite": "Récord: {{m}} m"
+    "bestweite": "Récord: {{m}} m",
+    "tipp": {
+      "halten": "Mantén el dedo pulsado: el soplador sopla en vertical hacia arriba.",
+      "versetzt": "Ahora colócate un poco a un lado del globo: el borde del chorro de aire lo empuja hacia el lado."
+    }
   },
   "levelname": {
     "1": "Primer soplo",

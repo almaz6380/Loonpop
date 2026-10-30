@@ -18,12 +18,27 @@ import {
 import { neueEndlosWelt, neuerSeed, meter } from '../spiel/endlos.ts';
 import type { Ausgang, EndlosArt, Level, Welt } from '../spiel/typen.ts';
 import { lade, speichere, mitSieg, mitWeite } from '../lib/fortschritt.ts';
+import * as ton from '../lib/ton.ts';
+import * as haptik from '../lib/haptik.ts';
 
 /**
  * Wie der Lauf zur bisherigen Bestmarke steht — fuers Ende-Fenster. Bei
  * Leveln ist das die Bestzeit (s), im Endlos-Lauf die Bestweite (m).
  */
 type Rekord = { neu: boolean; beste: number | null };
+
+/**
+ * Die Anleitung im ersten Level (30.10.2026): erst „halten“, dann „versetzt
+ * stehen“. ⚠ Die zweite Stufe ist die eigentliche Idee des Spiels (Regel 1a).
+ * Ohne sie hielt man LoonPop nach dem ersten Blick für eines der vielen
+ * Ballon-Spiele, und Apple tat genau das (4.3(a)).
+ */
+type Tipp = 'halten' | 'versetzt' | null;
+
+/** So lange bleibt „versetzt stehen“ höchstens stehen (Spielsekunden). */
+const TIPP_DAUER = 8;
+/** Ab dieser Seitwärtsfahrt (px/s) hat man das Lenken offenbar verstanden. */
+const TIPP_SEITWAERTS = 45;
 
 /**
  * Die Pixeldichte, die dieses Geraet schafft (siehe dichte.ts). Ausserhalb der
@@ -48,6 +63,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
   const [zeit, setZeit] = useState(0);
   const [weite, setWeite] = useState(0);
   const [rekord, setRekord] = useState<Rekord | null>(null);
+  const [tipp, setTipp] = useState<Tipp>(null);
   /**
    * Wo der Finger auf dem BILDSCHIRM liegt (CSS-Pixel im Canvas), nicht in der
    * Welt. ⚠ Das ist der Unterschied, der auf Strecken zaehlt: Die Welt scrollt
@@ -72,6 +88,11 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
     setEnde(null);
     setRekord(null);
     let endeUhr = 0;
+    // Nur im ersten Level, und dort bei jedem Versuch: Wer zum ersten Mal
+    // platzt, hat die Anleitung meist noch nicht verinnerlicht.
+    let tippJetzt: Tipp = !endlos && level?.id === 1 ? 'halten' : null;
+    let tippSeit = 0;
+    setTipp(tippJetzt);
 
     // ⚠ Auf dem Canvas in GERAETEPIXELN zeichnen, sonst ist auf einem Handy mit
     // doppelter Pixeldichte alles unscharf.
@@ -95,7 +116,19 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
 
     // Die Uhr im HUD darf nicht an der Schleife haengen — 5-mal je Sekunde
     // reicht fuers Auge und kostet React fast nichts.
-    const uhr = setInterval(() => { setZeit(welt.zeit); setWeite(meter(welt)); }, 200);
+    const uhr = setInterval(() => {
+      setZeit(welt.zeit);
+      setWeite(meter(welt));
+      if (tippJetzt === 'halten' && welt.geblaese.an) {
+        tippJetzt = 'versetzt';
+        tippSeit = welt.zeit;
+        setTipp(tippJetzt);
+      } else if (tippJetzt === 'versetzt' && (welt.zeit - tippSeit > TIPP_DAUER
+        || Math.abs(welt.ballon.geschw.x) > TIPP_SEITWAERTS || welt.ausgang !== 'laeuft')) {
+        tippJetzt = null;
+        setTipp(null);
+      }
+    }, 200);
 
     let letztesBild = performance.now();
     let messSumme = 0;
@@ -143,11 +176,16 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
         }
         ctx.setTransform(dichte!, 0, 0, dichte!, 0, 0);
         zeichne(ctx, w, blende, sichtRef.current);
+        // Nach dem Ende rechnet die Physik nicht weiter, die Stärke bliebe
+        // stehen. Dann soll das Gebläse verstummen.
+        ton.geblaese(w.ausgang === 'laeuft' ? w.geblaese.staerke : 0);
       },
       // ⚠ Verzoegert: Der Platz-Effekt dauert knapp eine Sekunde, und ein
       // Fenster, das sofort darueberfaellt, verdeckt genau den Moment, auf den
       // man gewartet hat.
       (w) => {
+        if (w.ausgang === 'geschafft') { ton.ankommen(); haptik.erfolg(); }
+        else if (w.ausgang === 'geplatzt') { ton.platzen(); haptik.stoss(); }
         // Sofort speichern, nicht erst mit dem Fenster: Wer gleich nach dem
         // Ankommen zurueck tippt, soll den Sieg trotzdem behalten.
         if (endlos) {
@@ -179,6 +217,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
       clearInterval(uhr);
       clearTimeout(endeUhr);
       window.removeEventListener('resize', anpassen);
+      ton.geblaese(0);
     };
   }, [level, endlos, versuch]);
 
@@ -197,6 +236,8 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
   };
   const anschalten = (e: React.PointerEvent<HTMLCanvasElement>) => {
     fahren(e);
+    ton.wecken();
+    haptik.tippen();
     if (weltRef.current) weltRef.current.geblaese.an = true;
   };
   const loslassen = () => {
@@ -241,6 +282,21 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
               : t('spiel.zeit', { s: zeit.toFixed(1) })}
         </span>
       </div>
+
+      {/* Anleitung im ersten Level. pointer-events-none: Der Finger muss
+          durch sie hindurch aufs Spielfeld. ⚠ Oben unter der Kopfleiste: Unten
+          verdeckte sie den Ballon, gerade wenn man ihn am dringendsten sieht. */}
+      {tipp && !ende && (
+        <div className="pointer-events-none absolute inset-x-0 top-[max(4.5rem,calc(env(safe-area-inset-top)+3.75rem),calc(var(--safe-area-inset-top,0px)+3.75rem))]
+                        flex justify-center px-6">
+          <p key={tipp}
+             className="max-w-xs rounded-2xl bg-[#12204f]/85 border border-white/20 px-4 py-3 text-center
+                        text-white text-sm font-semibold leading-snug shadow-lg shadow-black/25
+                        animate-[einblenden_240ms_ease-out]">
+            {t(`spiel.tipp.${tipp}`)}
+          </p>
+        </div>
+      )}
 
       {/* Ende — erscheint verzoegert, damit man den Platz-Effekt noch sieht */}
       {ende && ende !== 'laeuft' && (

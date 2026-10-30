@@ -26,11 +26,13 @@ ist (Reihenfolge in docs/store.md auf `werbung`, „Version 1.1“). Erst dann n
 ⚠ **30.10.2026: Apple lehnte 1.0 nach 4.3(a) ab** („ähnliches Konzept wie andere
 Apps“). Google prüft getrennt davon. Darauf folgte Build 2 (iOS) bzw.
 versionCode 2: Anleitung in Level 1, Ton, Vibration, neues Startbild und Menü,
-Store-Texte und -Bilder, die die Steuerung zuerst zeigen. Stand 30.10.2026
-abends: Build 2 hochgeladen und der Version 1.0 zugewiesen, Texte, Screenshots
-und Prüfnotiz in ASC gesetzt. Offen bei Josef: Antwort im Prüfungscenter und
-„Prüfung aktualisieren“ (Text in docs/store.md, „Ablehnung 4.3(a)“).
-⚠ Die Einreichung steht auf UNRESOLVED_ISSUES. Nicht per `aufraeumen` zurückziehen,
+Store-Texte und -Bilder, die die Steuerung zuerst zeigen. Am 30.10.2026
+abends hat Josef im Prüfungscenter geantwortet (Text in docs/store.md, „Ablehnung
+4.3(a)“) und „Prüfung aktualisieren“ getippt. Seitdem steht 1.0 mit **Build 2 auf
+WAITING_FOR_REVIEW**. Lehnt Apple wieder ab, folgt der Einspruch beim App Review
+Board (docs/store.md).
+⚠ Eine abgelehnte Einreichung (UNRESOLVED_ISSUES) nicht per `aufraeumen`
+zurückziehen. Neu einreichen über Antwort und „Prüfung aktualisieren“ in ASC,
 sonst geht der Zusammenhang mit der Ablehnung verloren.
 ⚠ `werbung` hat ebenfalls Build/versionCode 2 (nie hochgeladen). Beim
 Zusammenführen auf 3 erhöhen.

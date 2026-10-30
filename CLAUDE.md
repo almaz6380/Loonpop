@@ -24,10 +24,16 @@ Verknüpfen in RevenueCat und `MIT_TESTANZEIGEN = false` warten, bis 1.0 freigeg
 ist (Reihenfolge in docs/store.md auf `werbung`, „Version 1.1“). Erst dann nach
 `main`, sonst stünde die neue Datenschutzerklärung schon neben der App ohne Werbung.
 ⚠ **30.10.2026: Apple lehnte 1.0 nach 4.3(a) ab** („ähnliches Konzept wie andere
-Apps“). Google prüft getrennt davon. Darauf folgten Build 2 (iOS) bzw.
-versionCode 2: Anleitung in Level 1, Ton, Vibration, Store-Texte und -Bilder,
-die die Steuerung zuerst zeigen. Antwort an Apple und Reihenfolge stehen in
-docs/store.md, „Ablehnung 4.3(a)“.
+Apps“). Google prüft getrennt davon. Darauf folgte Build 2 (iOS) bzw.
+versionCode 2: Anleitung in Level 1, Ton, Vibration, neues Startbild und Menü,
+Store-Texte und -Bilder, die die Steuerung zuerst zeigen. Stand 30.10.2026
+abends: Build 2 hochgeladen und der Version 1.0 zugewiesen, Texte, Screenshots
+und Prüfnotiz in ASC gesetzt. Offen bei Josef: Antwort im Prüfungscenter und
+„Prüfung aktualisieren“ (Text in docs/store.md, „Ablehnung 4.3(a)“).
+⚠ Die Einreichung steht auf UNRESOLVED_ISSUES. Nicht per `aufraeumen` zurückziehen,
+sonst geht der Zusammenhang mit der Ablehnung verloren.
+⚠ `werbung` hat ebenfalls Build/versionCode 2 (nie hochgeladen). Beim
+Zusammenführen auf 3 erhöhen.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
 Löschen ohne ausdrückliches „ja" im Chat.
 **Testversion im Browser:** https://loonpop.almaz6380.workers.dev (seit 01.10.2026,
@@ -109,6 +115,13 @@ Der große Knopf „Spielen“ startet das erste offene, noch nicht geschaffte L
 darunter. Titel und Knöpfe nutzen Fredoka (OFL), die Schrift liegt in
 `public/schrift/`, weil die App offline läuft. ⚠ Bewegt wird nur per CSS-`transform`
 (Falle 18), und bei `prefers-reduced-motion` steht alles still.
+
+**Das Startbild** (iOS und Android, `startbild()` in `scripts/app-bilder.py`, seit
+30.10.2026) zeigt dasselbe wie das Menü: Landschaft, Schriftzug, Ballon im Strahl.
+⚠ iOS füllt das 2732er-Quadrat seitenfüllend, auf dem iPhone bleibt nur die
+mittlere Spalte (~45 %). Alles Wichtige richtet sich nach ihr.
+⚠ Das Menü blendet beim Öffnen nacheinander ein (knapp 1 s).
+`store-bilder.mjs` wartet deshalb 1,5 s vor dem Foto.
 
 **Der Nachklang** (Fetzen beim Platzen, Funken beim Ankommen) hängt an
 `welt.nachher`, einer eigenen Uhr. ⚠ `welt.zeit` taugt dafür nicht: Die steht ab

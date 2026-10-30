@@ -6,7 +6,10 @@ Ein Ballon schwebt durch ein Level; der Spieler bedient ein **Laubgebläse** am
 unteren Rand, das den Ballon nach oben bläst. **Nadeln** lassen ihn platzen.
 Die sechste App von Josef.
 
-**Repository:** https://github.com/almaz6380/loonpop (privat)
+**Repository:** https://github.com/almaz6380/loonpop (⚠ seit 30.10.2026
+**öffentlich**, damit die Actions kostenlos laufen; privat waren die Freiminuten
+aufgebraucht. Also nie Schlüssel, Passwörter oder Tokens ins Repo, nur in die
+Secrets.)
 **Stand:** M2 fertig — Fortschritt auf dem Gerät, Endlos-Modus. Seit 02.10.2026
 wird **nur noch nach oben** gespielt: fünfzehn Hoch-Level (IDs 1, 2, 3, 6, 8, 10, 13–21) und Endlos ↑. Strecken
 (Level 4, 5, 7, 9, 11, 12) und Endlos → sind ausgeblendet, nicht gelöscht

@@ -188,8 +188,7 @@ Antwort an die Prüfung (Englisch, zum Einfügen):
 > haptic feedback, and we rewrote the store description and screenshots so the
 > mechanic is clear at first glance.
 >
-> The app has no ads, no purchases, no account and collects no data. A short
-> screen recording of the gameplay is attached.
+> The app has no ads, no purchases, no account and collects no data.
 >
 > Best regards,
 > Josef Gallab

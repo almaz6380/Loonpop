@@ -34,8 +34,10 @@ Board (docs/store.md).
 ⚠ Eine abgelehnte Einreichung (UNRESOLVED_ISSUES) nicht per `aufraeumen`
 zurückziehen. Neu einreichen über Antwort und „Prüfung aktualisieren“ in ASC,
 sonst geht der Zusammenhang mit der Ablehnung verloren.
-⚠ `werbung` hat ebenfalls Build/versionCode 2 (nie hochgeladen). Beim
-Zusammenführen auf 3 erhöhen.
+**22.11.2026: Apple hat 1.0 freigegeben.** `werbung` ist auf
+`claude/optimistic-darwin-k01rmb` mit `main` zusammengeführt, Version **1.1**
+(Android versionCode 3, iOS Build 3). Stand und offene Schritte: Abschnitt
+„Version 1.1“ unten.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
 Löschen ohne ausdrückliches „ja" im Chat.
 **Testversion im Browser:** https://loonpop.almaz6380.workers.dev (seit 01.10.2026,
@@ -403,9 +405,9 @@ selbst tun muss (Konten, Profile, Secrets) und die Antworten für die Formulare.
   aus, Store-Workflows starten als Trockenlauf. Vorlage war `almaz6380/anigosha`.
 - Nur **Hochformat** und nur **iPhone** (`TARGETED_DEVICE_FAMILY = 1`). Sonst
   verlangt Apple iPad-Screenshots.
-- ⚠ **Was die Texte versprechen, muss stimmen:** „ohne Werbung, ohne Käufe,
-  ohne Konto, keine Daten“. Kommt M5 oder M6, ändern sich Store-Texte,
-  `scripts/rechtstexte.py` und beide Datenschutz-Formulare mit.
+- ⚠ **Was die Texte versprechen, muss stimmen.** Seit 1.1 gibt es Werbung und
+  einen Kauf; versprochen wird nur noch „kein Konto“. Kommt M5, ändern sich
+  Store-Texte, `scripts/rechtstexte.py` und beide Datenschutz-Formulare mit.
 - Bilder und Texte werden **erzeugt**, nicht von Hand gepflegt:
   `npm run app:bilder`, `npm run store:texte`, `npm run store:bilder` (braucht
   `vite preview` auf Port 4173), `npm run rechtstexte`.
@@ -428,6 +430,87 @@ selbst tun muss (Konten, Profile, Secrets) und die Antworten für die Formulare.
   `meta.associatedErrors` (`fehler_text()` in `asc.py` gibt es aus). Google
   antwortet zwischendurch mit 503; `play-upload.py` versucht es dann bis zu
   dreimal erneut.
+
+## Werbung und Kauf (1.1, seit 04.10.2026)
+
+Vorlage ist Anigosha, dort seit August 2026 im Store.
+
+- **Wann Werbung kommt**, steht in `werbetakt.ts` (rein, mit Tests): Vollbild
+  nur nach jedem 3. Platzen, frühestens 90 s nach der letzten, und erst beim
+  Tippen auf „Nochmal“/„Level“, nie im Moment des Platzens. Banner nur im Menü,
+  nie über dem Spielfeld, wo der Finger das Gebläse schiebt. Im Browser keine
+  Werbung und kein Kauf.
+- ⚠ **Testanzeigen bis kurz vor dem Einreichen** (`MIT_TESTANZEIGEN` in
+  `werbung.ts`). Die echten IDs (`LIVE`, `Info.plist`, `AndroidManifest.xml`) und
+  die öffentlichen RevenueCat-Schlüssel (`kauf.ts`) stehen schon drin.
+  `scripts/werbung-bereit.mjs` lässt keinen Upload zu Apple bzw. in die
+  Play-Produktion mit Testanzeigen durch; der interne Play-Test darf sie zeigen. Eigene Live-Anzeigen
+  nie ansehen oder anklicken: Das AdMob-Konto teilen sich Anigosha, MyPeak und
+  WELLbooked.
+- ⚠ **ATT nativ, im `SceneDelegate`** (`sceneDidBecomeActive`). LoonPop arbeitet
+  mit Szenen, `applicationDidBecomeActive` kommt hier nicht. Über das
+  AdMob-Plugin gefragt, zeigt iOS nichts (Anigosha, Ablehnung 2.1 am 12.08.2026).
+  `NSUserTrackingUsageDescription`, diese Abfrage und „Tracking: ja“ in ASC
+  müssen zusammen stimmen.
+- ⚠ **Capacitor-Plugins nie aus async-Funktionen zurückgeben oder `await`en**,
+  nur in einer Hülle `{ Purchases }`/`{ AdMob }` weiterreichen: Ihr `.then` löst
+  nie auf (Anigosha, „Kauf hängt“, Build 1–10).
+- ⚠ **Google legt einen Kauf erst an, wenn ein Build mit Kauf-Berechtigung
+  hochgeladen ist**, und dieser Build (mit `AD_ID`) geht nur durch, wenn in der
+  Play Console „Werbe-ID: Ja“ steht (04.10.2026). Die alte `inappproducts`-API
+  antwortet mit 403; `play-upload.py --kauf` nutzt `onetimeproducts`.
+- Das Prüfungsbild für Apples Kauf macht `scripts/kauf-bild.mjs` aus
+  `?kaufvorschau` (zeigt die Kauf-Karte im Browser, ohne Funktion).
+- Kein Konto: RevenueCat vergibt eine anonyme Kennung, „Käufe wiederherstellen“
+  holt den Kauf über das Store-Konto zurück (Apple verlangt den Knopf, 3.1.1).
+
+## Version 1.1 (22.11.2026): Werbung, Kauf, Weiterfliegen, Bewertung
+
+Branch `claude/optimistic-darwin-k01rmb` (= `main` + `werbung`). ⚠ Erst nach
+`main`, wenn 1.1 eingereicht wird: `main` deployt die Browser-Version samt neuer
+Datenschutzerklärung automatisch. Nichts gebaut, nichts hochgeladen.
+
+- **Werbung** (`src/lib/werbung.ts`): `MIT_TESTANZEIGEN = false`, echte IDs.
+  Banner nur im Menü, Vollbild nach jedem dritten Platzen beim Tippen auf
+  „Nochmal“/„Level“ (`werbetakt.ts`), nie bei „Weiter“ nach einem Sieg.
+  ⚠ Eigene Live-Anzeigen nie ansehen oder antippen.
+- **Kauf** „Werbung entfernen“ (`kauf.ts`, Karte `Werbefrei` im Menü) nimmt
+  Banner und Vollbild weg, das freiwillige Video bleibt.
+- **Weiterfliegen**: Nach dem Platzen bietet das Ende-Fenster einmal je Versuch
+  (auch im Endlos-Modus) „Weiterfliegen · Video“ an. Nach `earned` setzt
+  `weiterfliegen()` (`src/spiel/weiterfliegen.ts`, getestet) den Ballon auf
+  `ballon.vorher` (die Stelle vor dem Schritt, der platzte), Tempo 0, und
+  `unverwundbarBis = zeit + 1` (Physik prüft dann keine Nadeln, der Ballon
+  blinkt aus der Spielzeit). ⚠ Die Zeit läuft weiter und wird nie zurückgedreht:
+  Nadeln kommen aus `nadelJetzt(…, zeit)`, Bestzeit zählt normal.
+  `schleife.ts` meldet nach dem Weiterfliegen das nächste Ende wieder.
+  Nach einem Video entfällt eine fällige Vollbild-Anzeige, der Abstand läuft neu
+  (`videoGesehen` in `werbetakt.ts`).
+  ⚠ Das Plugin löst `showRewardVideoAd()` nur bei verdienter Belohnung auf. Deshalb
+  hört `zeigeBelohnungsvideo()` auf Showed/Dismissed/FailedToShow, hat eine harte
+  Zeitgrenze und eine Doppeltipp-Sperre (Muster Mahjong `requestReward`).
+  ⚠ `LIVE.*.rewarded` ist noch leer: Dann fehlt der Knopf (kein Fehler), und
+  `scripts/werbung-bereit.mjs` warnt nur.
+- **Bewertungsbitte** (`src/lib/bewertung.ts`, `@capacitor-community/in-app-review`):
+  nach einem geschafften Level beim Verlassen des Ende-Fensters, ab 5 geschafften
+  Leveln, höchstens alle 90 Tage, nie zugleich mit einer Vollbild-Anzeige, nur
+  nativ, ohne Belohnung.
+- Store-Texte (13 Sprachen) versprechen nicht mehr „keine Werbung / keine Käufe /
+  keine Daten“; Prüfnotiz (`PRUEF_NOTIZ` in `scripts/asc.py`) nennt Werbung,
+  Video und Kauf; Datenschutzerklärung (Stand 22.11.2026) um Video, Bewertung und
+  „offline spielbar, für Werbung und Kauf online“ ergänzt.
+
+**Was Josef noch tun muss (je mit eigenem „ja“):**
+1. AdMob: in beiden Apps einen Block **Belohnt** anlegen, IDs an Claude
+   (`LIVE.ios.rewarded`, `LIVE.android.rewarded`).
+2. Play Console → App-Inhalte: Werbe-ID **Ja**, Werbung **Ja**, Datensicherheit
+   neu (docs/store.md, Teil D).
+3. Apple App-Datenschutz: **Tracking ja** usw. (docs/store.md, Teil D).
+4. Android-Build mit Kauf-Berechtigung hochladen, dann `play-eintrag.yml` `kauf`
+   (Google-Kauf `loonpop_no_ads`).
+5. RevenueCat: Android-Produkt verknüpfen und ins Offering `default` hängen
+   (sonst `CONFIGURATION_ERROR`).
+6. Danach Branch nach `main`, bauen, Apple-Kauf MIT Version 1.1 einreichen.
 
 ## Konventionen
 

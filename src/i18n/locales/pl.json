@@ -43,7 +43,9 @@
     "tipp": {
       "halten": "Przytrzymaj palec – dmuchawa dmucha pionowo w górę.",
       "versetzt": "Teraz stań trochę z boku pod balonem: krawędź strumienia powietrza zepchnie go w bok."
-    }
+    },
+    "weiterfliegen": "Leć dalej · Wideo",
+    "videoFehlt": "Teraz nie ma żadnego wideo. Spróbuj ponownie później."
   },
   "levelname": {
     "1": "Pierwszy podmuch",
@@ -61,5 +63,18 @@
     "19": "Drzwi przesuwne",
     "20": "Pod prąd",
     "21": "Młyn"
+  },
+  "werbung": {
+    "entfernen": "Usuń reklamy",
+    "entfernenText": "Kup raz i graj bez reklam na zawsze.",
+    "wiederherstellen": "Przywróć zakupy",
+    "werbefrei": "Bez reklam – dzięki za wsparcie!",
+    "einstellungen": "Ustawienia reklam",
+    "wiederhergestellt": "Zakup przywrócony.",
+    "nichtsGefunden": "Nie znaleziono zakupu.",
+    "fehler": {
+      "kein_angebot": "Teraz niedostępne. Spróbuj później.",
+      "fehler": "Nie udało się. Spróbuj później."
+    }
   }
 }

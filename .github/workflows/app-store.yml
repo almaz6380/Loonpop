@@ -6,6 +6,7 @@
 #   screenshots     iPhone-Bilder je Sprache ersetzen (store-assets/ios/<code>)
 #   build           Build <nummer> der offenen Version zuweisen
 #   pflicht         Exportfrage, Inhaberrechte, Alter, Copyright, Kategorie, Kontakt, Preis, Laender
+#   kauf            Kauf „Werbung entfernen“: Preis, Texte, Laender, Pruefungsbild
 #   einreichen      Version zur Pruefung schicken
 #   aufraeumen      festhaengende Einreichung zurueckziehen
 #   profil          pruefen, ob das Profil „loonpop AppStore“ abrufbar ist (liest nur)
@@ -17,7 +18,7 @@ on:
       mode:
         description: 'Was getan wird'
         type: choice
-        options: [status, profil, texte, screenshots, build, pflicht, einreichen, aufraeumen]
+        options: [status, profil, texte, screenshots, build, pflicht, kauf, einreichen, aufraeumen]
         default: status
       nummer:
         description: 'Build-Nummer (nur fuer build)'

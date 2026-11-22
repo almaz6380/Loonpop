@@ -43,7 +43,9 @@
     "tipp": {
       "halten": "Garde le doigt appuyé : le souffleur souffle tout droit vers le haut.",
       "versetzt": "Place-toi maintenant un peu à côté du ballon : le bord du jet d’air le pousse sur le côté."
-    }
+    },
+    "weiterfliegen": "Continuer · Vidéo",
+    "videoFehlt": "Aucune vidéo pour le moment. Réessaie plus tard."
   },
   "levelname": {
     "1": "Premier souffle",
@@ -61,5 +63,18 @@
     "19": "Porte coulissante",
     "20": "À contresens",
     "21": "Le moulin"
+  },
+  "werbung": {
+    "entfernen": "Supprimer les pubs",
+    "entfernenText": "Un seul achat, sans pub pour toujours.",
+    "wiederherstellen": "Restaurer les achats",
+    "werbefrei": "Sans pub – merci pour ton soutien !",
+    "einstellungen": "Réglages des pubs",
+    "wiederhergestellt": "Achat restauré.",
+    "nichtsGefunden": "Aucun achat trouvé.",
+    "fehler": {
+      "kein_angebot": "Indisponible pour le moment. Réessaie plus tard.",
+      "fehler": "Ça n'a pas marché. Réessaie plus tard."
+    }
   }
 }

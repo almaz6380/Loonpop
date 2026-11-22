@@ -43,7 +43,9 @@
     "tipp": {
       "halten": "Halte den Finger gedrückt – das Gebläse bläst senkrecht nach oben.",
       "versetzt": "Jetzt stell dich etwas seitlich unter den Ballon: Der Rand des Luftstrahls schiebt ihn zur Seite."
-    }
+    },
+    "weiterfliegen": "Weiterfliegen · Video",
+    "videoFehlt": "Gerade gibt es kein Video. Versuch es später noch einmal."
   },
   "levelname": {
     "1": "Erste Luft",
@@ -61,5 +63,18 @@
     "19": "Schiebetür",
     "20": "Gegenverkehr",
     "21": "Die Mühle"
+  },
+  "werbung": {
+    "entfernen": "Werbung entfernen",
+    "entfernenText": "Einmal kaufen, für immer ohne Werbung.",
+    "wiederherstellen": "Käufe wiederherstellen",
+    "werbefrei": "Werbefrei – danke für deine Unterstützung!",
+    "einstellungen": "Werbe-Einstellungen",
+    "wiederhergestellt": "Kauf wiederhergestellt.",
+    "nichtsGefunden": "Kein Kauf gefunden.",
+    "fehler": {
+      "kein_angebot": "Gerade nicht verfügbar. Versuch es später noch einmal.",
+      "fehler": "Das hat nicht geklappt. Versuch es später noch einmal."
+    }
   }
 }

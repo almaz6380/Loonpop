@@ -20,6 +20,10 @@ import type { Ausgang, EndlosArt, Level, Welt } from '../spiel/typen.ts';
 import { lade, speichere, mitSieg, mitWeite } from '../lib/fortschritt.ts';
 import * as ton from '../lib/ton.ts';
 import * as haptik from '../lib/haptik.ts';
+import { platzerGezaehlt, vielleichtVollbild, weiterfliegenMoeglich, zeigeBelohnungsvideo } from '../lib/werbung.ts';
+import { vielleichtUmBewertungBitten } from '../lib/bewertung.ts';
+import { kannWeiterfliegen, weiterfliegen } from '../spiel/weiterfliegen.ts';
+import { LEVEL } from '../spiel/level/index.ts';
 
 /**
  * Wie der Lauf zur bisherigen Bestmarke steht — fuers Ende-Fenster. Bei
@@ -64,6 +68,11 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
   const [weite, setWeite] = useState(0);
   const [rekord, setRekord] = useState<Rekord | null>(null);
   const [tipp, setTipp] = useState<Tipp>(null);
+  /** Laeuft gerade das Video fuers Weiterfliegen? (sperrt den Knopf) */
+  const [videoLaeuft, setVideoLaeuft] = useState(false);
+  const [videoFehlt, setVideoFehlt] = useState(false);
+  /** Darf dieser Lauf noch weiterfliegen? Beim Ende gesetzt (Refs nicht im Rendern lesen). */
+  const [nochWeiter, setNochWeiter] = useState(false);
   /**
    * Wo der Finger auf dem BILDSCHIRM liegt (CSS-Pixel im Canvas), nicht in der
    * Welt. ⚠ Das ist der Unterschied, der auf Strecken zaehlt: Die Welt scrollt
@@ -186,6 +195,9 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
       (w) => {
         if (w.ausgang === 'geschafft') { ton.ankommen(); haptik.erfolg(); }
         else if (w.ausgang === 'geplatzt') { ton.platzen(); haptik.stoss(); }
+        // Nur zaehlen — gezeigt wird erst beim Weitertippen (werbetakt.ts).
+        if (w.ausgang === 'geplatzt') platzerGezaehlt();
+        setNochWeiter(kannWeiterfliegen(w));
         // Sofort speichern, nicht erst mit dem Fenster: Wer gleich nach dem
         // Ankommen zurueck tippt, soll den Sieg trotzdem behalten.
         if (endlos) {
@@ -246,7 +258,47 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
     fingerRef.current = null;
   };
 
-  const nochmal = () => setVersuch((v) => v + 1);
+  // Eine faellige Vollbild-Anzeige laeuft beim Verlassen des Ende-Fensters,
+  // nie mitten im Platzen. Das Spiel wartet nicht auf sie: Sie legt sich
+  // ueber die WebView, und danach geht es genau dort weiter.
+  //
+  // Nach einem geschafften Level darf beim Verlassen die Bewertungsbitte kommen
+  // (bewertung.ts) — aber nie zugleich mit einer Vollbild-Anzeige.
+  // „Weiter“ zeigt keine Vollbild-Anzeige: Die kommen nur nach dem Platzen
+  // (werbetakt.ts), und nach einem Sieg soll es ohne Pause weitergehen.
+  const verlassen = (mitVollbild = true) => {
+    const vollbild = mitVollbild && vielleichtVollbild();
+    if (ende === 'geschafft') {
+      const f = lade();
+      const geschafft = LEVEL.filter((l) => f.bestzeit[l.id] !== undefined).length;
+      void vielleichtUmBewertungBitten(geschafft, vollbild);
+    }
+  };
+  const nochmal = () => { verlassen(); setVideoFehlt(false); setVersuch((v) => v + 1); };
+  const zurLevelwahl = () => { verlassen(); zurueck(); };
+  const naechstesLevel = weiter && (() => { verlassen(false); weiter(); });
+
+  // „Weiterfliegen“: einmal je Versuch nach dem Platzen, gegen ein freiwilliges
+  // Video (src/spiel/weiterfliegen.ts). Nur wenn es eine Anzeigen-ID gibt.
+  const weiterfliegenAnbieten = ende === 'geplatzt' && nochWeiter && weiterfliegenMoeglich();
+  const videoAnsehen = async () => {
+    if (videoLaeuft) return;
+    setVideoLaeuft(true);
+    setVideoFehlt(false);
+    const ergebnis = await zeigeBelohnungsvideo();
+    setVideoLaeuft(false);
+    const w = weltRef.current;
+    if (ergebnis === 'earned' && w && weiterfliegen(w)) {
+      // Der Finger liegt nicht mehr auf dem Spielfeld.
+      w.geblaese.an = false;
+      fingerRef.current = null;
+      setRekord(null);
+      setNochWeiter(false);
+      setEnde(null);
+    } else if (ergebnis === 'unavailable') {
+      setVideoFehlt(true);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-[#0d1330] select-none">
@@ -327,8 +379,22 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
               </p>
             )}
             <div className="mb-7" />
-            {ende === 'geschafft' && weiter && (
-              <button onClick={weiter}
+            {weiterfliegenAnbieten && (
+              <button onClick={() => void videoAnsehen()} disabled={videoLaeuft}
+                className="w-full mb-3 px-6 py-3.5 rounded-2xl bg-[#ffd75e] text-[#12204f] font-bold
+                           shadow-lg shadow-black/25 active:scale-95 transition disabled:opacity-60
+                           flex items-center justify-center gap-2">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 rtl:-scale-x-100" fill="currentColor" aria-hidden="true">
+                  <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" />
+                </svg>
+                {t('spiel.weiterfliegen')}
+              </button>
+            )}
+            {videoFehlt && ende === 'geplatzt' && (
+              <p className="-mt-1 mb-3 text-sm text-[#ffe48a]" role="status">{t('spiel.videoFehlt')}</p>
+            )}
+            {ende === 'geschafft' && naechstesLevel && (
+              <button onClick={naechstesLevel}
                 className="w-full mb-3 px-6 py-3.5 rounded-2xl bg-[#ffd75e] text-[#12204f] font-bold
                            shadow-lg shadow-black/25 active:scale-95 transition">
                 {t('spiel.weiter')}
@@ -340,7 +406,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
                            shadow-lg shadow-black/25 active:scale-95 transition">
                 {t('spiel.nochmal')}
               </button>
-              <button onClick={zurueck}
+              <button onClick={zurLevelwahl}
                 className="px-6 py-3.5 rounded-2xl bg-white/12 border border-white/20
                            font-semibold active:scale-95 transition">
                 {t('spiel.levelwahl')}

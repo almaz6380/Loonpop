@@ -338,6 +338,66 @@ def setze_listing(tok, datei, lang, dry_run=False):
     commit_edit(tok, eid)
 
 
+# ── Kauf „Werbung entfernen“ (Version 1.1, 04.10.2026) ──────────────────────
+# Einmaliger Kauf `loonpop_no_ads`. Google rechnet Preise NETTO: 2,49 € werden
+# mit 20 % USt. zu 2,99 € (Anigosha). Die anderen Laender rechnet Google um
+# (autoConvertMissingPrices). Texte aus den Sprachdateien der App.
+KAUF_ID = 'loonpop_no_ads'
+KAUF_NETTO_MICROS = '2490000'
+
+
+def kauf_anlegen(dry_run=False):
+    wurzel = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    listings = {}
+    for pfad in sorted(glob.glob(os.path.join(wurzel, 'store-assets', 'texte', '*.json'))):
+        code = os.path.basename(pfad)[:-5]
+        with open(pfad, encoding='utf-8') as f:
+            play_codes = json.load(f)['storeCodes']['play']
+        with open(os.path.join(wurzel, 'src', 'i18n', 'locales', f'{code}.json'), encoding='utf-8') as f:
+            w = json.load(f)['werbung']
+        for lc in play_codes:
+            listings[lc] = {'title': w['entfernen'][:55], 'description': w['entfernenText'][:200]}
+    print(f'Kauf {KAUF_ID}: {len(listings)} Sprachen, 2,49 € netto')
+    if dry_run:
+        print('--dry-run: nichts angelegt.')
+        return
+    tok = token()
+    # ⚠ Die alte Schnittstelle (inappproducts) antwortet seit 2026 mit 403
+    # „Please migrate to the new publishing API“ (04.10.2026). Neu ist
+    # onetimeproducts mit Kaufoption und Preisen je Region.
+    basis = f'{API}/applications/{PKG}'
+    umgerechnet = call(tok, 'POST', f'{basis}/pricing:convertRegionPrices', data={
+        'price': {'currencyCode': 'EUR', 'units': '2', 'nanos': int(KAUF_NETTO_MICROS[1:]) * 1000}})
+    regionen = [{'regionCode': r, 'price': v['price'], 'availability': 'AVAILABLE'}
+                for r, v in sorted(umgerechnet.get('convertedRegionPrices', {}).items())]
+    andere = umgerechnet.get('convertedOtherRegionsPrice', {})
+    # ⚠ Die Regionen-Version muss zu den umgerechneten Waehrungen passen: Mit
+    # 2022/02 verlangte Google fuer Bulgarien BGN, umgerechnet war aber EUR.
+    version = (umgerechnet.get('regionVersion') or {}).get('version') or '2025/03'
+    print(f'  {len(regionen)} Regionen umgerechnet (Regionen-Version {version})')
+    produkt = {
+        'packageName': PKG, 'productId': KAUF_ID,
+        'listings': [{'languageCode': lc, **t} for lc, t in listings.items()],
+        'purchaseOptions': [{
+            'purchaseOptionId': 'standard',
+            'buyOption': {'legacyCompatible': True, 'multiQuantityEnabled': False},
+            'regionalPricingAndAvailabilityConfigs': regionen,
+            'newRegionsConfig': {'usdPrice': andere.get('usdPrice'), 'eurPrice': andere.get('eurPrice'),
+                                 'availability': 'AVAILABLE'},
+        }],
+    }
+    call(tok, 'PATCH', f'{basis}/onetimeproducts/{KAUF_ID}?allowMissing=true'
+         f'&regionsVersion.version={version}&updateMask=listings,purchaseOptions', data=produkt)
+    print('  angelegt bzw. aktualisiert')
+    try:
+        call(tok, 'POST', f'{basis}/onetimeproducts/{KAUF_ID}/purchaseOptions:batchUpdateStates', data={
+            'requests': [{'activatePurchaseOptionRequest': {
+                'packageName': PKG, 'productId': KAUF_ID, 'purchaseOptionId': 'standard'}}]}, fatal=False)
+        print('  Kaufoption aktiv')
+    except ApiError as e:
+        print(f'  Kaufoption nicht aktiviert ({e.code}): {e.detail[:300]}')
+
+
 def zeige_status(tok, track='production'):
     eid = call(tok, 'POST', f'{API}/applications/{PKG}/edits')['id']
     tr = call(tok, 'GET', f'{API}/applications/{PKG}/edits/{eid}/tracks/{track}')
@@ -356,6 +416,7 @@ def main():
                    help='nur als Entwurf anlegen (Pflicht, solange die App nie veroeffentlicht war)')
     p.add_argument('--notes', default='', help='Was-ist-neu-Text (de-DE)')
     p.add_argument('--status', action='store_true', help='nur den Track anzeigen')
+    p.add_argument('--kauf', action='store_true', help='Kauf „Werbung entfernen“ anlegen/aktualisieren')
     p.add_argument('--screenshots', metavar='VERZEICHNIS',
                    help='Store-Eintrag-Screenshots ersetzen (z. B. store-assets/android)')
     p.add_argument('--listing-lesen', nargs='?', const='-', metavar='JSON',
@@ -373,6 +434,8 @@ def main():
                    choices=['production', 'beta', 'alpha', 'internal'],
                    help='Play-Track (Standard: production)')
     a = p.parse_args()
+    if a.kauf:
+        return kauf_anlegen(a.dry_run)
 
     if not (a.aab or a.promote or a.status or a.screenshots or a.listing_lesen
             or a.listing

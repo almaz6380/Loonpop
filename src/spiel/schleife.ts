@@ -57,6 +57,9 @@ export function starteSchleife(
 
     zeichnen(welt, akku / DT);
 
+    // Nach dem Weiterfliegen (weiterfliegen.ts) laeuft der Lauf wieder — dann
+    // muss auch das naechste Ende gemeldet werden.
+    if (welt.ausgang === 'laeuft') gemeldet = false;
     if (welt.ausgang !== 'laeuft' && !gemeldet) {
       gemeldet = true;
       beiEnde(welt);

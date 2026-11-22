@@ -16,6 +16,7 @@ import type { Welt, Punkt } from './typen.ts';
 import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe } from './physik.ts';
 import { nadelnIn, meter } from './endlos.ts';
 import { ballonform, KNOTEN, BALLON_BILD_SEITEN } from './ballonform.ts';
+import { unverwundbar } from './weiterfliegen.ts';
 import { geblaeseMass, GEBLAESE_BILD } from './bildmasse.ts';
 
 /**
@@ -774,7 +775,13 @@ export function zeichne(
 
   const pos = zwischen(ballon.vorher, ballon.pos, blende);
   if (welt.ausgang === 'laeuft' || welt.nachher < 0.06) {
+    // Nach dem Weiterfliegen blinkt der Ballon, solange er geschuetzt ist.
+    // ⚠ Aus der Spielzeit gerechnet, nicht aus Math.random (siehe streu).
+    const blinkt = unverwundbar(welt) && Math.floor(welt.zeit * 10) % 2 === 1;
+    ctx.save();
+    if (blinkt) ctx.globalAlpha = 0.3;
     zeichneBallon(ctx, welt, pos, bodenY);
+    ctx.restore();
   }
   nachklang(ctx, welt, pos);
 

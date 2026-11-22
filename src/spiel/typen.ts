@@ -139,6 +139,10 @@ export type Welt = {
   boden: number;
   /** Nur im Endlos-Lauf: woraus die Nadeln entstehen (siehe endlos.ts). */
   endlos?: Endlos;
+  /** Ist dieser Lauf schon einmal weitergeflogen? (weiterfliegen.ts) */
+  weitergeflogen?: boolean;
+  /** Bis zu welcher Spielzeit der Ballon nicht platzen kann (weiterfliegen.ts). */
+  unverwundbarBis?: number;
 };
 
 export type EndlosArt = 'hoch' | 'strecke';

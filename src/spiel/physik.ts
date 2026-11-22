@@ -25,6 +25,7 @@
 import type { Punkt, Welt, Nadel } from './typen.ts';
 import { streckeTrifftNadel, laenge, minus } from './kollision.ts';
 import { nadelnIn, bodenNachziehen, endlosWind } from './endlos.ts';
+import { unverwundbar } from './weiterfliegen.ts';
 
 /** Ein Physikschritt = 1/120 Sekunde. */
 export const DT = 1 / 120;
@@ -255,7 +256,8 @@ export function schritt(welt: Welt): void {
     : welt.endlos.art === 'hoch'
       ? nadelnIn(welt, ballon.pos.y - 200, ballon.pos.y + 200)
       : nadelnIn(welt, ballon.pos.x - 200, ballon.pos.x + 200);
-  for (const nadel of nadeln) {
+  // Nach dem Weiterfliegen eine Sekunde Schutz (weiterfliegen.ts).
+  if (!unverwundbar(welt)) for (const nadel of nadeln) {
     const n = nadelJetzt(nadel, welt.zeit, level.groesse.hoehe);
     if (streckeTrifftNadel(ballon.vorher, ballon.pos, r, n.von, n.bis)) {
       welt.ausgang = 'geplatzt';

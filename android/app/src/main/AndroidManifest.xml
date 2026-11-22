@@ -25,6 +25,12 @@
 
         </activity>
 
+        <!-- AdMob-App-ID von LoonPop (Android, angelegt 04.10.2026). Ohne
+             Eintrag stuerzt das SDK beim Start ab. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-8860791993288062~5237501849" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

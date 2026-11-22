@@ -3,6 +3,7 @@
 #
 # sprache = alle  → jede Sprache aus store-assets/texte/*.json, mit all ihren
 #                   Play-Codes (es → es-ES und es-419 usw.)
+# kauf           → Kauf „Werbung entfernen“ (loonpop_no_ads) anlegen
 # produktion     → versionCode 1 aus dem internen Test an alle (Produktion);
 #                   im Trockenlauf nur den internen Track anzeigen
 # ⚠ Neue Sprachen muessen in der Play Console EINMAL als Uebersetzung angelegt
@@ -15,7 +16,7 @@ on:
       mode:
         description: 'Was aktualisiert wird'
         type: choice
-        options: [texte, screenshots, grafiken, produktion]
+        options: [texte, screenshots, grafiken, produktion, kauf]
         default: texte
       sprache:
         description: 'alle, oder ein Play-Code wie de-DE'
@@ -62,6 +63,11 @@ jobs:
           if [ "$SPRACHE" != "alle" ]; then
             grep "^$SPRACHE " paare.txt > p2.txt || { echo "Unbekannte Sprache $SPRACHE"; exit 1; }
             mv p2.txt paare.txt
+          fi
+
+          if [ "$MODE" = "kauf" ]; then
+            python3 scripts/play-upload.py --kauf "${TROCKEN[@]}"
+            exit 0
           fi
 
           if [ "$MODE" = "produktion" ]; then

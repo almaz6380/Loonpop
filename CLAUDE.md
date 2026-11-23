@@ -508,9 +508,10 @@ Datenschutzerklärung automatisch. Nichts gebaut, nichts hochgeladen.
 **Was Josef noch tun muss (je mit eigenem „ja“):**
 1. AdMob: in beiden Apps einen Block **Belohnt** anlegen, IDs an Claude
    (`LIVE.ios.rewarded`, `LIVE.android.rewarded`).
-2. Play Console → App-Inhalte: Werbe-ID **Ja**, Werbung **Ja**, Datensicherheit
-   neu (docs/store.md, Teil D).
-3. Apple App-Datenschutz: **Tracking ja** usw. (docs/store.md, Teil D).
+2. ✅ (23.11.2026) Play Console → App-Inhalte: Werbe-ID **Ja**, „Anzeigen“ (so heißt
+   „Werbung“ dort) **Ja**, Datensicherheit neu (docs/store.md, Teil D). Steht auf „Bereit
+   für die Überprüfung“, geht mit dem 1.1-Build an Google.
+3. ✅ (23.11.2026) Apple App-Datenschutz: **Tracking ja** usw. (docs/store.md, Teil D).
 4. Android-Build mit Kauf-Berechtigung hochladen, dann `play-eintrag.yml` `kauf`
    (Google-Kauf `loonpop_no_ads`).
 5. RevenueCat: Android-Produkt verknüpfen und ins Offering `default` hängen

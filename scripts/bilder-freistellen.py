@@ -72,6 +72,12 @@ def main() -> None:
     ZIEL.mkdir(parents=True, exist_ok=True)
 
     ballon = zuschneiden(freistellen(Image.open(QUELLEN / 'ballon.jpg'), 'gruen'))
+    # Das Bild vom 23.11.2026 bringt eine Schnur mit; die zeichnet das Spiel
+    # selbst (sie schwingt mit). Abgeschnitten wird ab der untersten Zeile, die
+    # noch breiter als 4 % des Ballons ist — darunter ist nur noch Schnur.
+    breite = (np.asarray(ballon.getchannel('A')) > 128).sum(axis=1)
+    unten = max(i for i, b in enumerate(breite) if b > 0.04 * breite.max())
+    ballon = zuschneiden(ballon.crop((0, 0, ballon.width, unten + 1)))
     auf_breite(ballon, 200).save(ZIEL / 'ballon.png', optimize=True)
     print('ballon', ballon.size, 'Seitenverhaeltnis', round(ballon.width / ballon.height, 4))
 

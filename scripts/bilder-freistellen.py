@@ -184,7 +184,8 @@ def main() -> None:
     for name in ['muenze', 'stern']:
         q = QUELLEN / f'{name}.jpg'
         if q.exists():
-            auf_breite(zuschneiden(freistellen(Image.open(q), 'gruen')), 128).save(ZIEL / f'{name}.png', optimize=True)
+            # Stern 256: er steht im Ende-Fenster bis 56 px gross (×3 Pixeldichte).
+            auf_breite(zuschneiden(freistellen(Image.open(q), 'gruen')), 256 if name == 'stern' else 128).save(ZIEL / f'{name}.png', optimize=True)
 
     for p in sorted(ZIEL.iterdir()):
         print(p.name, Image.open(p).size, p.stat().st_size // 1024, 'KB')

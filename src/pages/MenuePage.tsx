@@ -431,12 +431,8 @@ export default function MenuePage({ fortschritt, werbefrei, setWerbefrei, spiele
 }
 
 function MiniStern({ an }: { an?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" aria-hidden="true">
-      <path d="M12 2.6l2.8 6 6.5.7-4.9 4.4 1.4 6.4L12 16.8l-5.8 3.3 1.4-6.4-4.9-4.4 6.5-.7z"
-        fill={an ? '#ffb703' : 'rgba(18,32,79,0.25)'} />
-    </svg>
-  );
+  return <img src="/bilder/stern.png" alt="" aria-hidden="true"
+    className={`w-3.5 h-3.5 object-contain ${an ? '' : 'grayscale brightness-50 opacity-40'}`} />;
 }
 
 function MiniMuenze() {

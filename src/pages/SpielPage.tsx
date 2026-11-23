@@ -489,18 +489,11 @@ function Muenze({ klein }: { klein?: boolean }) {
 }
 
 function Stern({ an, verzoegerung, gross }: { an: boolean; verzoegerung: number; gross?: boolean }) {
+  // Gemini-Stern (public/bilder/stern.png); nicht verdiente Sterne grau und blass.
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true"
-      className={`${gross ? 'w-14 h-14 -mt-2' : 'w-11 h-11'} ${an ? 'anim-stern' : 'opacity-35'}`}
-      style={an ? { animationDelay: `${verzoegerung}ms` } : undefined}>
-      <defs>
-        <linearGradient id="st" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#fff1a0" /><stop offset=".5" stopColor="#ffc93c" /><stop offset="1" stopColor="#e08a0b" />
-        </linearGradient>
-      </defs>
-      <path d="M12 2.6l2.8 6 6.5.7-4.9 4.4 1.4 6.4L12 16.8l-5.8 3.3 1.4-6.4-4.9-4.4 6.5-.7z"
-        fill={an ? 'url(#st)' : '#0b1638'} stroke={an ? '#fff6c8' : '#ffffff40'} strokeWidth="1.1" strokeLinejoin="round" />
-    </svg>
+    <img src="/bilder/stern.png" alt="" aria-hidden="true"
+      className={`${gross ? 'w-14 h-14 -mt-2' : 'w-11 h-11'} object-contain ${an ? 'anim-stern drop-shadow-[0_4px_8px_rgba(0,0,0,0.35)]' : 'grayscale brightness-50 opacity-40'}`}
+      style={an ? { animationDelay: `${verzoegerung}ms` } : undefined} />
   );
 }
 

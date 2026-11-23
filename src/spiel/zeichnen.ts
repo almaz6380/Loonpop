@@ -347,7 +347,8 @@ function hintergrund(
     if (b) {
       const breite = gr * 3.6;
       const hoch = breite * (b.naturalHeight / b.naturalWidth);
-      ctx.globalAlpha = Math.min(1, deckung * 3.6);
+      // Nachts nur ein Hauch: helle Tageswolken leuchteten vor dem Mondhimmel.
+      ctx.globalAlpha = Math.min(1, deckung * 3.6) * (sicht.welt === 4 ? 0.3 : 1);
       ctx.drawImage(b, x - breite / 2, y - hoch / 2, breite, hoch);
       ctx.globalAlpha = 1;
       return;
@@ -431,6 +432,7 @@ function hintergrund(
 const BODEN_BILD: Record<number, { kante: number; hoehe: number; oben: string; unten: string }> = {
   1: { kante: 0.199, hoehe: 176, oben: '#5da046', unten: '#3e6a3a' },
   2: { kante: 0.45, hoehe: 210, oben: '#a8806a', unten: '#79604f' },
+  4: { kante: 0.276, hoehe: 190, oben: '#1d313c', unten: '#05101a' },
 };
 
 /** Wiese mit Halmen und ein paar Blumen. */

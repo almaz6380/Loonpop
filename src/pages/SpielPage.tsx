@@ -17,7 +17,8 @@ import {
 } from '../spiel/zeichnen.ts';
 import { neueEndlosWelt, neuerSeed, meter } from '../spiel/endlos.ts';
 import type { Ausgang, EndlosArt, Level, Welt } from '../spiel/typen.ts';
-import { lade, speichere, mitSieg, mitWeite } from '../lib/fortschritt.ts';
+import { lade, speichere, mitSieg, mitWeite, mitSternen } from '../lib/fortschritt.ts';
+import { sterneFuer } from '../spiel/sterne.ts';
 import * as ton from '../lib/ton.ts';
 import * as haptik from '../lib/haptik.ts';
 import { platzerGezaehlt, vielleichtVollbild, weiterfliegenMoeglich, zeigeBelohnungsvideo } from '../lib/werbung.ts';
@@ -68,6 +69,11 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
   const [zeit, setZeit] = useState(0);
   const [weite, setWeite] = useState(0);
   const [rekord, setRekord] = useState<Rekord | null>(null);
+  /** Sterne und neu verdiente Muenzen dieses Laufs (Ende-Fenster). */
+  const [sterne, setSterne] = useState(0);
+  const [plusMuenzen, setPlusMuenzen] = useState(0);
+  /** Eingesammelte Muenzen im laufenden Versuch (HUD). */
+  const [gesammelt, setGesammelt] = useState(0);
   const [tipp, setTipp] = useState<Tipp>(null);
   /** Laeuft gerade das Video fuers Weiterfliegen? (sperrt den Knopf) */
   const [videoLaeuft, setVideoLaeuft] = useState(false);
@@ -99,6 +105,9 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
     weltRef.current = welt;
     setEnde(null);
     setRekord(null);
+    setSterne(0);
+    setPlusMuenzen(0);
+    setGesammelt(0);
     let endeUhr = 0;
     // Nur im ersten Level, und dort bei jedem Versuch: Wer zum ersten Mal
     // platzt, hat die Anleitung meist noch nicht verinnerlicht.
@@ -131,6 +140,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
     const uhr = setInterval(() => {
       setZeit(welt.zeit);
       setWeite(meter(welt));
+      setGesammelt(welt.gesammelt?.length ?? 0);
       if (tippJetzt === 'halten' && welt.geblaese.an) {
         tippJetzt = 'versetzt';
         tippSeit = welt.zeit;
@@ -219,8 +229,12 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
           setWeite(meter(w));
         } else if (w.ausgang === 'geschafft') {
           const vorher = lade();
-          const { f, neu } = mitSieg(vorher, lvl.id, w.zeit);
+          const { f: mitZeit, neu } = mitSieg(vorher, lvl.id, w.zeit);
+          const st = sterneFuer(w);
+          const { f, plusMuenzen: plus } = mitSternen(mitZeit, lvl.id, st, w.gesammelt?.length ?? 0);
           speichere(f);
+          setSterne(st);
+          setPlusMuenzen(plus);
           const alt = vorher.bestzeit[lvl.id];
           setRekord({ neu: neu && alt !== undefined, beste: alt ?? null });
         }
@@ -340,7 +354,14 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
           </svg>
           {t('spiel.zurueck')}
         </button>
-        <span className="px-3.5 py-2 rounded-full bg-black/40
+        {!endlos && level?.muenzen && (
+          <span className="schrift-rund px-3 py-1.5 rounded-full bg-black/40 border border-white/10
+                           flex items-center gap-1.5 tabular-nums text-base">
+            <Muenze klein />
+            {gesammelt}/{level.muenzen.length}
+          </span>
+        )}
+        <span className="schrift-rund text-base px-3.5 py-1.5 rounded-full bg-black/40
                          border border-white/10 tabular-nums">
           {endlos
             ? t('spiel.meter', { m: Math.floor(weite) })
@@ -370,18 +391,32 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
         <div className="absolute inset-0 grid place-items-center px-8
                         bg-gradient-to-b from-black/45 via-black/60 to-black/75
                         animate-[einblenden_240ms_ease-out]">
-          <div className="text-center text-white max-w-xs">
-            <p className="text-6xl mb-3 drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)]">
-              {ende === 'geschafft' ? '🎈' : '💥'}
-            </p>
-            <h2 className="text-3xl font-black tracking-tight mb-1.5">{t(`spiel.ende.${ende}`)}</h2>
-            <p className="text-white/75 leading-relaxed">
+          <div className="text-center text-white w-full max-w-xs rounded-[28px] px-6 pt-6 pb-6
+                          bg-gradient-to-b from-[#24407f]/95 to-[#12204f]/95 border border-white/15
+                          shadow-2xl shadow-black/40 animate-[auftauchen_380ms_cubic-bezier(.2,1.4,.4,1)]">
+            <div className="mx-auto mb-2 w-20 h-20 grid place-items-center">
+              {ende === 'geschafft' ? <BallonSymbol /> : <PlatzSymbol />}
+            </div>
+            <h2 className="schrift-rund text-3xl font-bold tracking-tight mb-1">{t(`spiel.ende.${ende}`)}</h2>
+            {ende === 'geschafft' && !endlos && (
+              <div className="flex justify-center gap-2 my-2" aria-label={`${sterne}/3`}>
+                {[0, 1, 2].map((i) => (
+                  <Stern key={i} an={i < sterne} verzoegerung={250 + i * 220} gross={i === 1} />
+                ))}
+              </div>
+            )}
+            <p className="text-white/80 leading-relaxed">
               {endlos
                 ? t('spiel.weit', { m: Math.floor(weite) })
                 : ende === 'geschafft'
                   ? t('spiel.gebraucht', { s: zeit.toFixed(1) })
                   : t('spiel.trostworte')}
             </p>
+            {plusMuenzen > 0 && (
+              <p className="schrift-rund mt-1 flex items-center justify-center gap-1.5 text-[#ffe48a] text-lg">
+                <Muenze klein /> +{plusMuenzen}
+              </p>
+            )}
             {(ende === 'geschafft' || endlos) && rekord && (
               <p className="mt-1 text-sm font-semibold text-[#ffe48a]">
                 {endlos
@@ -418,12 +453,12 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
             <div className="flex gap-3 justify-center">
               <button onClick={nochmal}
                 className="px-6 py-3.5 rounded-2xl bg-white text-[#12204f] font-bold
-                           shadow-lg shadow-black/25 active:scale-95 transition">
+                           shadow-lg shadow-black/25 active:scale-95 transition schrift-rund">
                 {t('spiel.nochmal')}
               </button>
               <button onClick={zurLevelwahl}
                 className="px-6 py-3.5 rounded-2xl bg-white/12 border border-white/20
-                           font-semibold active:scale-95 transition">
+                           font-semibold active:scale-95 transition schrift-rund">
                 {t('spiel.levelwahl')}
               </button>
             </div>
@@ -431,5 +466,61 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
         </div>
       )}
     </div>
+  );
+}
+
+// ------------------------------------------------------------- kleine Bilder
+// Gezeichnet statt Emoji (Neugestaltung 23.11.2026): Emoji sehen auf jedem
+// Geraet anders aus und wirkten billig.
+
+function Muenze({ klein }: { klein?: boolean }) {
+  const g = klein ? 'w-5 h-5' : 'w-8 h-8';
+  return (
+    <svg viewBox="0 0 24 24" className={g} aria-hidden="true">
+      <defs>
+        <linearGradient id="mz" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fff3a8" /><stop offset=".45" stopColor="#ffc93c" /><stop offset="1" stopColor="#d9860b" />
+        </linearGradient>
+      </defs>
+      <circle cx="12" cy="13" r="10" fill="#a8650a" />
+      <circle cx="12" cy="12" r="10" fill="url(#mz)" />
+      <circle cx="12" cy="12" r="6.6" fill="none" stroke="#fff" strokeOpacity=".55" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+function Stern({ an, verzoegerung, gross }: { an: boolean; verzoegerung: number; gross?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true"
+      className={`${gross ? 'w-14 h-14 -mt-2' : 'w-11 h-11'} ${an ? 'anim-stern' : 'opacity-35'}`}
+      style={an ? { animationDelay: `${verzoegerung}ms` } : undefined}>
+      <defs>
+        <linearGradient id="st" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff1a0" /><stop offset=".5" stopColor="#ffc93c" /><stop offset="1" stopColor="#e08a0b" />
+        </linearGradient>
+      </defs>
+      <path d="M12 2.6l2.8 6 6.5.7-4.9 4.4 1.4 6.4L12 16.8l-5.8 3.3 1.4-6.4-4.9-4.4 6.5-.7z"
+        fill={an ? 'url(#st)' : '#0b1638'} stroke={an ? '#fff6c8' : '#ffffff40'} strokeWidth="1.1" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function BallonSymbol() {
+  return (
+    <img src="/bilder/ballon.png" alt="" className="h-20 drop-shadow-[0_8px_14px_rgba(0,0,0,0.4)] anim-schweben-klein" />
+  );
+}
+
+function PlatzSymbol() {
+  return (
+    <svg viewBox="0 0 80 80" className="w-20 h-20" aria-hidden="true">
+      <g fill="#e63a52">
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+          <path key={i} transform={`rotate(${i * 45 + 10} 40 40) translate(40 14)`}
+            d="M-6 -3 Q0 -8 7 -2 Q3 4 -5 4 Z" opacity={i % 2 ? 0.75 : 1} />
+        ))}
+      </g>
+      <circle cx="40" cy="40" r="12" fill="none" stroke="#fff" strokeWidth="3" strokeOpacity=".85" />
+    </svg>
   );
 }

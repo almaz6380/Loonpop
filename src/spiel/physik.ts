@@ -27,6 +27,9 @@ import { nadelnIn, bodenNachziehen, endlosWind } from './endlos.ts';
 import { unverwundbar } from './weiterfliegen.ts';
 import { steuern, STOSS, STOSS_PAUSE } from './steuerung.ts';
 
+/** Wie gross eine Muenze rechnet (px). Exportiert fuers Zeichnen (Falle 7). */
+export const MUENZ_RADIUS = 16;
+
 /** Ein Physikschritt = 1/120 Sekunde. */
 export const DT = 1 / 120;
 
@@ -277,6 +280,17 @@ export function schritt(welt: Welt): void {
     if (streckeTrifftNadel(ballon.vorher, ballon.pos, r, n.von, n.bis)) {
       welt.ausgang = 'geplatzt';
       return;
+    }
+  }
+
+  // --- Muenzen ------------------------------------------------------------
+  const muenzen = level.muenzen;
+  if (muenzen) {
+    for (let i = 0; i < muenzen.length; i++) {
+      if (welt.gesammelt?.includes(i)) continue;
+      if (laenge(minus(muenzen[i], ballon.pos)) < r + MUENZ_RADIUS) {
+        (welt.gesammelt ??= []).push(i);
+      }
     }
   }
 

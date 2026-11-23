@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { mitSieg, mitWeite, naechstes, offen, type Fortschritt } from './fortschritt.ts';
+import { mitSieg, mitSternen, mitWeite, naechstes, offen, type Fortschritt } from './fortschritt.ts';
 
 const leer = (): Fortschritt => ({ v: 1, bestzeit: {} });
 
@@ -53,4 +53,16 @@ test('der Spielen-Knopf startet das erste offene, nicht geschaffte Level', () =>
   assert.equal(naechstes({ v: 1, bestzeit: { 1: 5, 2: 7 } }, ids), 2);
   // Alles geschafft: das letzte, dort jagt man Bestzeiten.
   assert.equal(naechstes({ v: 1, bestzeit: { 1: 5, 2: 7, 3: 9, 6: 4 } }, ids), 3);
+});
+
+test('Sterne bleiben beim Besten, Muenzkonto zaehlt nur Verbesserungen', () => {
+  let r = mitSternen({ v: 1, bestzeit: {} }, 3, 2, 2);
+  assert.equal(r.plusMuenzen, 2);
+  assert.equal(r.f.muenzen, 2);
+  r = mitSternen(r.f, 3, 1, 2);
+  assert.equal(r.plusMuenzen, 0);
+  assert.equal(r.f.sterne?.[3], 2);
+  r = mitSternen(r.f, 3, 3, 3);
+  assert.equal(r.f.muenzen, 3);
+  assert.ok(r.neueSterne);
 });

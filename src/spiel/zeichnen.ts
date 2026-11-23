@@ -13,7 +13,7 @@
 // ein Screenshot liesse sich nie wiederholen.
 
 import type { Welt, Punkt } from './typen.ts';
-import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe } from './physik.ts';
+import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe, MUENZ_RADIUS } from './physik.ts';
 import { nadelnIn, meter } from './endlos.ts';
 import { ballonform, KNOTEN, BALLON_BILD_SEITEN } from './ballonform.ts';
 import { unverwundbar } from './weiterfliegen.ts';
@@ -755,6 +755,40 @@ export function zeichne(
             z.pos.y + Math.sin(w) * z.radius * 1.28, 2.6, 0, Math.PI * 2);
     ctx.fill();
   }
+  }
+
+  // --- Muenzen ------------------------------------------------------------
+  // Gemalt, bis Josefs Gemini-Muenze da ist (muenze.png). Sie dreht sich, indem
+  // sie in der Breite pulsiert — ein billiger, aber glaubhafter 3D-Eindruck.
+  if (level.muenzen) {
+    const muenzBild = bild('/bilder/muenze.png');
+    level.muenzen.forEach((m, i) => {
+      if (welt.gesammelt?.includes(i)) return;
+      const dreh = Math.cos(welt.zeit * 3.2 + i * 1.3);
+      const schweben = Math.sin(welt.zeit * 2.4 + i) * 4;
+      ctx.save();
+      ctx.translate(m.x, m.y + schweben);
+      ctx.scale(Math.max(0.18, Math.abs(dreh)), 1);
+      const R = MUENZ_RADIUS;
+      if (muenzBild) {
+        ctx.drawImage(muenzBild, -R * 1.15, -R * 1.15, R * 2.3, R * 2.3);
+      } else {
+        const g = ctx.createLinearGradient(-R, -R, R, R);
+        g.addColorStop(0, '#fff3a8');
+        g.addColorStop(0.45, '#ffc93c');
+        g.addColorStop(1, '#d9860b');
+        ctx.fillStyle = '#a8650a';
+        ctx.beginPath(); ctx.arc(0, 2, R, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(0, 0, R * 0.68, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.beginPath(); ctx.ellipse(-R * 0.35, -R * 0.4, R * 0.18, R * 0.3, -0.5, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    });
   }
 
   // --- Nadeln -------------------------------------------------------------

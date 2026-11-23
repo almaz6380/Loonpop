@@ -608,5 +608,20 @@
     "blaskraft": 560,
     "daempfung": 1.5,
     "zeitlimit": 0
-  }
+  },
+  "muenzen": [
+    {
+      "x": 325,
+      "y": 825
+    },
+    {
+      "x": 515,
+      "y": 725
+    },
+    {
+      "x": 515,
+      "y": 435
+    }
+  ],
+  "sterneZeit": 17
 }

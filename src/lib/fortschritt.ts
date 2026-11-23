@@ -23,6 +23,12 @@ export type Fortschritt = {
    * Endlos-Modus ohne Umbau weiter gelten.
    */
   endlos?: Partial<Record<EndlosArt, number>>;
+  /** Beste Sternzahl je Level-ID (seit 23.11.2026). */
+  sterne?: Record<string, number>;
+  /** Meiste eingesammelte Muenzen je Level-ID — das Konto zaehlt nur Verbesserungen. */
+  muenzenLevel?: Record<string, number>;
+  /** Muenzkonto (fuer Ballon-Skins). */
+  muenzen?: number;
 };
 
 const leer = (): Fortschritt => ({ v: 1, bestzeit: {} });
@@ -39,7 +45,13 @@ export function lade(): Fortschritt {
     const f = JSON.parse(roh) as Partial<Fortschritt>;
     if (f.v !== 1 || typeof f.bestzeit !== 'object' || f.bestzeit === null) return leer();
     const endlos = typeof f.endlos === 'object' && f.endlos !== null ? f.endlos : undefined;
-    return { v: 1, bestzeit: f.bestzeit, ...(endlos ? { endlos } : {}) };
+    const obj = (x: unknown) => (typeof x === 'object' && x !== null ? x as Record<string, number> : undefined);
+    return {
+      v: 1, bestzeit: f.bestzeit, ...(endlos ? { endlos } : {}),
+      ...(obj(f.sterne) ? { sterne: obj(f.sterne) } : {}),
+      ...(obj(f.muenzenLevel) ? { muenzenLevel: obj(f.muenzenLevel) } : {}),
+      ...(typeof f.muenzen === 'number' ? { muenzen: f.muenzen } : {}),
+    };
   } catch {
     return leer();
   }
@@ -82,4 +94,25 @@ export function mitWeite(f: Fortschritt, art: EndlosArt, meter: number): { f: Fo
   const alt = f.endlos?.[art];
   if (alt !== undefined && alt >= meter) return { f, neu: false };
   return { f: { ...f, endlos: { ...f.endlos, [art]: meter } }, neu: true };
+}
+
+/**
+ * Traegt Sterne und Muenzen eines geschafften Laufs ein. Ins Konto kommt nur,
+ * was ueber das bisher Beste in diesem Level hinausgeht — sonst liesse sich ein
+ * leichtes Level endlos melken.
+ */
+export function mitSternen(f: Fortschritt, id: number, sterne: number, muenzen: number): { f: Fortschritt; neueSterne: boolean; plusMuenzen: number } {
+  const alteSterne = f.sterne?.[id] ?? 0;
+  const alteMuenzen = f.muenzenLevel?.[id] ?? 0;
+  const plusMuenzen = Math.max(0, muenzen - alteMuenzen);
+  return {
+    f: {
+      ...f,
+      sterne: { ...f.sterne, [id]: Math.max(alteSterne, sterne) },
+      muenzenLevel: { ...f.muenzenLevel, [id]: Math.max(alteMuenzen, muenzen) },
+      muenzen: (f.muenzen ?? 0) + plusMuenzen,
+    },
+    neueSterne: sterne > alteSterne,
+    plusMuenzen,
+  };
 }

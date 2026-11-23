@@ -65,6 +65,10 @@ export type Level = {
   ziel: { pos: Punkt; radius: number };
   nadeln: Nadel[];
   zonen: Zone[];
+  /** Muenzen zum Einsammeln (seit 23.11.2026). Alle = ein Stern. */
+  muenzen?: Punkt[];
+  /** Unter dieser Zeit (Spielsekunden) gibt es einen Stern. */
+  sterneZeit?: number;
   /**
    * Staendiger Wind ueber das ganze Level (px/s²). Auf Strecken treibt er den
    * Ballon nach rechts — sonst muesste man ihn ueber den Strahlrand
@@ -151,6 +155,8 @@ export type Welt = {
   endlos?: Endlos;
   /** Ist dieser Lauf schon einmal weitergeflogen? (weiterfliegen.ts) */
   weitergeflogen?: boolean;
+  /** Indizes der eingesammelten Muenzen (level.muenzen). */
+  gesammelt?: number[];
   /** Bis zu welcher Spielzeit der Ballon nicht platzen kann (weiterfliegen.ts). */
   unverwundbarBis?: number;
 };

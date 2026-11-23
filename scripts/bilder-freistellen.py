@@ -39,7 +39,10 @@ def freistellen(bild: Image.Image, art: str) -> Image.Image:
         schluessel = np.array([0, 255, 0], np.float32)
     else:
         abstand = np.minimum(r, b) - g
-        schluessel = np.array([255, 0, 255], np.float32)
+        # Gemini trifft #FF00FF nie genau (23.11.2026: etwa 240/10/230). Mit
+        # der Idealfarbe gerechnet blieb an den Kanten ein lila Saum. Die
+        # echte Farbe steht in der linken oberen Ecke.
+        schluessel = np.median(a[:20, :20].reshape(-1, 3), axis=0)
     # Ab 30 Abstand beginnt der Hintergrund, ab 120 ist es nur noch Hintergrund.
     alpha = 1 - np.clip((abstand - 30) / 90, 0, 1)
     # Vordergrund zurueckrechnen: beobachtet = a·vorne + (1−a)·schluessel.
@@ -54,6 +57,12 @@ def freistellen(bild: Image.Image, art: str) -> Image.Image:
         vorne[..., 0] -= stich
         vorne[..., 2] -= stich
     alpha[alpha < 0.04] = 0
+    if art != 'gruen':
+        # Gemini malt um Natur-Motive einen weichen lila Schein in den
+        # Hintergrund. Den Rand deshalb um ein Pixel einziehen (23.11.2026).
+        from PIL import ImageFilter
+        a8 = Image.fromarray((alpha * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(3))
+        alpha = np.asarray(a8).astype(np.float32) / 255
     raus = np.dstack([vorne, alpha * 255]).astype(np.uint8)
     return Image.fromarray(raus, 'RGBA')
 

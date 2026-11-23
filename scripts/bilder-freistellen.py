@@ -127,7 +127,11 @@ def main() -> None:
         ZIEL / 'menue-himmel.jpg', quality=85)
 
     himmel = Image.open(QUELLEN / 'himmel.jpg').convert('RGB')
-    himmel.resize((360, 728), Image.LANCZOS).save(ZIEL / 'himmel.jpg', quality=88)
+    # Seit 23.11.2026 in voller Breite: Mit 360 px wurde der Himmel auf dem
+    # ganzen Schirm sichtbar unscharf.
+    breite = min(1080, himmel.width)
+    himmel.resize((breite, round(himmel.height * breite / himmel.width)), Image.LANCZOS).save(
+        ZIEL / 'himmel.jpg', quality=85)
 
     for p in sorted(ZIEL.iterdir()):
         print(p.name, Image.open(p).size, p.stat().st_size // 1024, 'KB')

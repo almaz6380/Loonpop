@@ -58,6 +58,17 @@ def freistellen(bild: Image.Image, art: str) -> Image.Image:
         vorne[..., 2] -= stich
     alpha[alpha < 0.04] = 0
     if art != 'gruen':
+        # Rosa Saum an Grashalmen (23.11.2026): an halb durchsichtigen Kanten
+        # Rot und Blau nicht ueber Gruen kommen lassen.
+        # Gemini malt den Schein auch in deckende Pixel nahe der Kante — deshalb
+        # alles bis 4 px vom durchsichtigen Grund, nicht nur halbdurchsichtige.
+        from PIL import ImageFilter as _F
+        nah = np.asarray(Image.fromarray((alpha * 255).astype(np.uint8)).filter(_F.MinFilter(9))) < 247
+        kante = (alpha > 0) & nah
+        g = vorne[..., 1]
+        vorne[..., 0] = np.where(kante, np.minimum(vorne[..., 0], g * 1.15 + 10), vorne[..., 0])
+        vorne[..., 2] = np.where(kante, np.minimum(vorne[..., 2], g), vorne[..., 2])
+        raus_kante = True
         # Gemini malt um Natur-Motive einen weichen lila Schein in den
         # Hintergrund. Den Rand deshalb um ein Pixel einziehen (23.11.2026).
         from PIL import ImageFilter

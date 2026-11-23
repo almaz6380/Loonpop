@@ -442,7 +442,8 @@ function wiese(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: 
   if (wiesenBild) {
     ctx.fillStyle = '#3e6a3a';
     ctx.fillRect(von, bodenY + 60, bis - von, hoehe - bodenY - 60);
-    kacheln(ctx, wiesenBild, von, bis, 0, bodenY - 46, 136);
+    // 23.11.2026: hoeher, damit unter dem Gras kein flacher Streifen bleibt.
+    kacheln(ctx, wiesenBild, von, bis, 0, bodenY - 52, 176);
     return;
   }
 

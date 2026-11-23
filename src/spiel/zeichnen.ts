@@ -640,12 +640,15 @@ function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bo
   // ⚠ Am KNOTEN beginnen, nicht fest unter der Mitte — sonst passt die
   // Schnur nicht mehr zum Ballon, sobald er sich neigt (siehe ballonform.ts).
   const k = form.knoten;
-  ctx.moveTo(k.x, k.y);
-  ctx.quadraticCurveTo(
-    k.x - ballon.geschw.x * 0.03, k.y + 14,
-    k.x - ballon.geschw.x * 0.05, k.y + 30,
-  );
-  ctx.stroke();
+  // Der Heissluftballon hat einen Korb statt eines Knotens: keine Schnur.
+  if (skin !== 'heissluft') {
+    ctx.moveTo(k.x, k.y);
+    ctx.quadraticCurveTo(
+      k.x - ballon.geschw.x * 0.03, k.y + 14,
+      k.x - ballon.geschw.x * 0.05, k.y + 30,
+    );
+    ctx.stroke();
+  }
 
   ctx.save();
   ctx.translate(pos.x, pos.y);

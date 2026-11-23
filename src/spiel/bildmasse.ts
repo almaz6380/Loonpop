@@ -6,11 +6,11 @@ import { MUND } from './physik.ts';
 /** Das Geblaesebild (public/bilder/geblaese.png), Anteile an Breite bzw. Hoehe. */
 export const GEBLAESE_BILD = {
   /** Breite zu Hoehe des ganzen Bilds. */
-  seiten: 0.7701,
+  seiten: 0.7207,
   /** Mitte der Trichteroeffnung, Anteil der Bildbreite. */
-  oeffnungMitte: 0.4988,
+  oeffnungMitte: 0.5,
   /** Aussenbreite des Trichterrands, Anteil der Bildbreite. */
-  oeffnungBreite: 0.6045,
+  oeffnungBreite: 0.9911,
 };
 
 /**
@@ -20,8 +20,11 @@ export const GEBLAESE_BILD = {
  * Mit 56 px ragte das Bild so weit unter den Rand, dass vom Motor fast nichts
  * mehr zu sehen war (02.10.2026). Das erste Bild mit langem Rohr waere sogar
  * nur 12 px schmal gewesen.
+ * Seit 23.11.2026 (Gemini-Gebläse in 3D-Optik) ist der Trichter so breit wie
+ * das ganze Gerät. Mit 68 px (= Strahl) reicht es fast von der Düse bis zum Boden; der
+ * Strahl tritt also aus der vollen Öffnung.
  */
-export const TRICHTER_BREITE = 48;
+export const TRICHTER_BREITE = 68;
 
 /** Die Groesse, in der das Geblaesebild gezeichnet wird. */
 export function geblaeseMass() {

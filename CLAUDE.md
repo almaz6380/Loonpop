@@ -53,12 +53,17 @@ weiter das ausdrückliche „ja".
 nach dem Loslassen weiter. Wer das „schwammig" findet und die Dämpfung hochdreht,
 baut ein anderes Spiel — das Vorausdenken IST die Aufgabe.
 
-**1a. Das Gebläse lässt sich NICHT drehen.** Es bläst senkrecht nach oben; der
-Strahl wird nach oben breiter und schwächer. Seitlich gesteuert wird über die
-**eigene Position**: Am Strahlrand getroffen, wird der Ballon zur Seite gedrückt.
-⚠ Wer hier eine Neigung einbaut, nimmt dem Spiel seine einzige Idee. Die
-Steuerung war bis zum 27.09.2026 falsch gebaut (tippen, wohin der Wind soll) —
-das war ein anderes Spiel.
+**1a. Das Gebläse KIPPT (seit 23.11.2026, Josefs Entscheidung).** Bis dahin blies
+es nur senkrecht, seitlich ging es allein über den Strahlrand — Josef: zu träge,
+„was ist, wenn ich schnell nach links oder rechts will?“. Jetzt (`steuerung.ts`):
+Das Gebläse fährt dem Finger auf einer Schiene nach (höchstens `FAHRT_MAX`),
+kippt je nach Vorsprung des Fingers bis 40°, und ein kurzer Wisch gibt einen
+Windstoß (Abklingzeit 1,5 s). Still stehend bläst es senkrecht, der Strahlrand
+drückt weiter zur Seite. Gerechnet wird in der Physik (`schritt` → `steuern`),
+nicht im Zeichnen; `strahlKraft` rechnet im gedrehten Kegel, `zeichnen.ts` dreht
+denselben Kegel (Falle 7). Ohne `ziel` (Bot, alte Tests) verhält es sich wie vorher.
+**Bildausschnitt:** Hoch-Level füllen seit 23.11.2026 die Bildschirmhöhe, die
+Kamera folgt dem Ballon seitlich (`kameraMitte`), keine dunklen Balken mehr.
 
 **2. Tempo kommt über den Level, nie über die Physik.** Schneller wird ein Level
 durch engere Gassen, stärkeren Wind (`tempo.windKraft`) und Zeitlimits. Ein

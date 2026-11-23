@@ -92,9 +92,8 @@ export type Level = {
 
 /**
  * Das Laubgeblaese — die Spielfigur. Es steht am unteren Rand, faehrt mit dem
- * Finger waagerecht mit und blaest SENKRECHT nach oben. Drehen laesst es sich
- * nicht: Seitlich gesteuert wird, indem man sich versetzt hinstellt (siehe
- * physik.ts, Strahlmodell).
+ * Finger waagerecht mit und kippt in Fahrtrichtung (seit 23.11.2026, siehe
+ * steuerung.ts). Still stehend blaest es senkrecht nach oben.
  */
 export type Geblaese = {
   /** Waagerechte Position der Duese in Levelkoordinaten. */
@@ -106,6 +105,17 @@ export type Geblaese = {
    * dem Loslassen ist das Spielgefuehl, kein Fehler.
    */
   staerke: number;
+  /**
+   * Wohin der Finger das Geblaese zieht (Levelkoordinaten). Fehlt, wenn kein
+   * Finger liegt — dann bleibt es stehen (steuerung.ts).
+   */
+  ziel?: number;
+  /** Neigung des Strahls (Bogenmass, + = nach rechts). Siehe steuerung.ts. */
+  neigung?: number;
+  /** Angeforderter Windstoss (-1 links, 1 rechts). Die Physik verbraucht ihn. */
+  stoss?: -1 | 0 | 1;
+  /** Ab welcher Spielzeit der naechste Windstoss wieder geht. */
+  stossFrei?: number;
 };
 
 export type Ballon = {

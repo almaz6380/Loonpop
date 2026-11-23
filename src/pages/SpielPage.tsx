@@ -13,7 +13,7 @@ import { starteSchleife } from '../spiel/schleife.ts';
 import { glaetten, KAMERA_TEMPO } from '../spiel/kamera.ts';
 import { naechsteDichte, startDichte, DICHTE_FENSTER } from '../spiel/dichte.ts';
 import {
-  sichtBerechnen, sichtEndlosHoch, kameraFuer, kameraYFuer, zuLevel, zeichne, type Sicht,
+  sichtBerechnen, sichtEndlosHoch, kameraFuer, kameraMitte, kameraYFuer, zuLevel, zeichne, type Sicht,
 } from '../spiel/zeichnen.ts';
 import { neueEndlosWelt, neuerSeed, meter } from '../spiel/endlos.ts';
 import type { Ausgang, EndlosArt, Level, Welt } from '../spiel/typen.ts';
@@ -23,6 +23,7 @@ import * as haptik from '../lib/haptik.ts';
 import { platzerGezaehlt, vielleichtVollbild, weiterfliegenMoeglich, zeigeBelohnungsvideo } from '../lib/werbung.ts';
 import { vielleichtUmBewertungBitten } from '../lib/bewertung.ts';
 import { kannWeiterfliegen, weiterfliegen } from '../spiel/weiterfliegen.ts';
+import { istWisch } from '../spiel/steuerung.ts';
 import { LEVEL } from '../spiel/level/index.ts';
 
 /**
@@ -41,8 +42,8 @@ type Tipp = 'halten' | 'versetzt' | null;
 
 /** So lange bleibt „versetzt stehen“ höchstens stehen (Spielsekunden). */
 const TIPP_DAUER = 8;
-/** Ab dieser Seitwärtsfahrt (px/s) hat man das Lenken offenbar verstanden. */
-const TIPP_SEITWAERTS = 45;
+/** Ab dieser Neigung (rad) hat man das Kippen offenbar verstanden. */
+const TIPP_NEIGUNG = 0.35;
 
 /**
  * Die Pixeldichte, die dieses Geraet schafft (siehe dichte.ts). Ausserhalb der
@@ -82,6 +83,8 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
    * dem Schirm du stehst.
    */
   const fingerRef = useRef<number | null>(null);
+  /** Wo und wann der Finger aufgesetzt hat — fuer den Wisch-Windstoss. */
+  const wischRef = useRef<{ x: number; t: number } | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -133,7 +136,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
         tippSeit = welt.zeit;
         setTipp(tippJetzt);
       } else if (tippJetzt === 'versetzt' && (welt.zeit - tippSeit > TIPP_DAUER
-        || Math.abs(welt.ballon.geschw.x) > TIPP_SEITWAERTS || welt.ausgang !== 'laeuft')) {
+        || Math.abs(welt.geblaese.neigung ?? 0) > TIPP_NEIGUNG || welt.ausgang !== 'laeuft')) {
         tippJetzt = null;
         setTipp(null);
       }
@@ -163,6 +166,10 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
         // ⚠ Die Kamera wird beim ZEICHNEN nachgefuehrt, nicht in der Physik.
         // Sonst haenge der Weltzustand vom Bildschirm ab und derselbe Lauf
         // liefe auf zwei Geraeten verschieden.
+        if (lvl.art === 'hoch' && !endlos) {
+          const ziel = kameraMitte(sichtRef.current, w.ballon.pos.x, lvl.groesse.breite);
+          sichtRef.current.kameraX = glaetten(sichtRef.current.kameraX, ziel, dt, KAMERA_TEMPO.strecke);
+        }
         if (lvl.art === 'strecke') {
           const ziel = kameraFuer(sichtRef.current, w.ballon.pos.x, lvl.groesse.breite);
           // Weich nachziehen, damit das Bild nicht am Ballon klebt.
@@ -177,12 +184,12 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
           sichtRef.current.kameraY = jetzt === undefined || Math.abs(ziel - jetzt) > 600
             ? ziel : glaetten(jetzt, ziel, dt, KAMERA_TEMPO.hoch);
         }
-        // Geblaese der Kamera nachfuehren — jedes Bild, nicht nur wenn sich der
-        // Finger bewegt.
-        if (fingerRef.current !== null) {
-          const im = zuLevel({ x: fingerRef.current, y: 0 }, sichtRef.current);
-          w.geblaese.x = Math.max(40, Math.min(lvl.groesse.breite - 40, im.x));
-        }
+        // Das Ziel des Geblaeses jedes Bild neu umrechnen, nicht nur wenn sich
+        // der Finger bewegt (die Kamera kann wandern). Hinfahren und Kippen
+        // rechnet die Physik (steuerung.ts) — sonst hinge es an der Bildrate.
+        w.geblaese.ziel = fingerRef.current === null
+          ? undefined
+          : zuLevel({ x: fingerRef.current, y: 0 }, sichtRef.current).x;
         ctx.setTransform(dichte!, 0, 0, dichte!, 0, 0);
         zeichne(ctx, w, blende, sichtRef.current);
         // Nach dem Ende rechnet die Physik nicht weiter, die Stärke bliebe
@@ -248,11 +255,19 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
   };
   const anschalten = (e: React.PointerEvent<HTMLCanvasElement>) => {
     fahren(e);
+    wischRef.current = { x: e.clientX, t: performance.now() };
     ton.wecken();
     haptik.tippen();
     if (weltRef.current) weltRef.current.geblaese.an = true;
   };
-  const loslassen = () => {
+  const loslassen = (e?: React.PointerEvent<HTMLCanvasElement>) => {
+    // Kurz und schnell seitwaerts gewischt? Dann ein Windstoss (steuerung.ts).
+    const w0 = wischRef.current;
+    wischRef.current = null;
+    if (e && w0 && weltRef.current) {
+      const r = istWisch(e.clientX - w0.x, performance.now() - w0.t);
+      if (r) { weltRef.current.geblaese.stoss = r; haptik.tippen(); }
+    }
     if (weltRef.current) weltRef.current.geblaese.an = false;
     // Der Finger ist weg — das Geblaese bleibt stehen, wo es zuletzt war.
     fingerRef.current = null;
@@ -308,7 +323,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
         onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); anschalten(e); }}
         onPointerMove={(e) => { if (e.buttons > 0 || e.pointerType === 'touch') fahren(e); }}
         onPointerUp={loslassen}
-        onPointerCancel={loslassen}
+        onPointerCancel={() => loslassen()}
       />
 
       {/* HUD. ⚠ Auf Android (ab 15 randlos) meldet Capacitor die Statusleiste

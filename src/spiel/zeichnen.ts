@@ -160,12 +160,16 @@ export function sichtBerechnen(
   // ⚠ Auf Strecken bestimmt allein die HOEHE die Skala. Wuerde hier wie bei
   // `hoch` das Minimum genommen, schrumpfte eine 2400 px breite Strecke auf
   // Briefmarkengroesse.
+  // Hoch-Level (seit 23.11.2026): die HOEHE fuellt den Schirm, keine dunklen
+  // Balken mehr. Ist das Level dann breiter als der Schirm, folgt die Kamera
+  // dem Ballon seitlich (kameraMitte). Hoechstens ein Viertel darf fehlen,
+  // sonst sieht man die Nadeln nicht mehr kommen.
   const skala = art === 'strecke'
     ? hoehe / levelHoehe
-    : Math.min(breite / levelBreite, hoehe / levelHoehe);
+    : Math.min(hoehe / levelHoehe, breite / (levelBreite * 0.75));
   return {
     skala,
-    randX: art === 'strecke' ? 0 : (breite - levelBreite * skala) / 2,
+    randX: art === 'strecke' ? 0 : Math.max(0, (breite - levelBreite * skala) / 2),
     randY: (hoehe - levelHoehe * skala) / 2,
     breite,
     hoehe,
@@ -184,6 +188,13 @@ export function kameraFuer(sicht: Sicht, ballonX: number, levelBreite: number): 
   const sichtbar = sicht.breite / sicht.skala;
   const wunsch = ballonX - sichtbar * 0.38;
   return Math.max(0, Math.min(levelBreite - sichtbar, wunsch));
+}
+
+/** Hoch-Level breiter als der Schirm: Ballon mittig halten, nie ueber den Rand. */
+export function kameraMitte(sicht: Sicht, ballonX: number, levelBreite: number): number {
+  const sichtbar = sicht.breite / sicht.skala;
+  if (sichtbar >= levelBreite) return 0;
+  return Math.max(0, Math.min(levelBreite - sichtbar, ballonX - sichtbar / 2));
 }
 
 /** Bildschirmpunkt → Levelkoordinate. Fuer die Fingereingabe. */
@@ -404,12 +415,18 @@ function zeichneGeblaese(ctx: CanvasRenderingContext2D, welt: Welt, gy: number, 
   if (geblaeseBild) {
     const { breite, hoehe } = geblaeseMass();
     const zittern = Math.sin(welt.zeit * 70) * 0.8 * st;
-    ctx.drawImage(geblaeseBild, gx - GEBLAESE_BILD.oeffnungMitte * breite + zittern, gy - 3, breite, hoehe);
+    // Um die Duese gedreht, damit Strahl und Trichter zusammenpassen.
+    ctx.save();
+    ctx.translate(gx, gy);
+    ctx.rotate(welt.geblaese.neigung ?? 0);
+    ctx.drawImage(geblaeseBild, -GEBLAESE_BILD.oeffnungMitte * breite + zittern, -3, breite, hoehe);
+    ctx.restore();
     return;
   }
 
   ctx.save();
   ctx.translate(gx, gy);
+  ctx.rotate(welt.geblaese.neigung ?? 0);
 
   // Duese
   const duese = ctx.createLinearGradient(-30, -14, 30, 6);
@@ -745,16 +762,22 @@ export function zeichne(
   const gy = welt.boden - DUESE_HOEHE;
   const st = welt.geblaese.staerke;
   if (st > 0.02) {
-    const kegel = ctx.createLinearGradient(0, gy, 0, oben);
+    // Gedreht um die Duese — genau wie strahlKraft rechnet (steuerung.ts).
+    const neigung = welt.geblaese.neigung ?? 0;
+    const laenge = (gy - oben) / Math.max(0.6, Math.cos(neigung));
+    ctx.save();
+    ctx.translate(gx, gy);
+    ctx.rotate(neigung);
+    const kegel = ctx.createLinearGradient(0, 0, 0, -laenge);
     kegel.addColorStop(0, `rgba(255,255,255,${0.4 * st})`);
     kegel.addColorStop(0.5, `rgba(226,244,255,${0.17 * st})`);
     kegel.addColorStop(1, 'rgba(226,244,255,0)');
     ctx.fillStyle = kegel;
     ctx.beginPath();
-    ctx.moveTo(gx - MUND, gy);
-    ctx.lineTo(gx - (MUND + (gy - oben) * AUFWEITUNG), oben);
-    ctx.lineTo(gx + (MUND + (gy - oben) * AUFWEITUNG), oben);
-    ctx.lineTo(gx + MUND, gy);
+    ctx.moveTo(-MUND, 0);
+    ctx.lineTo(-(MUND + laenge * AUFWEITUNG), -laenge);
+    ctx.lineTo(MUND + laenge * AUFWEITUNG, -laenge);
+    ctx.lineTo(MUND, 0);
     ctx.closePath();
     ctx.fill();
 
@@ -762,13 +785,14 @@ export function zeichne(
     // der Strahl noch traegt.
     for (let i = 0; i < 16; i++) {
       const p = ((welt.zeit * (0.55 + (i % 4) * 0.12) + i / 16) % 1);
-      const y = gy - p * (gy - oben);
-      const seit = Math.sin(i * 12.9898 + welt.zeit * 0.8) * (MUND + (gy - y) * AUFWEITUNG) * 0.7;
+      const y = -p * laenge;
+      const seit = Math.sin(i * 12.9898 + welt.zeit * 0.8) * (MUND - y * AUFWEITUNG) * 0.7;
       ctx.fillStyle = `rgba(255,248,214,${(1 - p) * 0.8 * st})`;
       ctx.beginPath();
-      ctx.ellipse(gx + seit, y, 5, 3, p * 9, 0, Math.PI * 2);
+      ctx.ellipse(seit, y, 5, 3, p * 9, 0, Math.PI * 2);
       ctx.fill();
     }
+    ctx.restore();
   }
 
   zeichneGeblaese(ctx, welt, gy, bodenY);

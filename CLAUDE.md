@@ -473,7 +473,11 @@ Vorlage ist Anigosha, dort seit August 2026 im Store.
 
 Branch `claude/optimistic-darwin-k01rmb` (= `main` + `werbung`). ⚠ Erst nach
 `main`, wenn 1.1 eingereicht wird: `main` deployt die Browser-Version samt neuer
-Datenschutzerklärung automatisch. Nichts gebaut, nichts hochgeladen.
+Datenschutzerklärung automatisch.
+**23.11.2026 gebaut und hochgeladen:** Android versionCode 3 (1.1) im **internen Test**
+(`android-release` 45260881721, Edit `00397539210800141604`), iOS Build 3 (1.1) in App Store
+Connect (`ios-release` 45260887146, Delivery `f3612da4-…`), noch NICHT eingereicht.
+Apple warnt (90725): ab April 2027 nur noch mit iOS-27-SDK (Xcode 27).
 
 - **Werbung** (`src/lib/werbung.ts`): `MIT_TESTANZEIGEN = false`, echte IDs.
   Banner nur im Menü, Vollbild nach jedem dritten Platzen beim Tippen auf

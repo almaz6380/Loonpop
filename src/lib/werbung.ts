@@ -61,7 +61,8 @@ const LIVE = {
   android: {
     banner: 'ca-app-pub-8860791993288062/3122474399',
     vollbild: 'ca-app-pub-8860791993288062/8157066812',
-    rewarded: '',
+    // Belohnt „Weiterfliegen“, angelegt 23.11.2026.
+    rewarded: 'ca-app-pub-8860791993288062/3111035912',
   },
 };
 

@@ -42,8 +42,9 @@ for (const { code } of SPRACHEN) {
 test('jedes spielbare Level hat einen Namen in jeder Sprache', () => {
   const lv = new URL('../spiel/level/', import.meta.url);
   const hoch = readdirSync(lv).filter((d) => d.endsWith('.json'))
-    .map((d) => JSON.parse(readFileSync(new URL(d, lv), 'utf8')) as { id: number; art: string })
-    .filter((l) => l.art === 'hoch');
+    .map((d) => JSON.parse(readFileSync(new URL(d, lv), 'utf8')) as { id: number; art: string; welt?: number })
+    // Welten 2–4 heissen „<Weltname> <n>“ (menue.weltLevel), eigene Namen braucht nur Welt 1.
+    .filter((l) => l.art === 'hoch' && (l.welt ?? 1) === 1);
   for (const { code } of SPRACHEN) {
     const namen = lade(code).levelname as Baum;
     for (const l of hoch) assert.ok(namen[String(l.id)], `${code}: Level ${l.id} ohne Namen`);

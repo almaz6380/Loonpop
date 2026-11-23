@@ -29,6 +29,11 @@ export type Fortschritt = {
   muenzenLevel?: Record<string, number>;
   /** Muenzkonto (fuer Ballon-Skins). */
   muenzen?: number;
+  /** Gekaufte Ballon-Skins und der gewaehlte (siehe SKINS). */
+  skins?: string[];
+  skin?: string;
+  /** Tages-Herausforderung: Tag (lokal, JJJJ-MM-TT), Bestweite, Serie. */
+  tages?: { tag: string; beste: number; serie: number };
 };
 
 const leer = (): Fortschritt => ({ v: 1, bestzeit: {} });
@@ -51,6 +56,9 @@ export function lade(): Fortschritt {
       ...(obj(f.sterne) ? { sterne: obj(f.sterne) } : {}),
       ...(obj(f.muenzenLevel) ? { muenzenLevel: obj(f.muenzenLevel) } : {}),
       ...(typeof f.muenzen === 'number' ? { muenzen: f.muenzen } : {}),
+      ...(Array.isArray(f.skins) ? { skins: f.skins } : {}),
+      ...(typeof f.skin === 'string' ? { skin: f.skin } : {}),
+      ...(typeof f.tages === 'object' && f.tages !== null ? { tages: f.tages } : {}),
     };
   } catch {
     return leer();
@@ -115,4 +123,68 @@ export function mitSternen(f: Fortschritt, id: number, sterne: number, muenzen: 
     neueSterne: sterne > alteSterne,
     plusMuenzen,
   };
+}
+
+// ------------------------------------------------------------------ Welten
+// Neugestaltung 23.11.2026: Eine Welt oeffnet sich mit Sternen aus der
+// vorigen — anderthalb je Level. Wer jedes Level nur knapp schafft, muss also
+// zurueck und Muenzen oder Zeit holen; das ist der Grund, ueberhaupt Sterne
+// zu sammeln.
+
+/** Sterne, die man in Welt w−1 braucht, damit Welt w aufgeht. */
+export const sterneNoetig = (levelInVorigerWelt: number) => Math.ceil(levelInVorigerWelt * 1.5);
+
+export function sterneIn(f: Fortschritt, ids: number[]): number {
+  return ids.reduce((s, id) => s + (f.sterne?.[id] ?? 0), 0);
+}
+
+/** Ist Welt `w` (1-basiert) offen? `welten[i]` = IDs der Level in Welt i+1. */
+export function weltOffen(f: Fortschritt, welten: number[][], w: number): boolean {
+  if (w <= 1) return true;
+  const vorige = welten[w - 2];
+  return weltOffen(f, welten, w - 1) && sterneIn(f, vorige) >= sterneNoetig(vorige.length);
+}
+
+// ------------------------------------------------------------- Ballon-Skins
+
+export const SKINS = [
+  { id: 'rot', preis: 0 }, { id: 'blau', preis: 30 }, { id: 'gelb', preis: 30 },
+  { id: 'gruen', preis: 40 }, { id: 'lila', preis: 40 }, { id: 'stern', preis: 80 },
+  { id: 'herz', preis: 100 }, { id: 'heissluft', preis: 150 }, { id: 'gold', preis: 250 },
+] as const;
+export type SkinId = (typeof SKINS)[number]['id'];
+
+export function skinBesitzt(f: Fortschritt, id: SkinId): boolean {
+  return id === 'rot' || (f.skins?.includes(id) ?? false);
+}
+
+/** Kauft einen Skin, wenn das Konto reicht. Gibt null zurueck, wenn nicht. */
+export function skinKaufen(f: Fortschritt, id: SkinId): Fortschritt | null {
+  if (skinBesitzt(f, id)) return { ...f, skin: id };
+  const preis = SKINS.find((s) => s.id === id)!.preis;
+  if ((f.muenzen ?? 0) < preis) return null;
+  return { ...f, muenzen: (f.muenzen ?? 0) - preis, skins: [...(f.skins ?? []), id], skin: id };
+}
+
+// ------------------------------------------------------ Tages-Herausforderung
+// Ein Endlos-Lauf je Tag, fuer alle gleich (Seed aus dem lokalen Datum).
+// Gezaehlt wird die Bestweite des Tages und eine Serie aufeinanderfolgender Tage.
+
+export function tagesSchluessel(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+function gestern(tag: string): string {
+  const [j, m, t] = tag.split('-').map(Number);
+  return tagesSchluessel(new Date(j, m - 1, t - 1));
+}
+
+/** Traegt einen Tageslauf ein. `neu` = neue Tagesbestweite. */
+export function mitTageslauf(f: Fortschritt, tag: string, meter: number): { f: Fortschritt; neu: boolean } {
+  const alt = f.tages;
+  const heute = alt?.tag === tag;
+  const serie = heute ? alt.serie : alt?.tag === gestern(tag) ? alt.serie + 1 : 1;
+  const beste = heute ? Math.max(alt.beste, meter) : meter;
+  return { f: { ...f, tages: { tag, beste, serie } }, neu: !heute || meter > alt.beste };
 }

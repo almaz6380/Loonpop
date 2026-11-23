@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { mitSieg, mitSternen, mitWeite, naechstes, offen, type Fortschritt } from './fortschritt.ts';
+import { mitSieg, mitSternen, mitWeite, mitTageslauf, naechstes, offen, skinBesitzt, skinKaufen, tagesSchluessel, weltOffen, type Fortschritt } from './fortschritt.ts';
 
 const leer = (): Fortschritt => ({ v: 1, bestzeit: {} });
 
@@ -65,4 +65,37 @@ test('Sterne bleiben beim Besten, Muenzkonto zaehlt nur Verbesserungen', () => {
   r = mitSternen(r.f, 3, 3, 3);
   assert.equal(r.f.muenzen, 3);
   assert.ok(r.neueSterne);
+});
+
+test('Welten oeffnen sich mit anderthalb Sternen je Level der vorigen Welt', () => {
+  const welten = [[1, 2], [101, 102], [201]];
+  let f: Fortschritt = { v: 1, bestzeit: {} };
+  assert.equal(weltOffen(f, welten, 1), true);
+  assert.equal(weltOffen(f, welten, 2), false);
+  f = { ...f, sterne: { 1: 2, 2: 1 } };
+  assert.equal(weltOffen(f, welten, 2), true);
+  assert.equal(weltOffen(f, welten, 3), false);
+});
+
+test('Skins: kaufen nur mit genug Muenzen, Rot ist immer da', () => {
+  let f: Fortschritt = { v: 1, bestzeit: {}, muenzen: 20 };
+  assert.equal(skinBesitzt(f, 'rot'), true);
+  assert.equal(skinKaufen(f, 'blau'), null);
+  f = { ...f, muenzen: 35 };
+  const g = skinKaufen(f, 'blau')!;
+  assert.equal(g.muenzen, 5);
+  assert.equal(g.skin, 'blau');
+  assert.equal(skinBesitzt(g, 'blau'), true);
+});
+
+test('Tageslauf: Bestweite des Tages und Serie ueber aufeinanderfolgende Tage', () => {
+  let f: Fortschritt = { v: 1, bestzeit: {} };
+  f = mitTageslauf(f, '2026-11-22', 40).f;
+  f = mitTageslauf(f, '2026-11-23', 30).f;
+  assert.deepEqual(f.tages, { tag: '2026-11-23', beste: 30, serie: 2 });
+  const r = mitTageslauf(f, '2026-11-23', 25);
+  assert.equal(r.neu, false);
+  f = mitTageslauf(r.f, '2026-11-25', 10).f;
+  assert.equal(f.tages?.serie, 1);
+  assert.equal(tagesSchluessel(new Date(2026, 0, 5)), '2026-01-05');
 });

@@ -18,7 +18,14 @@
     "spielen": "Jogar",
     "alleLevel": "Todas as fases",
     "tonAn": "Som ligado",
-    "tonAus": "Som desligado"
+    "tonAus": "Som desligado",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "Junte mais {{n}} ★ em “{{welt}}”",
+    "tagesflug": "Voo do dia",
+    "tagesflugText": "Novo a cada dia, igual para todos",
+    "serie": "Sequência de {{n}} dias",
+    "ballons": "Balões",
+    "gewaehlt": "Escolhido"
   },
   "spiel": {
     "zurueck": "Voltar",
@@ -76,5 +83,22 @@
       "kein_angebot": "Indisponível no momento. Tente novamente mais tarde.",
       "fehler": "Não funcionou. Tente novamente mais tarde."
     }
+  },
+  "welt": {
+    "1": "Campo",
+    "2": "Cidade",
+    "3": "Deserto",
+    "4": "Noite"
+  },
+  "skin": {
+    "rot": "Vermelho",
+    "blau": "Azul",
+    "gelb": "Amarelo",
+    "gruen": "Verde",
+    "lila": "Roxo",
+    "stern": "Estrelas",
+    "herz": "Coração",
+    "heissluft": "Balão de ar",
+    "gold": "Ouro"
   }
 }

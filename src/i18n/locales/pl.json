@@ -18,7 +18,14 @@
     "spielen": "Graj",
     "alleLevel": "Wszystkie poziomy",
     "tonAn": "Dźwięk wł.",
-    "tonAus": "Dźwięk wył."
+    "tonAus": "Dźwięk wył.",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "Zbierz jeszcze {{n}} ★ w „{{welt}}”",
+    "tagesflug": "Lot dnia",
+    "tagesflugText": "Codziennie nowy, ten sam dla wszystkich",
+    "serie": "Seria: {{n}}",
+    "ballons": "Balony",
+    "gewaehlt": "Wybrany"
   },
   "spiel": {
     "zurueck": "Wstecz",
@@ -76,5 +83,22 @@
       "kein_angebot": "Teraz niedostępne. Spróbuj później.",
       "fehler": "Nie udało się. Spróbuj później."
     }
+  },
+  "welt": {
+    "1": "Łąka",
+    "2": "Miasto",
+    "3": "Pustynia",
+    "4": "Noc"
+  },
+  "skin": {
+    "rot": "Czerwony",
+    "blau": "Niebieski",
+    "gelb": "Żółty",
+    "gruen": "Zielony",
+    "lila": "Fioletowy",
+    "stern": "Gwiazdki",
+    "herz": "Serce",
+    "heissluft": "Balon na ogrzane powietrze",
+    "gold": "Złoty"
   }
 }

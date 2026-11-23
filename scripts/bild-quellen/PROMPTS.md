@@ -47,5 +47,10 @@ blau-violett, Glühwürmchen).
 |---|---|
 | `logo.jpg` | Schriftzug „LoonPop“ in dicken, runden, glänzenden 3D-Buchstaben, Farbverlauf Rot→Orange, das „o“ als Ballon. Auf Magenta #FF00FF. (Hier ausnahmsweise **mit** Schrift.) |
 
+**Dateinamen beim Ablegen** (23.11.2026): Wiese fern → `huegel-fern.jpg`, Wiese nah →
+`huegel-nah.jpg`, Wiese Boden → `wiese.jpg`; andere Welten `<welt>-himmel.jpg`,
+`<welt>-fern.jpg`, `<welt>-nah.jpg`, `<welt>-boden.jpg` (welt = stadt, wueste, nacht);
+Skins `ballon-<farbe>.jpg`; `muenze.jpg`, `stern.jpg`. Danach `python3 scripts/bilder-freistellen.py`.
+
 Reihenfolge, wenn wenig Zeit: Gebläse, rote Ballon, Wiese (4 Bilder), Münze, Stern —
 damit ist Welt 1 komplett. Der Rest kann später kommen.

@@ -18,7 +18,14 @@
     "spielen": "Spielen",
     "alleLevel": "Alle Level",
     "tonAn": "Ton an",
-    "tonAus": "Ton aus"
+    "tonAus": "Ton aus",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "Noch {{n}} ★ in „{{welt}}“ sammeln",
+    "tagesflug": "Tagesflug",
+    "tagesflugText": "Jeden Tag neu, für alle gleich",
+    "serie": "{{n}} Tage in Folge",
+    "ballons": "Ballons",
+    "gewaehlt": "Gewählt"
   },
   "spiel": {
     "zurueck": "Zurück",
@@ -76,5 +83,22 @@
       "kein_angebot": "Gerade nicht verfügbar. Versuch es später noch einmal.",
       "fehler": "Das hat nicht geklappt. Versuch es später noch einmal."
     }
+  },
+  "welt": {
+    "1": "Wiese",
+    "2": "Stadt",
+    "3": "Wüste",
+    "4": "Nacht"
+  },
+  "skin": {
+    "rot": "Rot",
+    "blau": "Blau",
+    "gelb": "Gelb",
+    "gruen": "Grün",
+    "lila": "Lila",
+    "stern": "Sterne",
+    "herz": "Herz",
+    "heissluft": "Heißluft",
+    "gold": "Gold"
   }
 }

@@ -24,8 +24,14 @@ test('jede Level-Datei steht auch in level/index.ts', () => {
   for (const d of dateien) assert.ok(index.includes(`'./${d}'`), `${d} fehlt in level/index.ts`);
 });
 
-test('die Level sind fortlaufend nummeriert', () => {
-  alle.forEach((l, i) => assert.equal(l.id, i + 1, `${dateien[i]} hat id ${l.id}`));
+test('die Level sind je Welt fortlaufend nummeriert und die Datei heisst wie die ID', () => {
+  // Welt 1: 1, 2, 3 …; Welt w ≥ 2: (w−1)·100 + 1 … (seit 23.11.2026).
+  alle.forEach((l, i) => assert.equal(String(l.id).padStart(3, '0') + '.json', dateien[i], `${dateien[i]} hat id ${l.id}`));
+  for (const w of [1, 2, 3, 4]) {
+    const ids = alle.filter((l) => (l.welt ?? 1) === w).map((l) => l.id).sort((a, b) => a - b);
+    const basis = w === 1 ? 0 : (w - 1) * 100;
+    ids.forEach((id, k) => assert.equal(id, basis + k + 1, `Welt ${w}`));
+  }
 });
 
 for (const level of alle) {

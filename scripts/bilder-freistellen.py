@@ -144,6 +144,37 @@ def main() -> None:
     himmel.resize((breite, round(himmel.height * breite / himmel.width)), Image.LANCZOS).save(
         ZIEL / 'himmel.jpg', quality=85)
 
+    # Neugestaltung 23.11.2026: Welt-, Skin-, Muenz- und Sternbilder, sobald
+    # Josef sie aus Gemini liefert. Fehlt eine Quelle, wird sie uebersprungen —
+    # das Spiel faerbt dann die Wiese ein bzw. malt selbst (zeichnen.ts).
+    for welt in ['stadt', 'wueste', 'nacht']:
+        q = QUELLEN / f'{welt}-himmel.jpg'
+        if q.exists():
+            h = Image.open(q).convert('RGB')
+            b = min(1080, h.width)
+            h.resize((b, round(h.height * b / h.width)), Image.LANCZOS).save(ZIEL / f'{welt}-himmel.jpg', quality=85)
+        for teil in ['fern', 'nah', 'boden']:
+            q = QUELLEN / f'{welt}-{teil}.jpg'
+            if not q.exists():
+                continue
+            roh = freistellen(Image.open(q), 'magenta')
+            oben = roh.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()[1]
+            auf_breite(roh.crop((0, oben, roh.width, roh.height)), 1200).save(ZIEL / f'{welt}-{teil}.png', optimize=True)
+    for skin in ['blau', 'gelb', 'gruen', 'lila', 'stern', 'herz', 'heissluft', 'gold']:
+        q = QUELLEN / f'ballon-{skin}.jpg'
+        if not q.exists():
+            continue
+        # Gruener Ballon auf Magenta, alle anderen auf Gruen (PROMPTS.md).
+        b = zuschneiden(freistellen(Image.open(q), 'magenta' if skin == 'gruen' else 'gruen'))
+        breite = (np.asarray(b.getchannel('A')) > 128).sum(axis=1)
+        unten = max(i for i, w in enumerate(breite) if w > 0.04 * breite.max())
+        b = zuschneiden(b.crop((0, 0, b.width, unten + 1)))
+        b.save(ZIEL / f'ballon-{skin}.png', optimize=True)
+    for name in ['muenze', 'stern']:
+        q = QUELLEN / f'{name}.jpg'
+        if q.exists():
+            auf_breite(zuschneiden(freistellen(Image.open(q), 'gruen')), 128).save(ZIEL / f'{name}.png', optimize=True)
+
     for p in sorted(ZIEL.iterdir()):
         print(p.name, Image.open(p).size, p.stat().st_size // 1024, 'KB')
 

@@ -65,6 +65,8 @@ export type Level = {
   ziel: { pos: Punkt; radius: number };
   nadeln: Nadel[];
   zonen: Zone[];
+  /** Welt 1–4 (fehlt = 1). Bestimmt Aussehen und Freischaltung. */
+  welt?: number;
   /** Muenzen zum Einsammeln (seit 23.11.2026). Alle = ein Stern. */
   muenzen?: Punkt[];
   /** Unter dieser Zeit (Spielsekunden) gibt es einen Stern. */

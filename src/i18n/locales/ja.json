@@ -18,7 +18,14 @@
     "spielen": "プレイ",
     "alleLevel": "レベル一覧",
     "tonAn": "サウンド オン",
-    "tonAus": "サウンド オフ"
+    "tonAus": "サウンド オフ",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "「{{welt}}」で★をあと{{n}}個集めよう",
+    "tagesflug": "今日のフライト",
+    "tagesflugText": "毎日新しく、みんな同じコース",
+    "serie": "{{n}}日連続",
+    "ballons": "風船",
+    "gewaehlt": "選択中"
   },
   "spiel": {
     "zurueck": "戻る",
@@ -76,5 +83,22 @@
       "kein_angebot": "現在ご利用いただけません。後でもう一度お試しください。",
       "fehler": "うまくいきませんでした。後でもう一度お試しください。"
     }
+  },
+  "welt": {
+    "1": "草原",
+    "2": "街",
+    "3": "砂漠",
+    "4": "夜"
+  },
+  "skin": {
+    "rot": "赤",
+    "blau": "青",
+    "gelb": "黄",
+    "gruen": "緑",
+    "lila": "紫",
+    "stern": "星",
+    "herz": "ハート",
+    "heissluft": "熱気球",
+    "gold": "金"
   }
 }

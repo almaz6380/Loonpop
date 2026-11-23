@@ -115,12 +115,14 @@ async function versuche(lauf, dauer) {
   throw new Error('Ballon platzt in jedem Versuch');
 }
 
-async function imFlug(seite, geraet, menuePos, dauer, versatz = 0) {
+async function imFlug(seite, geraet, levelId, dauer, versatz = 0) {
   return versuche(async (d) => {
     await seite.goto(URL_APP);
     await seite.waitForTimeout(400);
-    // Die Levelkacheln im Raster des Menues (MenuePage). menuePos zaehlt ab 1.
-    await seite.locator('section button').nth(menuePos - 1).click();
+    // Die Levelkachel im Raster des Menues (MenuePage, data-level = Level-ID).
+    // ⚠ Seit den Welten (23.11.2026) stehen im Raster auch Welt-Reiter und
+    // Ballon-Skins — nach Position gezaehlt, traefe man das falsche.
+    await seite.locator(`[data-level="${levelId}"]`).click();
     await seite.waitForTimeout(700);
     return fliegen(seite, geraet, d, versatz);
   }, dauer);
@@ -205,9 +207,9 @@ for (const [name, format] of Object.entries(FORMATE)) {
     await seite.waitForTimeout(1500);
     const bilder = [
       await seite.screenshot({ type: 'png' }),
-      await imFlug(seite, format.geraet, 8, 1500, 6),     // 9  Zickzack
+      await imFlug(seite, format.geraet, 15, 1500, 6),    // Zickzack
       await endlos(seite, format.geraet),
-      await imFlug(seite, format.geraet, 13, 1500),       // Schiebetür (Index 0 ist der Endlos-Knopf)
+      await imFlug(seite, format.geraet, 19, 1500),       // Schiebetür
     ];
     const ordner = new URL(`../store-assets/${name}/${code}/`, import.meta.url);
     mkdirSync(ordner, { recursive: true });

@@ -29,6 +29,45 @@ import { geblaeseMass, GEBLAESE_BILD } from './bildmasse.ts';
  * frei, alles unter /bilder/ scripts/bilder-freistellen.py.
  */
 const bilder = new Map<string, HTMLImageElement>();
+
+/** Ordnernamen der Welten fuer eigene Bilder (z. B. /bilder/stadt-himmel.jpg). */
+const WELT_NAME = ['', 'wiese', 'stadt', 'wueste', 'nacht'];
+
+/**
+ * Das Bild einer Welt, wenn es sie gibt, sonst das der Wiese. Fehlt die Datei,
+ * liefert `bild` null (404 = naturalWidth 0) und es bleibt beim Wiesenbild.
+ */
+function weltBild(sicht: { welt?: number }, eigenes: string, wiese: string): HTMLImageElement | null {
+  const w = sicht.welt ?? 1;
+  if (w > 1) {
+    const b = bild(`/bilder/${WELT_NAME[w]}-${eigenes}`);
+    if (b) return b;
+  }
+  return bild(wiese);
+}
+
+/**
+ * Faerbung je Welt, solange ihre eigenen Bilder fehlen (23.11.2026). Eine
+ * Farbschicht ueber Himmel und Huegeln macht aus der Wiese Abend, Wueste,
+ * Nacht. Sobald ein eigenes Bild geladen ist, faellt die Schicht weg.
+ */
+const WELT_TOENUNG: Record<number, { farbe: string; mischung: GlobalCompositeOperation; staerke: number }> = {
+  2: { farbe: '#ff8a3d', mischung: 'soft-light', staerke: 0.75 },
+  3: { farbe: '#ffb347', mischung: 'multiply', staerke: 0.55 },
+  4: { farbe: '#0d1a4a', mischung: 'multiply', staerke: 0.85 },
+};
+
+function toenen(ctx: CanvasRenderingContext2D, sicht: { welt?: number }, eigenes: string, x: number, y: number, b: number, h: number) {
+  const w = sicht.welt ?? 1;
+  const t = WELT_TOENUNG[w];
+  if (!t || bild(`/bilder/${WELT_NAME[w]}-${eigenes}`)) return;
+  ctx.save();
+  ctx.globalCompositeOperation = t.mischung;
+  ctx.globalAlpha = t.staerke;
+  ctx.fillStyle = t.farbe;
+  ctx.fillRect(x, y, b, h);
+  ctx.restore();
+}
 function bild(pfad: string): HTMLImageElement | null {
   let b = bilder.get(pfad);
   if (!b) {
@@ -127,6 +166,10 @@ export type Sicht = {
    * hoeher). Nur im Endlos-Lauf nach oben, sonst 0.
    */
   kameraY?: number;
+  /** Welt 1–4 (Wiese, Stadt, Wueste, Nacht) — nur Aussehen. */
+  welt?: number;
+  /** Gewaehlter Ballon-Skin (fortschritt.SKINS) — nur Aussehen. */
+  skin?: string;
 };
 
 /**
@@ -231,9 +274,21 @@ function hintergrund(
 
   // Der Himmel selbst steht fest — er fuellt immer den ganzen Ausschnitt.
   // Das Bild bringt seine Sonne mit; nur der gemalte Rueckfall braucht eine.
-  const himmelBild = bild('/bilder/himmel.jpg');
+  const himmelBild = weltBild(sicht, 'himmel.jpg', '/bilder/himmel.jpg');
   if (himmelBild) {
     ctx.drawImage(himmelBild, sicht.kameraX - 20, oben, sichtbar + 40, hoehe);
+    toenen(ctx, sicht, 'himmel.jpg', sicht.kameraX - 20, oben, sichtbar + 40, hoehe);
+    // Die Nacht bekommt Sterne, solange ihr eigener Himmel fehlt.
+    if ((sicht.welt ?? 1) === 4 && !bild('/bilder/nacht-himmel.jpg')) {
+      for (let i = 0; i < 70; i++) {
+        const x = sicht.kameraX + streu(i) * sichtbar;
+        const y = oben + streu(i + 100) * hoehe * 0.7;
+        ctx.fillStyle = `rgba(255,255,240,${0.35 + 0.5 * Math.abs(Math.sin(welt.zeit * 1.5 + i))})`;
+        ctx.beginPath();
+        ctx.arc(x, y, 1 + streu(i + 200) * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
   } else {
     const himmel = ctx.createLinearGradient(0, oben, 0, oben + hoehe);
     himmel.addColorStop(0, '#152364');
@@ -321,13 +376,14 @@ function hintergrund(
   // --- Huegel, zwei Schichten ---------------------------------------------
   // Mit Bild: ferne Huegel wandern auf dem Schirm mit einem Viertel, nahe mit
   // der Haelfte des Tempos — wie die gemalten Schichten.
-  const fern = bild('/bilder/huegel-fern.png');
-  const nah = bild('/bilder/huegel-nah.png');
+  const fern = weltBild(sicht, 'fern.png', '/bilder/huegel-fern.png');
+  const nah = weltBild(sicht, 'nah.png', '/bilder/huegel-nah.png');
   if (fern && nah) {
     const von = sicht.kameraX - 40;
     const bis = sicht.kameraX + sichtbar + 40;
     kacheln(ctx, fern, von, bis, sicht.kameraX * 0.75, bodenY - 250, 270);
     kacheln(ctx, nah, von, bis, sicht.kameraX * 0.5, bodenY - 170, 190);
+    toenen(ctx, sicht, 'nah.png', von, bodenY - 260, bis - von, 300);
     return;
   }
   for (const [tiefe, hoehenAnteil, farbe] of [[0.35, 0.16, '#5e86a8'], [0.6, 0.1, '#4a7a6a']] as const) {
@@ -363,11 +419,12 @@ function wiese(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: 
 
   // Mit Bild: ein Streifen Wiese, die Grasbueschel ragen ueber bodenY hinaus.
   // Darunter bleibt der Verlauf sichtbar, wo das Bild nicht hinreicht.
-  const wiesenBild = bild('/bilder/wiese.png');
+  const wiesenBild = weltBild(sicht, 'boden.png', '/bilder/wiese.png');
   if (wiesenBild) {
     ctx.fillStyle = '#3e6a3a';
     ctx.fillRect(von, bodenY + 60, bis - von, hoehe - bodenY - 60);
     kacheln(ctx, wiesenBild, von, bis, 0, bodenY - 46, 136);
+    toenen(ctx, sicht, 'boden.png', von, bodenY - 50, bis - von, hoehe - bodenY + 50);
     return;
   }
 
@@ -495,7 +552,37 @@ function zeichneGeblaese(ctx: CanvasRenderingContext2D, welt: Welt, gy: number, 
   ctx.restore();
 }
 
-function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bodenY: number) {
+/**
+ * Farbtoene der Skins, solange ihr eigenes Gemini-Bild fehlt: der rote Ballon,
+ * einmal umgefaerbt in ein eigenes Canvas (nicht in jedem Bild — Falle 18).
+ */
+export const SKIN_FILTER: Record<string, string> = {
+  blau: 'hue-rotate(215deg) saturate(1.1)', gelb: 'hue-rotate(58deg) saturate(1.7) brightness(1.55)',
+  gruen: 'hue-rotate(115deg) brightness(1.05)', lila: 'hue-rotate(275deg)',
+  stern: 'hue-rotate(185deg) saturate(.8) brightness(1.5)', herz: 'hue-rotate(320deg) saturate(.85) brightness(1.5)',
+  heissluft: 'hue-rotate(22deg) saturate(1.6) brightness(1.35)', gold: 'sepia(1) saturate(2.6) hue-rotate(-8deg) brightness(1.15) contrast(1.1)',
+};
+const skinCache = new Map<string, HTMLCanvasElement>();
+function skinBild(skin: string | undefined): CanvasImageSource | null {
+  const basis = bild('/bilder/ballon.png');
+  if (!skin || skin === 'rot') return basis;
+  const eigenes = bild(`/bilder/ballon-${skin}.png`);
+  if (eigenes) return eigenes;
+  if (!basis) return null;
+  let c = skinCache.get(skin);
+  if (!c) {
+    c = document.createElement('canvas');
+    c.width = basis.naturalWidth;
+    c.height = basis.naturalHeight;
+    const g = c.getContext('2d')!;
+    g.filter = SKIN_FILTER[skin] ?? 'none';
+    g.drawImage(basis, 0, 0);
+    skinCache.set(skin, c);
+  }
+  return c;
+}
+
+function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bodenY: number, skin?: string) {
   const { ballon } = welt;
   const r = ballon.radius;
   const form = ballonform(pos, ballon.geschw, r);
@@ -530,7 +617,7 @@ function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bo
   ctx.scale(1 / form.dehnung, form.dehnung);
   // Das Bild reicht von der Oberkante (−r) bis zur Knotenspitze (r + KNOTEN) —
   // genau dort, wo die Schnur ansetzt und wo der gemalte Ballon lag.
-  const ballonBild = bild('/bilder/ballon.png');
+  const ballonBild = skinBild(skin);
   if (ballonBild) {
     const hoch = 2 * r + KNOTEN;
     const breit = hoch * BALLON_BILD_SEITEN;
@@ -902,7 +989,7 @@ export function zeichne(
     const blinkt = unverwundbar(welt) && Math.floor(welt.zeit * 10) % 2 === 1;
     ctx.save();
     if (blinkt) ctx.globalAlpha = 0.3;
-    zeichneBallon(ctx, welt, pos, bodenY);
+    zeichneBallon(ctx, welt, pos, bodenY, sicht.skin);
     ctx.restore();
   }
   nachklang(ctx, welt, pos);

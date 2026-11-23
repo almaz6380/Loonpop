@@ -18,7 +18,14 @@
     "spielen": "Jugar",
     "alleLevel": "Todos los niveles",
     "tonAn": "Sonido sí",
-    "tonAus": "Sonido no"
+    "tonAus": "Sonido no",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "Consigue {{n}} ★ más en «{{welt}}»",
+    "tagesflug": "Vuelo diario",
+    "tagesflugText": "Nuevo cada día, igual para todos",
+    "serie": "Racha de {{n}} días",
+    "ballons": "Globos",
+    "gewaehlt": "Elegido"
   },
   "spiel": {
     "zurueck": "Atrás",
@@ -76,5 +83,22 @@
       "kein_angebot": "No disponible ahora. Inténtalo más tarde.",
       "fehler": "No ha funcionado. Inténtalo más tarde."
     }
+  },
+  "welt": {
+    "1": "Prado",
+    "2": "Ciudad",
+    "3": "Desierto",
+    "4": "Noche"
+  },
+  "skin": {
+    "rot": "Rojo",
+    "blau": "Azul",
+    "gelb": "Amarillo",
+    "gruen": "Verde",
+    "lila": "Morado",
+    "stern": "Estrellas",
+    "herz": "Corazón",
+    "heissluft": "Aerostático",
+    "gold": "Oro"
   }
 }

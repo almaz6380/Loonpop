@@ -18,7 +18,14 @@
     "spielen": "Gioca",
     "alleLevel": "Tutti i livelli",
     "tonAn": "Audio sì",
-    "tonAus": "Audio no"
+    "tonAus": "Audio no",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "Raccogli altre {{n}} ★ in «{{welt}}»",
+    "tagesflug": "Volo del giorno",
+    "tagesflugText": "Nuovo ogni giorno, uguale per tutti",
+    "serie": "Serie di {{n}} giorni",
+    "ballons": "Palloncini",
+    "gewaehlt": "Scelto"
   },
   "spiel": {
     "zurueck": "Indietro",
@@ -76,5 +83,22 @@
       "kein_angebot": "Non disponibile ora. Riprova più tardi.",
       "fehler": "Non ha funzionato. Riprova più tardi."
     }
+  },
+  "welt": {
+    "1": "Prato",
+    "2": "Città",
+    "3": "Deserto",
+    "4": "Notte"
+  },
+  "skin": {
+    "rot": "Rosso",
+    "blau": "Blu",
+    "gelb": "Giallo",
+    "gruen": "Verde",
+    "lila": "Viola",
+    "stern": "Stelle",
+    "herz": "Cuore",
+    "heissluft": "Mongolfiera",
+    "gold": "Oro"
   }
 }

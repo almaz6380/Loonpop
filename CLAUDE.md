@@ -517,6 +517,39 @@ Datenschutzerklärung automatisch. Nichts gebaut, nichts hochgeladen.
    (sonst `CONFIGURATION_ERROR`).
 6. Danach Branch nach `main`, bauen, Apple-Kauf MIT Version 1.1 einreichen.
 
+## Neugestaltung (23.11.2026, Teil von Version 1.1)
+
+Josef: „sieht billig aus und funktioniert nicht gut“. Umgebaut auf dem Zweig
+`claude/optimistic-darwin-k01rmb`, ausgeliefert zusammen mit Werbung/Kauf als 1.1.
+
+- **Steuerung:** Gebläse kippt (Regel 1a oben), Wisch = Windstoß.
+- **Bilder 2.5D aus Gemini** (Josef erzeugt sie, Aufträge in
+  `scripts/bild-quellen/PROMPTS.md`). Neu da: Ballon, Gebläse, Himmel, Hügel fern/nah.
+  `bilder-freistellen.py` verarbeitet auch Welt-, Skin-, Münz- und Sternbilder,
+  sobald ihre Quelle (`stadt-himmel.jpg`, `ballon-blau.jpg`, `muenze.jpg` …) liegt.
+  ⚠ Magenta wird mit der **echten** Hintergrundfarbe (Ecke oben links) gerechnet und
+  die Kante um 1 px eingezogen — Gemini trifft #FF00FF nie und malt einen lila Schein.
+  ⚠ Bilder, die Josef nur als Vorschau mitten in einem Lauf schickt, kommen nicht als
+  Datei an; er muss sie als eigene Nachricht schicken.
+- **Schärfe:** Pixeldichte bis 3 (`dichte.ts`), Ballon in voller Auflösung.
+- **Effekte** (`zeichnen.ts`): Knall-Ring, flatternde Fetzen, Rütteln (`ruetteln`),
+  Konfetti, Staubwölkchen — alles aus `streu`/`welt.nachher`, kein Math.random.
+- **Sterne + Münzen** (`sterne.ts`, `Level.muenzen`, `Level.sterneZeit`): 1 Stern Ziel,
+  +1 unter Sternzeit, +1 alle Münzen. Münzen liegen auf dem kürzesten freien Weg
+  (`wegPunkte` in `pruefung.ts`, gesetzt von `scripts/muenzen-setzen.ts`). Konto zählt
+  nur Verbesserungen je Level (`mitSternen`). Sternzeit = Weglänge/80 + 2 s, noch
+  nicht von Josef nachgespielt.
+- **Welten** 1 Wiese (alte 15 Level), 2 Stadt (101–112), 3 Wüste (201–212), 4 Nacht
+  (301–312). Die neuen 36 Level schneidet `scripts/welten-bauen.ts` aus dem
+  Endlos-Generator und prüft jedes mit `pruefeLevel`. Welt w öffnet mit 1,5 ★ je Level
+  der vorigen (`weltOffen`). Ohne eigene Bilder färbt `toenen()` die Wiese ein.
+  Namen der Level ab Welt 2: „<Weltname> <n>“ (`menue.weltLevel`).
+- **Ballon-Skins** (`SKINS` in `fortschritt.ts`, 9 Stück, 30–250 Münzen). Ohne eigenes
+  Bild wird der rote Ballon einmal per Canvas-Filter umgefärbt (`SKIN_FILTER`).
+- **Tagesflug:** Endlos ↑ mit Seed aus dem lokalen Datum, Tagesbestweite + Serie
+  (`mitTageslauf`), Abend-Optik (Welt 2).
+- `store-bilder.mjs` klickt Level über `data-level`, nicht mehr nach Position.
+
 ## Konventionen
 
 - Dokumentation und Kommentare auf Deutsch; ein Kommentar sagt, **warum** etwas so

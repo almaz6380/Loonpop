@@ -17,7 +17,7 @@ import {
 } from '../spiel/zeichnen.ts';
 import { neueEndlosWelt, neuerSeed, meter } from '../spiel/endlos.ts';
 import type { Ausgang, EndlosArt, Level, Welt } from '../spiel/typen.ts';
-import { lade, speichere, mitSieg, mitWeite, mitSternen } from '../lib/fortschritt.ts';
+import { lade, speichere, mitSieg, mitWeite, mitSternen, mitTageslauf, tagesSchluessel } from '../lib/fortschritt.ts';
 import { sterneFuer } from '../spiel/sterne.ts';
 import * as ton from '../lib/ton.ts';
 import * as haptik from '../lib/haptik.ts';
@@ -52,10 +52,12 @@ const TIPP_NEIGUNG = 0.35;
  */
 let dichte: number | null = null;
 
-export default function SpielPage({ level, endlos, zurueck, weiter }: {
+export default function SpielPage({ level, endlos, tages, zurueck, weiter }: {
   /** Ein gebautes Level — oder `endlos` fuer einen Endlos-Lauf. */
   level?: Level;
   endlos?: EndlosArt;
+  /** Tages-Herausforderung: Endlos mit dem Seed des heutigen Tages. */
+  tages?: boolean;
   zurueck: () => void;
   /** Fehlt beim letzten Level und im Endlos-Lauf. */
   weiter?: () => void;
@@ -100,7 +102,10 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
 
     // Jeder Versuch im Endlos-Lauf bekommt einen neuen Seed. Die Uhr waehlt
     // nur den Seed — der Lauf selbst haengt dann allein an ihm.
-    const welt = endlos ? neueEndlosWelt(endlos, neuerSeed(Date.now())) : neueWelt(level!);
+    // Tagesflug: fuer alle derselbe Seed — aus dem lokalen Datum.
+    const welt = endlos
+      ? neueEndlosWelt(endlos, tages ? neuerSeed(Number(tagesSchluessel(new Date()).replaceAll('-', ''))) : neuerSeed(Date.now()))
+      : neueWelt(level!);
     const lvl = welt.level;
     weltRef.current = welt;
     setEnde(null);
@@ -130,6 +135,8 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
           ? sichtEndlosHoch(b, h, lvl.groesse.breite)
           : sichtBerechnen(b, h, lvl.groesse.breite, lvl.groesse.hoehe, lvl.art)),
         kameraX: sichtRef.current.kameraX,
+        welt: lvl.welt ?? (tages ? 2 : 1),
+        skin: lade().skin,
       };
     };
     anpassen();
@@ -220,9 +227,12 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
         if (endlos) {
           const vorher = lade();
           const m = Math.floor(meter(w));
-          const { f, neu } = mitWeite(vorher, endlos, m);
+          const tag = tagesSchluessel(new Date());
+          const { f, neu } = tages
+            ? mitTageslauf(vorher, tag, m)
+            : mitWeite(vorher, endlos, m);
           speichere(f);
-          const alt = vorher.endlos?.[endlos];
+          const alt = tages ? (vorher.tages?.tag === tag ? vorher.tages.beste : undefined) : vorher.endlos?.[endlos];
           // Schon der erste Lauf ist eine Bestweite — anders als bei Leveln,
           // wo das Ankommen selbst die Nachricht ist.
           setRekord({ neu: neu && m > 0, beste: alt ?? null });
@@ -252,7 +262,7 @@ export default function SpielPage({ level, endlos, zurueck, weiter }: {
       window.removeEventListener('resize', anpassen);
       ton.geblaese(0);
     };
-  }, [level, endlos, versuch]);
+  }, [level, endlos, tages, versuch]);
 
   // --- Finger -------------------------------------------------------------
   // Der Finger schiebt das Geblaese WAAGERECHT; die Hoehe des Fingers ist

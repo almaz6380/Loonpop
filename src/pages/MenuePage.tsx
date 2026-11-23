@@ -12,8 +12,12 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { LEVEL } from '../spiel/level/index.ts';
-import { naechstes as naechstesLevel, offen, type Fortschritt } from '../lib/fortschritt.ts';
+import { LEVEL, WELTEN, weltVon } from '../spiel/level/index.ts';
+import {
+  offen, weltOffen, sterneIn, sterneNoetig, speichere, skinBesitzt, skinKaufen, tagesSchluessel,
+  SKINS, type Fortschritt, type SkinId,
+} from '../lib/fortschritt.ts';
+import { SKIN_FILTER } from '../spiel/zeichnen.ts';
 import { SPRACHEN } from '../lib/sprache.ts';
 import { setzeSprache } from '../i18n/index.ts';
 import { setzeTon, tonAn } from '../lib/ton.ts';
@@ -21,6 +25,10 @@ import { aufBannerHoehe, einwilligungAendern, einwilligungAenderbar } from '../l
 import { kaeufeWiederherstellen, kaufMoeglich, preisHolen, werbungEntfernen } from '../lib/kauf.ts';
 
 const IDS = LEVEL.map((l) => l.id);
+/** Level-IDs je Welt (Index 0 = Welt 1). */
+const WELT_IDS = WELTEN.map((w) => LEVEL.filter((l) => weltVon(l) === w).map((l) => l.id));
+/** Stelle des Levels innerhalb seiner Welt (1-basiert). */
+const IN_WELT = LEVEL.map((l) => WELT_IDS[weltVon(l) - 1].indexOf(l.id) + 1);
 
 function Szene() {
   return (
@@ -154,19 +162,43 @@ function Werbefrei({ werbefrei, setWerbefrei }: { werbefrei: boolean; setWerbefr
   );
 }
 
-export default function MenuePage({ fortschritt, werbefrei, setWerbefrei, spieleLevel, spieleEndlos }: {
+export default function MenuePage({ fortschritt, werbefrei, setWerbefrei, spieleLevel, spieleEndlos, spieleTagesflug, setFortschritt }: {
   fortschritt: Fortschritt;
   werbefrei: boolean;
   setWerbefrei: (frei: boolean) => void;
   spieleLevel: (index: number) => void;
   spieleEndlos: () => void;
+  spieleTagesflug: () => void;
+  setFortschritt: (f: Fortschritt) => void;
 }) {
   const { t, i18n } = useTranslation();
   const [ton, setTon] = useState(tonAn);
-  const naechstes = naechstesLevel(fortschritt, IDS);
-  const geschafft = LEVEL.filter((l) => fortschritt.bestzeit[l.id] !== undefined).length;
+  // Spielbar: der Reihe nach UND die Welt offen (Sterne aus der vorigen).
+  const spielbar = (i: number) => offen(fortschritt, IDS, i) && weltOffen(fortschritt, WELT_IDS, weltVon(LEVEL[i]));
+  const naechstes = (() => {
+    const i = LEVEL.findIndex((l, k) => spielbar(k) && fortschritt.bestzeit[l.id] === undefined);
+    if (i >= 0) return i;
+    for (let k = LEVEL.length - 1; k >= 0; k--) if (spielbar(k)) return k;
+    return 0;
+  })();
   const weite = fortschritt.endlos?.hoch;
-  const name = (i: number) => t(`levelname.${LEVEL[i].id}`, LEVEL[i].name);
+  const name = (i: number) => {
+    const w = weltVon(LEVEL[i]);
+    return w === 1
+      ? t(`levelname.${LEVEL[i].id}`, LEVEL[i].name)
+      : t('menue.weltLevel', { welt: t(`welt.${w}`), n: IN_WELT[i] });
+  };
+  const [weltWahl, setWeltWahl] = useState(() => weltVon(LEVEL[naechstes]));
+  const heute = tagesSchluessel(new Date());
+  const tagesBeste = fortschritt.tages?.tag === heute ? fortschritt.tages.beste : undefined;
+  const serie = fortschritt.tages && (fortschritt.tages.tag === heute || fortschritt.tages.tag === tagesSchluessel(new Date(Date.now() - 864e5)))
+    ? fortschritt.tages.serie : 0;
+  const skinWaehlen = (id: SkinId) => {
+    const neu = skinKaufen(fortschritt, id);
+    if (!neu) return;
+    speichere(neu);
+    setFortschritt(neu);
+  };
   // Der Banner liegt nativ ueber der WebView. So viel Platz bleibt unten frei,
   // sonst verdeckt er Sprachwahl und Rechtstexte.
   const [banner, setBanner] = useState(0);
@@ -206,7 +238,7 @@ export default function MenuePage({ fortschritt, werbefrei, setWerbefrei, spiele
             {t('menue.spielen')}
           </span>
           <span className="block mt-0.5 text-sm font-semibold opacity-75 truncate">
-            {t('menue.level', { n: naechstes + 1 })} · {name(naechstes)}
+            {name(naechstes)}
           </span>
         </button>
 
@@ -232,48 +264,117 @@ export default function MenuePage({ fortschritt, werbefrei, setWerbefrei, spiele
           )}
         </button>
 
-        {/* Alle Level als Raster: geschafft (gelb), naechstes (pulsiert), gesperrt */}
+        {/* Tagesflug: ein Endlos-Lauf je Tag, fuer alle gleich (23.11.2026). */}
+        <button
+          onClick={spieleTagesflug}
+          className="anim-auftauchen [animation-delay:360ms] mt-3 w-full rounded-3xl bg-gradient-to-b from-[#ff9a4d]/95 to-[#e2573b]/95 border border-white/25 px-5 py-3
+                     shadow-[0_6px_0_rgba(120,30,10,0.35),0_12px_24px_rgba(10,20,60,0.25)]
+                     flex items-center gap-3 text-start active:scale-[0.98] transition"
+        >
+          <span className="shrink-0 w-10 h-10 rounded-2xl bg-white/20 grid place-items-center">
+            <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+              <rect x="4" y="5" width="16" height="15" rx="3" /><path d="M4 10h16M9 3v4M15 3v4" strokeLinecap="round" />
+            </svg>
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="schrift-rund block text-lg font-bold">{t('menue.tagesflug')}</span>
+            <span className="block text-xs text-white/85 truncate">
+              {serie > 0 ? t('menue.serie', { n: serie }) : t('menue.tagesflugText')}
+            </span>
+          </span>
+          {tagesBeste !== undefined && (
+            <span className="schrift-rund shrink-0 text-lg font-bold tabular-nums text-[#fff3c4]">
+              {t('menue.bestweite', { m: tagesBeste })}
+            </span>
+          )}
+        </button>
+
+        {/* Welten mit Leveln: geschafft (gelb, mit Sternen), naechstes (pulsiert), gesperrt */}
         <section className="anim-auftauchen [animation-delay:400ms] mt-5 rounded-3xl bg-[#12204f]/75 border border-white/20 p-4
                             shadow-[0_12px_30px_rgba(10,20,60,0.25)]">
+          <div className="grid grid-cols-4 gap-1.5">
+            {WELTEN.map((w) => {
+              const ids = WELT_IDS[w - 1];
+              const auf = weltOffen(fortschritt, WELT_IDS, w);
+              return (
+                <button key={w} onClick={() => setWeltWahl(w)} aria-pressed={weltWahl === w}
+                  className={`schrift-rund rounded-2xl px-1 py-2 text-center transition active:scale-95
+                              ${weltWahl === w ? 'bg-white text-[#12204f]' : 'bg-white/10 text-white'}`}>
+                  <span className="block text-sm font-bold truncate">{t(`welt.${w}`)}</span>
+                  <span className="flex items-center justify-center gap-0.5 text-xs tabular-nums opacity-80">
+                    {auf ? <><MiniStern an />{sterneIn(fortschritt, ids)}/{ids.length * 3}</> : <Schloss klein />}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {weltOffen(fortschritt, WELT_IDS, weltWahl) ? (
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              {LEVEL.map((lvl, i) => {
+                if (weltVon(lvl) !== weltWahl) return null;
+                const frei = spielbar(i);
+                const fertig = fortschritt.bestzeit[lvl.id] !== undefined;
+                const st = fortschritt.sterne?.[lvl.id] ?? (fertig ? 1 : 0);
+                return (
+                  <button
+                    key={lvl.id}
+                    data-level={lvl.id}
+                    disabled={!frei}
+                    onClick={() => spieleLevel(i)}
+                    aria-label={`${name(i)}${frei ? '' : ` (${t('menue.gesperrt')})`}`}
+                    title={name(i)}
+                    className={`schrift-rund relative aspect-square rounded-2xl flex flex-col items-center justify-center
+                                text-xl font-bold tabular-nums transition active:scale-95
+                                ${fertig ? 'bg-[#ffd75e] text-[#12204f] shadow-[0_3px_0_#d9a92e]'
+                                  : frei ? 'bg-white text-[#12204f] shadow-[0_3px_0_#b9c6e4]'
+                                    : 'bg-white/10 text-white/40 border border-white/15'}
+                                ${i === naechstes && !fertig ? 'anim-rufen' : ''}`}
+                  >
+                    {frei ? IN_WELT[i] : <Schloss />}
+                    {fertig && (
+                      <span className="flex gap-px mt-0.5" aria-label={`${st}/3`}>
+                        {[0, 1, 2].map((k) => <MiniStern key={k} an={k < st} />)}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-4 mb-2 flex items-center justify-center gap-2 text-sm font-semibold text-white/85">
+              <Schloss klein />
+              {t('menue.weltGesperrt', {
+                n: sterneNoetig(WELT_IDS[weltWahl - 2].length) - sterneIn(fortschritt, WELT_IDS[weltWahl - 2]),
+                welt: t(`welt.${weltWahl - 1}`),
+              })}
+            </p>
+          )}
+        </section>
+
+        {/* Ballon-Skins fuer Muenzen (23.11.2026). */}
+        <section className="anim-auftauchen [animation-delay:440ms] mt-4 rounded-3xl bg-[#12204f]/75 border border-white/20 p-4 text-start">
           <div className="flex items-baseline justify-between">
-            <h2 className="schrift-rund text-lg font-bold">{t('menue.alleLevel')}</h2>
-            <span className="text-sm font-semibold tabular-nums text-white/80">
-              {geschafft}/{LEVEL.length}
+            <h2 className="schrift-rund text-lg font-bold">{t('menue.ballons')}</h2>
+            <span className="schrift-rund flex items-center gap-1 text-[#ffe48a] tabular-nums">
+              <MiniMuenze /> {fortschritt.muenzen ?? 0}
             </span>
           </div>
-          <div className="mt-3 grid grid-cols-5 gap-2">
-            {LEVEL.map((lvl, i) => {
-              const frei = offen(fortschritt, IDS, i);
-              const bestzeit = fortschritt.bestzeit[lvl.id];
-              const fertig = bestzeit !== undefined;
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {SKINS.map((sk) => {
+              const hat = skinBesitzt(fortschritt, sk.id);
+              const aktiv = (fortschritt.skin ?? 'rot') === sk.id;
+              const leistbar = (fortschritt.muenzen ?? 0) >= sk.preis;
               return (
-                <button
-                  key={lvl.id}
-                  disabled={!frei}
-                  onClick={() => spieleLevel(i)}
-                  aria-label={`${t('menue.level', { n: i + 1 })}: ${name(i)}${frei ? '' : ` (${t('menue.gesperrt')})`}`}
-                  title={name(i)}
-                  className={`schrift-rund relative aspect-square rounded-2xl grid place-items-center
-                              text-lg font-bold tabular-nums transition active:scale-95
-                              ${fertig ? 'bg-[#ffd75e] text-[#12204f] shadow-[0_3px_0_#d9a92e]'
-                                : frei ? 'bg-white text-[#12204f] shadow-[0_3px_0_#b9c6e4]'
-                                  : 'bg-white/10 text-white/40 border border-white/15'}
-                              ${i === naechstes && !fertig ? 'anim-rufen' : ''}`}
-                >
-                  {frei ? i + 1 : (
-                    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
-                      <rect x="5" y="11" width="14" height="10" rx="2.5" />
-                      <path d="M8 11V8a4 4 0 0 1 8 0v3" strokeLinecap="round" />
-                    </svg>
-                  )}
-                  {fertig && (
-                    <span className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full bg-[#4caf50] text-white grid place-items-center
-                                     border-2 border-[#12204f]">
-                      <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="4" aria-hidden="true">
-                        <path d="M5 12.5l4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
-                  )}
+                <button key={sk.id} onClick={() => skinWaehlen(sk.id)} disabled={!hat && !leistbar}
+                  aria-pressed={aktiv}
+                  className={`rounded-2xl p-2 flex flex-col items-center gap-1 transition active:scale-95
+                              ${aktiv ? 'bg-white/25 ring-2 ring-[#ffd75e]' : 'bg-white/8'} ${!hat && !leistbar ? 'opacity-50' : ''}`}>
+                  <img src="/bilder/ballon.png" alt="" className="h-12"
+                       style={{ filter: SKIN_FILTER[sk.id] }} />
+                  <span className="text-xs font-semibold truncate max-w-full">{t(`skin.${sk.id}`)}</span>
+                  <span className="schrift-rund text-xs flex items-center gap-1 text-[#ffe48a]">
+                    {aktiv ? t('menue.gewaehlt') : hat ? '✓' : <><MiniMuenze />{sk.preis}</>}
+                  </span>
                 </button>
               );
             })}
@@ -326,5 +427,32 @@ export default function MenuePage({ fortschritt, werbefrei, setWerbefrei, spiele
         </div>
       </main>
     </div>
+  );
+}
+
+function MiniStern({ an }: { an?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" aria-hidden="true">
+      <path d="M12 2.6l2.8 6 6.5.7-4.9 4.4 1.4 6.4L12 16.8l-5.8 3.3 1.4-6.4-4.9-4.4 6.5-.7z"
+        fill={an ? '#ffb703' : 'rgba(18,32,79,0.25)'} />
+    </svg>
+  );
+}
+
+function MiniMuenze() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden="true">
+      <circle cx="12" cy="13" r="10" fill="#a8650a" /><circle cx="12" cy="12" r="10" fill="#ffc93c" />
+      <circle cx="12" cy="12" r="6.6" fill="none" stroke="#fff" strokeOpacity=".6" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+function Schloss({ klein }: { klein?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className={klein ? 'w-4 h-4' : 'w-5 h-5'} fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+      <rect x="5" y="11" width="14" height="10" rx="2.5" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" strokeLinecap="round" />
+    </svg>
   );
 }

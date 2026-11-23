@@ -18,7 +18,14 @@
     "spielen": "플레이",
     "alleLevel": "전체 레벨",
     "tonAn": "소리 켜짐",
-    "tonAus": "소리 꺼짐"
+    "tonAus": "소리 꺼짐",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "「{{welt}}」에서 ★ {{n}}개 더 모으세요",
+    "tagesflug": "오늘의 비행",
+    "tagesflugText": "매일 새롭게, 모두에게 같은 코스",
+    "serie": "{{n}}일 연속",
+    "ballons": "풍선",
+    "gewaehlt": "선택됨"
   },
   "spiel": {
     "zurueck": "뒤로",
@@ -76,5 +83,22 @@
       "kein_angebot": "지금은 이용할 수 없습니다. 나중에 다시 시도해 주세요.",
       "fehler": "실패했습니다. 나중에 다시 시도해 주세요."
     }
+  },
+  "welt": {
+    "1": "초원",
+    "2": "도시",
+    "3": "사막",
+    "4": "밤"
+  },
+  "skin": {
+    "rot": "빨강",
+    "blau": "파랑",
+    "gelb": "노랑",
+    "gruen": "초록",
+    "lila": "보라",
+    "stern": "별",
+    "herz": "하트",
+    "heissluft": "열기구",
+    "gold": "금"
   }
 }

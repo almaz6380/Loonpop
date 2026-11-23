@@ -18,7 +18,14 @@
     "spielen": "开始游戏",
     "alleLevel": "全部关卡",
     "tonAn": "声音开",
-    "tonAus": "声音关"
+    "tonAus": "声音关",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "在“{{welt}}”再收集 {{n}} 颗★",
+    "tagesflug": "每日飞行",
+    "tagesflugText": "每天更新，人人相同",
+    "serie": "连续 {{n}} 天",
+    "ballons": "气球",
+    "gewaehlt": "已选"
   },
   "spiel": {
     "zurueck": "返回",
@@ -76,5 +83,22 @@
       "kein_angebot": "暂时不可用，请稍后再试。",
       "fehler": "没有成功，请稍后再试。"
     }
+  },
+  "welt": {
+    "1": "草地",
+    "2": "城市",
+    "3": "沙漠",
+    "4": "夜晚"
+  },
+  "skin": {
+    "rot": "红色",
+    "blau": "蓝色",
+    "gelb": "黄色",
+    "gruen": "绿色",
+    "lila": "紫色",
+    "stern": "星星",
+    "herz": "爱心",
+    "heissluft": "热气球",
+    "gold": "金色"
   }
 }

@@ -18,7 +18,14 @@
     "spielen": "Play",
     "alleLevel": "All levels",
     "tonAn": "Sound on",
-    "tonAus": "Sound off"
+    "tonAus": "Sound off",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "Collect {{n}} more ★ in “{{welt}}”",
+    "tagesflug": "Daily Flight",
+    "tagesflugText": "New every day, same for everyone",
+    "serie": "{{n}}-day streak",
+    "ballons": "Balloons",
+    "gewaehlt": "Selected"
   },
   "spiel": {
     "zurueck": "Back",
@@ -76,5 +83,22 @@
       "kein_angebot": "Not available right now. Please try again later.",
       "fehler": "That didn't work. Please try again later."
     }
+  },
+  "welt": {
+    "1": "Meadow",
+    "2": "City",
+    "3": "Desert",
+    "4": "Night"
+  },
+  "skin": {
+    "rot": "Red",
+    "blau": "Blue",
+    "gelb": "Yellow",
+    "gruen": "Green",
+    "lila": "Purple",
+    "stern": "Stars",
+    "herz": "Heart",
+    "heissluft": "Hot air",
+    "gold": "Gold"
   }
 }

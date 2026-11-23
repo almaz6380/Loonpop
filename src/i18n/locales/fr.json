@@ -18,7 +18,14 @@
     "spielen": "Jouer",
     "alleLevel": "Tous les niveaux",
     "tonAn": "Son activé",
-    "tonAus": "Son coupé"
+    "tonAus": "Son coupé",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "Encore {{n}} ★ à gagner dans « {{welt}} »",
+    "tagesflug": "Vol du jour",
+    "tagesflugText": "Nouveau chaque jour, le même pour tous",
+    "serie": "Série de {{n}} jours",
+    "ballons": "Ballons",
+    "gewaehlt": "Choisi"
   },
   "spiel": {
     "zurueck": "Retour",
@@ -76,5 +83,22 @@
       "kein_angebot": "Indisponible pour le moment. Réessaie plus tard.",
       "fehler": "Ça n'a pas marché. Réessaie plus tard."
     }
+  },
+  "welt": {
+    "1": "Prairie",
+    "2": "Ville",
+    "3": "Désert",
+    "4": "Nuit"
+  },
+  "skin": {
+    "rot": "Rouge",
+    "blau": "Bleu",
+    "gelb": "Jaune",
+    "gruen": "Vert",
+    "lila": "Violet",
+    "stern": "Étoiles",
+    "herz": "Cœur",
+    "heissluft": "Montgolfière",
+    "gold": "Or"
   }
 }

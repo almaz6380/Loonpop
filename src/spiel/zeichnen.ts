@@ -422,6 +422,17 @@ function hintergrund(
   }
 }
 
+/**
+ * Bodenbilder je Welt (23.11.2026): `kante` = Anteil der Bildhoehe, ab dem der
+ * Boden geschlossen ist (gemessen: erste Zeile mit > 60 % deckenden Pixeln),
+ * `hoehe` = gezeichnete Hoehe, `oben`/`unten` = Farbe des Bodens darunter.
+ * ⚠ Neues Bodenbild → kante neu messen, sonst steht ein Streifen Grund frei.
+ */
+const BODEN_BILD: Record<number, { kante: number; hoehe: number; oben: string; unten: string }> = {
+  1: { kante: 0.199, hoehe: 176, oben: '#5da046', unten: '#3e6a3a' },
+  2: { kante: 0.45, hoehe: 210, oben: '#a8806a', unten: '#79604f' },
+};
+
 /** Wiese mit Halmen und ein paar Blumen. */
 function wiese(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: number, unten: number) {
   const hoehe = unten > bodenY ? unten : bodenY + 120;
@@ -429,21 +440,25 @@ function wiese(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: 
   const von = sicht.kameraX - 30;
   const bis = sicht.kameraX + sichtbar + 30;
 
+  // Mit Bild: ein Streifen Boden, Grasbueschel bzw. Laternen ragen ueber
+  // bodenY hinaus. Eigene Weltbilder haben ihre Bodenkante woanders als die
+  // Wiese (BODEN_BILD), deshalb wird an der Kante ausgerichtet, nicht oben.
+  const wiesenBild = weltBild(sicht, 'boden.png', '/bilder/wiese.png');
+  const eigen = wiesenBild instanceof HTMLImageElement && !wiesenBild.src.endsWith('/bilder/wiese.png');
+  const masse = (eigen && BODEN_BILD[sicht.welt ?? 1]) || BODEN_BILD[1];
+
   const gras = ctx.createLinearGradient(0, bodenY, 0, hoehe);
-  gras.addColorStop(0, '#7dc25e');
-  gras.addColorStop(0.3, '#5da046');
-  gras.addColorStop(1, '#3d6e30');
+  gras.addColorStop(0, masse.oben);
+  gras.addColorStop(1, masse.unten);
   ctx.fillStyle = gras;
   ctx.fillRect(von, bodenY, bis - von, hoehe - bodenY);
 
-  // Mit Bild: ein Streifen Wiese, die Grasbueschel ragen ueber bodenY hinaus.
-  // Darunter bleibt der Verlauf sichtbar, wo das Bild nicht hinreicht.
-  const wiesenBild = weltBild(sicht, 'boden.png', '/bilder/wiese.png');
   if (wiesenBild) {
-    ctx.fillStyle = '#3e6a3a';
-    ctx.fillRect(von, bodenY + 60, bis - von, hoehe - bodenY - 60);
-    // 23.11.2026: hoeher, damit unter dem Gras kein flacher Streifen bleibt.
-    kacheln(ctx, wiesenBild, von, bis, 0, bodenY - 52, 176);
+    // Kante des Bodens im Bild 17 px ueber bodenY (wie die Wiese seit 23.11.).
+    const y = bodenY - 17 - masse.kante * masse.hoehe;
+    ctx.fillStyle = masse.unten;
+    ctx.fillRect(von, y + masse.hoehe - 2, bis - von, hoehe - y - masse.hoehe + 2);
+    kacheln(ctx, wiesenBild, von, bis, 0, y, masse.hoehe);
     return;
   }
 

@@ -432,6 +432,7 @@ function hintergrund(
 const BODEN_BILD: Record<number, { kante: number; hoehe: number; oben: string; unten: string }> = {
   1: { kante: 0.199, hoehe: 176, oben: '#5da046', unten: '#3e6a3a' },
   2: { kante: 0.45, hoehe: 210, oben: '#a8806a', unten: '#79604f' },
+  3: { kante: 0.054, hoehe: 170, oben: '#ecc171', unten: '#e8b967' },
   4: { kante: 0.276, hoehe: 190, oben: '#1d313c', unten: '#05101a' },
 };
 

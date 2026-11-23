@@ -531,6 +531,12 @@ Josef: „sieht billig aus und funktioniert nicht gut“. Umgebaut auf dem Zweig
   die Kante um 1 px eingezogen — Gemini trifft #FF00FF nie und malt einen lila Schein.
   ⚠ Bilder, die Josef nur als Vorschau mitten in einem Lauf schickt, kommen nicht als
   Datei an; er muss sie als eigene Nachricht schicken.
+- **Alle Bilder da (23.11.2026):** 4 Welten je Himmel/fern/nah/Boden, 9 Ballon-Skins, Logo,
+  Münze, Stern. ⚠ Bodenbilder haben ihre Bodenkante an verschiedener Höhe: `BODEN_BILD` in
+  `zeichnen.ts` (kante gemessen = erste Zeile mit > 60 % deckenden Pixeln). Neues Bodenbild →
+  neu messen, sonst steht ein Streifen Grundfarbe frei (so lag in der Stadt erst ein grüner
+  Wiesenstreifen über dem Pflaster). Skins werden auf 368 px Höhe verkleinert und mit ihrem
+  eigenen Seitenverhältnis gezeichnet (Heißluftballon mit Korb, ohne Schnur).
 - **Schärfe:** Pixeldichte bis 3 (`dichte.ts`), Ballon in voller Auflösung.
 - **Effekte** (`zeichnen.ts`): Knall-Ring, flatternde Fetzen, Rütteln (`ruetteln`),
   Konfetti, Staubwölkchen — alles aus `streu`/`welt.nachher`, kein Math.random.

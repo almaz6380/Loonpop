@@ -87,7 +87,9 @@ def main() -> None:
     breite = (np.asarray(ballon.getchannel('A')) > 128).sum(axis=1)
     unten = max(i for i, b in enumerate(breite) if b > 0.04 * breite.max())
     ballon = zuschneiden(ballon.crop((0, 0, ballon.width, unten + 1)))
-    auf_breite(ballon, 200).save(ZIEL / 'ballon.png', optimize=True)
+    # Volle Auflösung (23.11.2026): auf 200 px verkleinert wirkte er auf
+    # iPhones weich.
+    ballon.save(ZIEL / 'ballon.png', optimize=True)
     print('ballon', ballon.size, 'Seitenverhaeltnis', round(ballon.width / ballon.height, 4))
 
     # Das Geblaese: Die Trichteroeffnung bestimmt, wo der Strahl beginnt.

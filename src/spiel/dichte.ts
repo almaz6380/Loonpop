@@ -9,7 +9,9 @@
 // im Mittel zu lange dauern, in kleinen Stufen herunter. Nie wieder hinauf,
 // sonst pendelt es zwischen scharf-und-ruckelig und weich-und-fluessig.
 
-export const DICHTE_MAX = 2;
+// ⚠ Seit 23.11.2026 bis 3: Mit 2 wirkte der neue 3D-Ballon auf iPhones (Dichte 3)
+// weich, Josef: „nicht so scharf“. Schwache Geräte stufen sich weiter selbst herunter.
+export const DICHTE_MAX = 3;
 export const DICHTE_MIN = 1;
 /** Ueber so viele Bilder wird gemittelt, bevor entschieden wird. */
 export const DICHTE_FENSTER = 30;

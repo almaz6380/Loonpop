@@ -408,6 +408,20 @@ function zeichneGeblaese(ctx: CanvasRenderingContext2D, welt: Welt, gy: number, 
   ctx.ellipse(gx, bodenY + 62, 46, 10, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // Staubwoelkchen am Boden, solange es blaest — das Geraet arbeitet sichtbar.
+  if (st > 0.1) {
+    for (let i = 0; i < 6; i++) {
+      const p = (welt.zeit * 1.6 + i / 6) % 1;
+      const seite = i % 2 === 0 ? -1 : 1;
+      const x = gx + seite * (30 + p * 46 + streu(i) * 10);
+      const y = bodenY + 58 - p * 18;
+      ctx.fillStyle = `rgba(235,240,225,${0.35 * st * (1 - p)})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 5 + p * 9, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
   // Mit Bild: Die Trichteroeffnung sitzt genau an der Duese, dort beginnt der
   // gezeichnete und der gerechnete Strahl. Beim Blasen zittert es ein wenig —
   // das gemalte Laufrad, das sich dreht, gibt es im Bild nicht.
@@ -545,38 +559,87 @@ function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bo
   ctx.restore();
 }
 
-/** Der Nachklang: Fetzen beim Platzen, Funken beim Ankommen. */
+/** Der Nachklang: Fetzen beim Platzen, Konfetti beim Ankommen (Neugestaltung 23.11.2026). */
 function nachklang(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt) {
   const t = welt.nachher;
-  if (t > 1.2) return;
   const r = welt.ballon.radius;
 
   if (welt.ausgang === 'geplatzt') {
-    for (let i = 0; i < 14; i++) {
-      const w = (i / 14) * Math.PI * 2 + streu(i) * 0.6;
-      const tempo = 180 + streu(i * 5) * 260;
-      const x = pos.x + Math.cos(w) * tempo * t;
-      const y = pos.y + Math.sin(w) * tempo * t + 420 * t * t;
-      ctx.fillStyle = `rgba(230,60,88,${Math.max(0, 1 - t / 1.2)})`;
+    if (t > 1.4) return;
+    // Weisser Blitzring: der Knall, den man sieht.
+    if (t < 0.22) {
+      const p = t / 0.22;
+      ctx.strokeStyle = `rgba(255,255,255,${0.9 * (1 - p)})`;
+      ctx.lineWidth = 10 * (1 - p) + 1;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, r * (0.8 + p * 2.4), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(255,250,235,${0.55 * (1 - p)})`;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, r * (1 - p * 0.6), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Gummifetzen: gewellte Streifen in Ballonrot, flattern und fallen.
+    const deck = Math.max(0, 1 - t / 1.4);
+    for (let i = 0; i < 18; i++) {
+      const w = (i / 18) * Math.PI * 2 + streu(i) * 0.7;
+      const tempo = 160 + streu(i * 5) * 300;
+      const bremse = 1 - Math.min(0.6, t * 0.6);
+      const x = pos.x + Math.cos(w) * tempo * t * bremse + Math.sin(t * 9 + i) * 6;
+      const y = pos.y + Math.sin(w) * tempo * t * bremse + 380 * t * t;
+      const gr = 5 + streu(i * 3) * 7;
       ctx.save();
       ctx.translate(x, y);
-      ctx.rotate(w + t * 7);
+      ctx.rotate(w + t * (6 + streu(i * 7) * 8));
+      // Flattern: die Breite pumpt, wie ein Blatt, das sich dreht.
+      ctx.scale(1, 0.35 + Math.abs(Math.sin(t * 14 + i)) * 0.65);
+      ctx.fillStyle = i % 3 === 0 ? `rgba(255,120,135,${deck})` : `rgba(214,38,58,${deck})`;
       ctx.beginPath();
-      ctx.moveTo(-6, -4); ctx.lineTo(7, 0); ctx.lineTo(-4, 6);
+      ctx.moveTo(-gr, -gr * 0.5);
+      ctx.quadraticCurveTo(0, -gr * 1.1, gr, -gr * 0.3);
+      ctx.quadraticCurveTo(gr * 0.4, gr * 0.6, -gr * 0.8, gr * 0.5);
       ctx.closePath();
       ctx.fill();
       ctx.restore();
     }
   } else if (welt.ausgang === 'geschafft') {
-    for (let i = 0; i < 16; i++) {
-      const w = (i / 16) * Math.PI * 2;
-      const d = r + t * 200;
-      ctx.fillStyle = `rgba(255,226,120,${Math.max(0, 1 - t / 1.2)})`;
+    if (t > 2.2) return;
+    // Lichtring wie bisher, nur kraeftiger.
+    if (t < 0.6) {
+      const p = t / 0.6;
+      ctx.strokeStyle = `rgba(255,226,120,${1 - p})`;
+      ctx.lineWidth = 6;
       ctx.beginPath();
-      ctx.arc(pos.x + Math.cos(w) * d, pos.y + Math.sin(w) * d, 4 - t * 2, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(pos.x, pos.y, r + p * 160, 0, Math.PI * 2);
+      ctx.stroke();
     }
+    // Konfetti: schiesst hoch, faellt flatternd. Farben aus streu, nie Math.random.
+    const farben = ['#ff4d6d', '#ffd75e', '#4cc9f0', '#80ed99', '#c77dff'];
+    const deck = Math.max(0, 1 - Math.max(0, t - 1.4) / 0.8);
+    for (let i = 0; i < 40; i++) {
+      const w = -Math.PI / 2 + (streu(i) - 0.5) * 2.4;
+      const tempo = 260 + streu(i * 3) * 340;
+      const x = pos.x + Math.cos(w) * tempo * t * 0.8 + Math.sin(t * 6 + i) * 10;
+      const y = pos.y + Math.sin(w) * tempo * t + 520 * t * t;
+      ctx.save();
+      ctx.globalAlpha = deck;
+      ctx.translate(x, y);
+      ctx.rotate(t * (5 + streu(i * 9) * 8) + i);
+      ctx.scale(1, Math.abs(Math.cos(t * 11 + i)) + 0.15);
+      ctx.fillStyle = farben[i % farben.length];
+      ctx.fillRect(-4, -2.5, 8, 5);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
   }
+}
+
+/** Kurzes Ruetteln nach dem Platzen (Spielzeit-unabhaengig, aus welt.nachher). */
+export function ruetteln(welt: Welt): Punkt {
+  const t = welt.nachher;
+  if (welt.ausgang !== 'geplatzt' || t > 0.28) return { x: 0, y: 0 };
+  const staerke = 7 * (1 - t / 0.28);
+  return { x: Math.sin(t * 95) * staerke, y: Math.cos(t * 77) * staerke * 0.7 };
 }
 
 // ---------------------------------------------------------------------- Bild
@@ -602,7 +665,8 @@ export function zeichne(
   // die Spielseite gesetzt hat. Gerechnet wird ab hier in CSS-Pixeln.
   ctx.save();
   ctx.clearRect(0, 0, sicht.breite, sicht.hoehe);
-  ctx.translate(sicht.randX, sicht.randY);
+  const zittern = ruetteln(welt);
+  ctx.translate(sicht.randX + zittern.x, sicht.randY + zittern.y);
   ctx.scale(sicht.skala, sicht.skala);
   ctx.translate(-sicht.kameraX, -kameraY);
   // Nichts unter den Boden zeichnen: Das Geblaesebild reicht ein Stueck unter

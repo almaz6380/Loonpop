@@ -484,19 +484,8 @@ export default function SpielPage({ level, endlos, tages, zurueck, weiter }: {
 // Geraet anders aus und wirkten billig.
 
 function Muenze({ klein }: { klein?: boolean }) {
-  const g = klein ? 'w-5 h-5' : 'w-8 h-8';
-  return (
-    <svg viewBox="0 0 24 24" className={g} aria-hidden="true">
-      <defs>
-        <linearGradient id="mz" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#fff3a8" /><stop offset=".45" stopColor="#ffc93c" /><stop offset="1" stopColor="#d9860b" />
-        </linearGradient>
-      </defs>
-      <circle cx="12" cy="13" r="10" fill="#a8650a" />
-      <circle cx="12" cy="12" r="10" fill="url(#mz)" />
-      <circle cx="12" cy="12" r="6.6" fill="none" stroke="#fff" strokeOpacity=".55" strokeWidth="1.4" />
-    </svg>
-  );
+  // Das Gemini-Bild (public/bilder/muenze.png), dasselbe wie im Spielfeld.
+  return <img src="/bilder/muenze.png" alt="" aria-hidden="true" className={klein ? 'w-5 h-5' : 'w-8 h-8'} />;
 }
 
 function Stern({ an, verzoegerung, gross }: { an: boolean; verzoegerung: number; gross?: boolean }) {

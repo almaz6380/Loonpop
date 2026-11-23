@@ -440,12 +440,7 @@ function MiniStern({ an }: { an?: boolean }) {
 }
 
 function MiniMuenze() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden="true">
-      <circle cx="12" cy="13" r="10" fill="#a8650a" /><circle cx="12" cy="12" r="10" fill="#ffc93c" />
-      <circle cx="12" cy="12" r="6.6" fill="none" stroke="#fff" strokeOpacity=".6" strokeWidth="1.4" />
-    </svg>
-  );
+  return <img src="/bilder/muenze.png" alt="" aria-hidden="true" className="w-4 h-4" />;
 }
 
 function Schloss({ klein }: { klein?: boolean }) {

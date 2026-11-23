@@ -369,8 +369,15 @@ export default function MenuePage({ fortschritt, werbefrei, setWerbefrei, spiele
                   aria-pressed={aktiv}
                   className={`rounded-2xl p-2 flex flex-col items-center gap-1 transition active:scale-95
                               ${aktiv ? 'bg-white/25 ring-2 ring-[#ffd75e]' : 'bg-white/8'} ${!hat && !leistbar ? 'opacity-50' : ''}`}>
-                  <img src="/bilder/ballon.png" alt="" className="h-12"
-                       style={{ filter: SKIN_FILTER[sk.id] }} />
+                  {/* Eigenes Bild aus Gemini, sonst der rote Ballon umgefaerbt
+                      (wie im Spiel, skinBild in zeichnen.ts). */}
+                  <img src={sk.id === 'rot' ? '/bilder/ballon.png' : `/bilder/ballon-${sk.id}.png`} alt="" className="h-12"
+                       onError={(e) => {
+                         const img = e.currentTarget;
+                         if (img.src.endsWith('/bilder/ballon.png')) return;
+                         img.src = '/bilder/ballon.png';
+                         img.style.filter = SKIN_FILTER[sk.id] ?? 'none';
+                       }} />
                   <span className="text-xs font-semibold truncate max-w-full">{t(`skin.${sk.id}`)}</span>
                   <span className="schrift-rund text-xs flex items-center gap-1 text-[#ffe48a]">
                     {aktiv ? t('menue.gewaehlt') : hat ? '✓' : <><MiniMuenze />{sk.preis}</>}

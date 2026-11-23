@@ -656,7 +656,11 @@ function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bo
   const ballonBild = skinBild(skin);
   if (ballonBild) {
     const hoch = 2 * r + KNOTEN;
-    const breit = hoch * BALLON_BILD_SEITEN;
+    // Eigene Skin-Bilder haben ihr eigenes Seitenverhaeltnis (Heissluftballon
+    // mit Korb ist schmaler), sonst wuerden sie gestaucht.
+    const bw = ballonBild instanceof HTMLImageElement ? ballonBild.naturalWidth : (ballonBild as HTMLCanvasElement).width;
+    const bh = ballonBild instanceof HTMLImageElement ? ballonBild.naturalHeight : (ballonBild as HTMLCanvasElement).height;
+    const breit = bw && bh && skin && skin !== 'rot' ? hoch * (bw / bh) : hoch * BALLON_BILD_SEITEN;
     ctx.drawImage(ballonBild, -breit / 2, -r, breit, hoch);
     ctx.restore();
     return;

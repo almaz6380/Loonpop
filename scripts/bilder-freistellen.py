@@ -180,6 +180,8 @@ def main() -> None:
         breite = (np.asarray(b.getchannel('A')) > 128).sum(axis=1)
         unten = max(i for i, w in enumerate(breite) if w > 0.04 * breite.max())
         b = zuschneiden(b.crop((0, 0, b.width, unten + 1)))
+        # Gleiche Hoehe wie der rote Ballon (368 px), sonst je 250 KB.
+        b = b.resize((round(b.width * 368 / b.height), 368), Image.LANCZOS)
         b.save(ZIEL / f'ballon-{skin}.png', optimize=True)
     for name in ['muenze', 'stern']:
         q = QUELLEN / f'{name}.jpg'

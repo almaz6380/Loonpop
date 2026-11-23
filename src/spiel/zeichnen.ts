@@ -37,36 +37,57 @@ const WELT_NAME = ['', 'wiese', 'stadt', 'wueste', 'nacht'];
  * Das Bild einer Welt, wenn es sie gibt, sonst das der Wiese. Fehlt die Datei,
  * liefert `bild` null (404 = naturalWidth 0) und es bleibt beim Wiesenbild.
  */
-function weltBild(sicht: { welt?: number }, eigenes: string, wiese: string): HTMLImageElement | null {
+function weltBild(sicht: { welt?: number }, eigenes: string, wiese: string): HTMLImageElement | HTMLCanvasElement | null {
   const w = sicht.welt ?? 1;
   if (w > 1) {
     const b = bild(`/bilder/${WELT_NAME[w]}-${eigenes}`);
     if (b) return b;
   }
-  return bild(wiese);
+  const basis = bild(wiese);
+  if (!basis || w === 1) return basis;
+  return getoent(basis, w, eigenes === 'himmel.jpg');
 }
 
 /**
- * Faerbung je Welt, solange ihre eigenen Bilder fehlen (23.11.2026). Eine
- * Farbschicht ueber Himmel und Huegeln macht aus der Wiese Abend, Wueste,
- * Nacht. Sobald ein eigenes Bild geladen ist, faellt die Schicht weg.
+ * Faerbung je Welt, solange ihre eigenen Bilder fehlen (23.11.2026): das
+ * Wiesenbild, einmal in ein eigenes Canvas umgefaerbt. Nur die Pixel des Bildes
+ * (source-atop), sonst entstuenden am durchsichtigen Rand der Huegel Kanten.
  */
-const WELT_TOENUNG: Record<number, { farbe: string; mischung: GlobalCompositeOperation; staerke: number }> = {
-  2: { farbe: '#ff8a3d', mischung: 'soft-light', staerke: 0.75 },
-  3: { farbe: '#ffb347', mischung: 'multiply', staerke: 0.55 },
+const WELT_TOENUNG: Record<number, { farbe: string; mischung: GlobalCompositeOperation; staerke: number; himmel?: [string, string] }> = {
+  2: { farbe: '#ff8a3d', mischung: 'soft-light', staerke: 0.8 },
+  3: { farbe: '#f0a23c', mischung: 'color', staerke: 0.55, himmel: ['rgba(226,112,48,0.78)', 'rgba(252,214,140,0.85)'] },
   4: { farbe: '#0d1a4a', mischung: 'multiply', staerke: 0.85 },
 };
-
-function toenen(ctx: CanvasRenderingContext2D, sicht: { welt?: number }, eigenes: string, x: number, y: number, b: number, h: number) {
-  const w = sicht.welt ?? 1;
+const toenCache = new Map<string, HTMLCanvasElement>();
+function getoent(basis: HTMLImageElement, w: number, himmel: boolean): HTMLCanvasElement {
+  const schluessel = `${basis.src}|${w}`;
+  let c = toenCache.get(schluessel);
+  if (c) return c;
   const t = WELT_TOENUNG[w];
-  if (!t || bild(`/bilder/${WELT_NAME[w]}-${eigenes}`)) return;
-  ctx.save();
-  ctx.globalCompositeOperation = t.mischung;
-  ctx.globalAlpha = t.staerke;
-  ctx.fillStyle = t.farbe;
-  ctx.fillRect(x, y, b, h);
-  ctx.restore();
+  c = document.createElement('canvas');
+  c.width = basis.naturalWidth;
+  c.height = basis.naturalHeight;
+  const g = c.getContext('2d')!;
+  g.drawImage(basis, 0, 0);
+  if (himmel && t.himmel) {
+    // Wuestenhimmel: ein warmer Verlauf — jede Mischart machte aus Blau Grau.
+    const v = g.createLinearGradient(0, 0, 0, c.height);
+    v.addColorStop(0, t.himmel[0]);
+    v.addColorStop(1, t.himmel[1]);
+    g.fillStyle = v;
+    g.fillRect(0, 0, c.width, c.height);
+  } else {
+    g.globalCompositeOperation = t.mischung;
+    g.globalAlpha = t.staerke;
+    g.fillStyle = t.farbe;
+    g.fillRect(0, 0, c.width, c.height);
+    // Durchsichtigkeit des Originals wiederherstellen.
+    g.globalCompositeOperation = 'destination-in';
+    g.globalAlpha = 1;
+    g.drawImage(basis, 0, 0);
+  }
+  toenCache.set(schluessel, c);
+  return c;
 }
 function bild(pfad: string): HTMLImageElement | null {
   let b = bilder.get(pfad);
@@ -84,10 +105,10 @@ function bild(pfad: string): HTMLImageElement | null {
  * gespiegelt passen die Raender immer. Ein Ueberblenden ergab doppelte Kanten.
  */
 function kacheln(
-  ctx: CanvasRenderingContext2D, b: HTMLImageElement,
+  ctx: CanvasRenderingContext2D, b: HTMLImageElement | HTMLCanvasElement,
   von: number, bis: number, versatz: number, y: number, hoehe: number,
 ) {
-  const breite = hoehe * (b.naturalWidth / b.naturalHeight);
+  const breite = hoehe * (b.width / b.height);
   const erste = Math.floor((von - versatz) / breite);
   const letzte = Math.ceil((bis - versatz) / breite);
   for (let n = erste; n <= letzte; n++) {
@@ -277,7 +298,6 @@ function hintergrund(
   const himmelBild = weltBild(sicht, 'himmel.jpg', '/bilder/himmel.jpg');
   if (himmelBild) {
     ctx.drawImage(himmelBild, sicht.kameraX - 20, oben, sichtbar + 40, hoehe);
-    toenen(ctx, sicht, 'himmel.jpg', sicht.kameraX - 20, oben, sichtbar + 40, hoehe);
     // Die Nacht bekommt Sterne, solange ihr eigener Himmel fehlt.
     if ((sicht.welt ?? 1) === 4 && !bild('/bilder/nacht-himmel.jpg')) {
       for (let i = 0; i < 70; i++) {
@@ -383,7 +403,6 @@ function hintergrund(
     const bis = sicht.kameraX + sichtbar + 40;
     kacheln(ctx, fern, von, bis, sicht.kameraX * 0.75, bodenY - 250, 270);
     kacheln(ctx, nah, von, bis, sicht.kameraX * 0.5, bodenY - 170, 190);
-    toenen(ctx, sicht, 'nah.png', von, bodenY - 260, bis - von, 300);
     return;
   }
   for (const [tiefe, hoehenAnteil, farbe] of [[0.35, 0.16, '#5e86a8'], [0.6, 0.1, '#4a7a6a']] as const) {
@@ -424,7 +443,6 @@ function wiese(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: 
     ctx.fillStyle = '#3e6a3a';
     ctx.fillRect(von, bodenY + 60, bis - von, hoehe - bodenY - 60);
     kacheln(ctx, wiesenBild, von, bis, 0, bodenY - 46, 136);
-    toenen(ctx, sicht, 'boden.png', von, bodenY - 50, bis - von, hoehe - bodenY + 50);
     return;
   }
 

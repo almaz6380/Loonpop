@@ -403,10 +403,12 @@ PRUEF_NOTIZ = ('LoonPop is a single-player skill game. No account and no login. 
                'button “Restore purchases” are on the main menu below the level grid; the '
                'purchase removes banner and full-screen ads, the optional video stays '
                'available. The tracking prompt (ATT) appears at first launch. Gameplay: '
-               'touch and hold to blow the leaf blower; slide to move it. The blower only '
-               'blows straight up: to steer the balloon sideways, stand off-centre beneath '
-               'it, so the edge of the air stream pushes it (level 1 shows this). All levels '
-               'are reachable by playing; the endless mode is available from the start.')
+               'touch and hold to blow the leaf blower; slide to move it. The blower follows '
+               'your finger and tilts towards it, pushing the balloon sideways; a quick swipe '
+               'gives a gust (level 1 shows this). Levels are grouped into four worlds that '
+               'unlock with stars earned in the previous world; coins collected in levels buy '
+               'balloon skins (no real money). A daily flight and the endless mode are '
+               'available from the start.')
 V2 = 'https://api.appstoreconnect.apple.com/v2'
 
 

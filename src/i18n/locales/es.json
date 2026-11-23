@@ -3,7 +3,7 @@
     "titel": "LoonPop",
     "untertitel": "Mantén el soplador de hojas bajo el globo y pulsa. Las agujas no perdonan.",
     "level": "Nivel {{n}}",
-    "hinweis": "Desliza el soplador hacia los lados y mantén pulsado para soplar. Si te colocas desplazado, empujas el globo hacia un lado.",
+    "hinweis": "Mantén pulsado para soplar. Desliza hacia un lado: el soplador se inclina y empuja el globo. Un deslizamiento rápido da una ráfaga.",
     "hoch": "arriba",
     "strecke": "recorrido",
     "gesperrt": "bloqueado",

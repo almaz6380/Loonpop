@@ -47,15 +47,16 @@ const TEST = {
 // Die echten LoonPop-Bloecke traegt Josef nach dem Anlegen in AdMob ein
 // (docs/store.md, „Werbung einrichten“).
 //
-// ⚠ `rewarded` (Weiterfliegen) ist noch leer: Josef legt die beiden Bloecke
-// „Belohnt“ in AdMob an. Solange die ID fehlt, zeigt das Ende-Fenster den
-// Knopf einfach nicht (weiterfliegenMoeglich).
+// `rewarded` (Weiterfliegen): seit 23.11.2026 auf beiden Plattformen gesetzt.
+// Ist eine ID leer, zeigt das Ende-Fenster den Knopf einfach nicht
+// (weiterfliegenMoeglich).
 const LIVE = {
   // iOS-App ca-app-pub-8860791993288062~7035556835 (angelegt 04.10.2026)
   ios: {
     banner: 'ca-app-pub-8860791993288062/2004833844',
     vollbild: 'ca-app-pub-8860791993288062/7863665182',
-    rewarded: '',
+    // Belohnt „Weiterfliegen“, angelegt 23.11.2026.
+    rewarded: 'ca-app-pub-8860791993288062/2400589471',
   },
   // Android-App ca-app-pub-8860791993288062~5237501849 (angelegt 04.10.2026)
   android: {

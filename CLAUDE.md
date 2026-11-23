@@ -494,8 +494,8 @@ Datenschutzerklärung automatisch. Nichts gebaut, nichts hochgeladen.
   ⚠ Das Plugin löst `showRewardVideoAd()` nur bei verdienter Belohnung auf. Deshalb
   hört `zeigeBelohnungsvideo()` auf Showed/Dismissed/FailedToShow, hat eine harte
   Zeitgrenze und eine Doppeltipp-Sperre (Muster Mahjong `requestReward`).
-  ⚠ `LIVE.*.rewarded` ist noch leer: Dann fehlt der Knopf (kein Fehler), und
-  `scripts/werbung-bereit.mjs` warnt nur.
+  `LIVE.*.rewarded` seit 23.11.2026 gesetzt (iOS `…/2400589471`, Android
+  `…/3111035912`). Fehlt eine ID, fehlt nur der Knopf (kein Fehler).
 - **Bewertungsbitte** (`src/lib/bewertung.ts`, `@capacitor-community/in-app-review`):
   nach einem geschafften Level beim Verlassen des Ende-Fensters, ab 5 geschafften
   Leveln, höchstens alle 90 Tage, nie zugleich mit einer Vollbild-Anzeige, nur
@@ -506,8 +506,7 @@ Datenschutzerklärung automatisch. Nichts gebaut, nichts hochgeladen.
   „offline spielbar, für Werbung und Kauf online“ ergänzt.
 
 **Was Josef noch tun muss (je mit eigenem „ja“):**
-1. AdMob: in beiden Apps einen Block **Belohnt** anlegen, IDs an Claude
-   (`LIVE.ios.rewarded`, `LIVE.android.rewarded`).
+1. ✅ (23.11.2026) AdMob: Block **Belohnt** in beiden Apps, IDs in `werbung.ts`.
 2. ✅ (23.11.2026) Play Console → App-Inhalte: Werbe-ID **Ja**, „Anzeigen“ (so heißt
    „Werbung“ dort) **Ja**, Datensicherheit neu (docs/store.md, Teil D). Steht auf „Bereit
    für die Überprüfung“, geht mit dem 1.1-Build an Google.

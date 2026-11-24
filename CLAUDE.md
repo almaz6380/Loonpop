@@ -484,9 +484,16 @@ Screenshots in 16 Store-Sprachen committet. ASC: Version 1.1 angelegt (`app-stor
 `version-anlegen`, neu), Texte samt „Neu in dieser Version“ (`appstore.whatsNew` in
 `store-assets/texte/*.json`), Build 3 zugewiesen, 64 Screenshots, Kauf READY_TO_SUBMIT.
 Store-Bilder neu (`store-bilder.mjs`): Neigung, Welten, Nacht, Endlos — die alte erste Zeile
-„Gebläse, das nur nach oben bläst“ war seit 1a falsch. Offen: RevenueCat-Android (Josef),
-dann `play-eintrag.yml` `produktion` vc3, Apple-Einreichung MIT Kauf in ASC (Josef, der erste
-Kauf geht nicht per API), danach Merge nach `main`.
+„Gebläse, das nur nach oben bläst“ war seit 1a falsch.
+**24.11.2026 ausgeliefert:** Prüfnotiz auf 1.1 umgeschrieben (`app-store.yml` `pflicht` — in ASC
+stand noch der 1.0-Text „no in-app purchases and no ads“). Josef hat in ASC 1.1 (Build 3) **zusammen
+mit** dem Kauf „Werbung entfernen“ eingereicht, Einreichung `82fd219f-97be-4652-808d-917a5375bd65`,
+`WAITING_FOR_REVIEW`. ⚠ Der Kauf allein im Übermittlungsentwurf → „erster IAP muss mit neuer
+App-Version“: erst auf der Versionsseite „Zur Prüfung hinzufügen“, dann beides übermitteln.
+RevenueCat: Android-Produkt am Entitlement `no_ads`, Offering `default` in beiden Zeilen.
+Android **vc3 (1.1) in Produktion an alle** (`play-eintrag.yml` `produktion`, Edit
+`06560752481628269219` committet). Danach Merge nach `main`.
+Offen in ASC: neue Altersfreigabe-Fragen (Pflicht bis 15.01.2027).
 
 - **Werbung** (`src/lib/werbung.ts`): `MIT_TESTANZEIGEN = false`, echte IDs.
   Banner nur im Menü, Vollbild nach jedem dritten Platzen beim Tippen auf
@@ -524,11 +531,10 @@ Kauf geht nicht per API), danach Merge nach `main`.
    „Werbung“ dort) **Ja**, Datensicherheit neu (docs/store.md, Teil D). Steht auf „Bereit
    für die Überprüfung“, geht mit dem 1.1-Build an Google.
 3. ✅ (23.11.2026) Apple App-Datenschutz: **Tracking ja** usw. (docs/store.md, Teil D).
-4. Android-Build mit Kauf-Berechtigung hochladen, dann `play-eintrag.yml` `kauf`
-   (Google-Kauf `loonpop_no_ads`).
-5. RevenueCat: Android-Produkt verknüpfen und ins Offering `default` hängen
-   (sonst `CONFIGURATION_ERROR`).
-6. Danach Branch nach `main`, bauen, Apple-Kauf MIT Version 1.1 einreichen.
+4. ✅ (24.11.2026) Google-Kauf `loonpop_no_ads` angelegt und aktiv.
+5. ✅ (24.11.2026) RevenueCat Android verknüpft, Offering `default` in beiden Zeilen.
+6. ✅ (24.11.2026) 1.1 samt Kauf bei Apple eingereicht, Android an alle, Merge nach `main`.
+7. Bis 15.01.2027: Altersfreigabe-Fragen in ASC beantworten (App-Informationen).
 
 ## Neugestaltung (23.11.2026, Teil von Version 1.1)
 

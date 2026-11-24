@@ -478,6 +478,15 @@ Datenschutzerklärung automatisch.
 (`android-release` 45260881721, Edit `00397539210800141604`), iOS Build 3 (1.1) in App Store
 Connect (`ios-release` 45260887146, Delivery `f3612da4-…`), noch NICHT eingereicht.
 Apple warnt (90725): ab April 2027 nur noch mit iOS-27-SDK (Xcode 27).
+**24.11.2026 vorbereitet:** Google-Kauf `loonpop_no_ads` angelegt und aktiv (⚠ Aktivieren
+geht nur über den Pfad `oneTimeProducts`, klein geschrieben HTML-404). Play-Texte und neue
+Screenshots in 16 Store-Sprachen committet. ASC: Version 1.1 angelegt (`app-store.yml`
+`version-anlegen`, neu), Texte samt „Neu in dieser Version“ (`appstore.whatsNew` in
+`store-assets/texte/*.json`), Build 3 zugewiesen, 64 Screenshots, Kauf READY_TO_SUBMIT.
+Store-Bilder neu (`store-bilder.mjs`): Neigung, Welten, Nacht, Endlos — die alte erste Zeile
+„Gebläse, das nur nach oben bläst“ war seit 1a falsch. Offen: RevenueCat-Android (Josef),
+dann `play-eintrag.yml` `produktion` vc3, Apple-Einreichung MIT Kauf in ASC (Josef, der erste
+Kauf geht nicht per API), danach Merge nach `main`.
 
 - **Werbung** (`src/lib/werbung.ts`): `MIT_TESTANZEIGEN = false`, echte IDs.
   Banner nur im Menü, Vollbild nach jedem dritten Platzen beim Tippen auf

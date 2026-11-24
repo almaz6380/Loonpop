@@ -390,7 +390,10 @@ def kauf_anlegen(dry_run=False):
          f'&regionsVersion.version={version}&updateMask=listings,purchaseOptions', data=produkt)
     print('  angelegt bzw. aktualisiert')
     try:
-        call(tok, 'POST', f'{basis}/onetimeproducts/{KAUF_ID}/purchaseOptions:batchUpdateStates', data={
+        # ⚠ 24.11.2026: Hier verlangt Google den Pfad in Binnenmajuskeln
+        # (oneTimeProducts), klein geschrieben antwortet es mit einer HTML-404.
+        # Der PATCH oben nimmt dagegen nur die kleine Schreibweise.
+        call(tok, 'POST', f'{basis}/oneTimeProducts/{KAUF_ID}/purchaseOptions:batchUpdateStates', data={
             'requests': [{'activatePurchaseOptionRequest': {
                 'packageName': PKG, 'productId': KAUF_ID, 'purchaseOptionId': 'standard'}}]}, fatal=False)
         print('  Kaufoption aktiv')

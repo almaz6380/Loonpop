@@ -3,7 +3,7 @@
     "titel": "LoonPop",
     "untertitel": "Segure o soprador de folhas embaixo do balão e aperte. As agulhas não perdoam.",
     "level": "Fase {{n}}",
-    "hinweis": "Deslize o soprador para os lados e segure para soprar. Se ficar de lado, você empurra o balão para o lado.",
+    "hinweis": "Segure para soprar. Arraste para o lado: o soprador se inclina e empurra o balão. Um deslize rápido dá uma rajada.",
     "hoch": "para cima",
     "strecke": "percurso",
     "gesperrt": "bloqueada",
@@ -18,7 +18,14 @@
     "spielen": "Jogar",
     "alleLevel": "Todas as fases",
     "tonAn": "Som ligado",
-    "tonAus": "Som desligado"
+    "tonAus": "Som desligado",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "Junte mais {{n}} ★ em “{{welt}}”",
+    "tagesflug": "Voo do dia",
+    "tagesflugText": "Novo a cada dia, igual para todos",
+    "serie": "Sequência de {{n}} dias",
+    "ballons": "Balões",
+    "gewaehlt": "Escolhido"
   },
   "spiel": {
     "zurueck": "Voltar",
@@ -42,8 +49,10 @@
     "bestweite": "Recorde: {{m}} m",
     "tipp": {
       "halten": "Mantenha o dedo pressionado: o soprador sopra reto para cima.",
-      "versetzt": "Agora fique um pouco de lado embaixo do balão: a borda do jato de ar o empurra para o lado."
-    }
+      "versetzt": "Arraste o dedo para o lado: o soprador se inclina e empurra o balão para lá. Um deslize rápido dá uma rajada de vento."
+    },
+    "weiterfliegen": "Continuar voando · Vídeo",
+    "videoFehlt": "Nenhum vídeo disponível agora. Tente novamente mais tarde."
   },
   "levelname": {
     "1": "Primeiro sopro",
@@ -61,5 +70,35 @@
     "19": "Porta de correr",
     "20": "Contramão",
     "21": "O moinho"
+  },
+  "werbung": {
+    "entfernen": "Remover anúncios",
+    "entfernenText": "Compre uma vez e fique sem anúncios para sempre.",
+    "wiederherstellen": "Restaurar compras",
+    "werbefrei": "Sem anúncios – obrigado pelo apoio!",
+    "einstellungen": "Configurações de anúncios",
+    "wiederhergestellt": "Compra restaurada.",
+    "nichtsGefunden": "Nenhuma compra encontrada.",
+    "fehler": {
+      "kein_angebot": "Indisponível no momento. Tente novamente mais tarde.",
+      "fehler": "Não funcionou. Tente novamente mais tarde."
+    }
+  },
+  "welt": {
+    "1": "Campo",
+    "2": "Cidade",
+    "3": "Deserto",
+    "4": "Noite"
+  },
+  "skin": {
+    "rot": "Vermelho",
+    "blau": "Azul",
+    "gelb": "Amarelo",
+    "gruen": "Verde",
+    "lila": "Roxo",
+    "stern": "Estrelas",
+    "herz": "Coração",
+    "heissluft": "Balão de ar",
+    "gold": "Ouro"
   }
 }

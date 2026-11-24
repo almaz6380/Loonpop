@@ -65,6 +65,12 @@ export type Level = {
   ziel: { pos: Punkt; radius: number };
   nadeln: Nadel[];
   zonen: Zone[];
+  /** Welt 1–4 (fehlt = 1). Bestimmt Aussehen und Freischaltung. */
+  welt?: number;
+  /** Muenzen zum Einsammeln (seit 23.11.2026). Alle = ein Stern. */
+  muenzen?: Punkt[];
+  /** Unter dieser Zeit (Spielsekunden) gibt es einen Stern. */
+  sterneZeit?: number;
   /**
    * Staendiger Wind ueber das ganze Level (px/s²). Auf Strecken treibt er den
    * Ballon nach rechts — sonst muesste man ihn ueber den Strahlrand
@@ -92,9 +98,8 @@ export type Level = {
 
 /**
  * Das Laubgeblaese — die Spielfigur. Es steht am unteren Rand, faehrt mit dem
- * Finger waagerecht mit und blaest SENKRECHT nach oben. Drehen laesst es sich
- * nicht: Seitlich gesteuert wird, indem man sich versetzt hinstellt (siehe
- * physik.ts, Strahlmodell).
+ * Finger waagerecht mit und kippt in Fahrtrichtung (seit 23.11.2026, siehe
+ * steuerung.ts). Still stehend blaest es senkrecht nach oben.
  */
 export type Geblaese = {
   /** Waagerechte Position der Duese in Levelkoordinaten. */
@@ -106,6 +111,17 @@ export type Geblaese = {
    * dem Loslassen ist das Spielgefuehl, kein Fehler.
    */
   staerke: number;
+  /**
+   * Wohin der Finger das Geblaese zieht (Levelkoordinaten). Fehlt, wenn kein
+   * Finger liegt — dann bleibt es stehen (steuerung.ts).
+   */
+  ziel?: number;
+  /** Neigung des Strahls (Bogenmass, + = nach rechts). Siehe steuerung.ts. */
+  neigung?: number;
+  /** Angeforderter Windstoss (-1 links, 1 rechts). Die Physik verbraucht ihn. */
+  stoss?: -1 | 0 | 1;
+  /** Ab welcher Spielzeit der naechste Windstoss wieder geht. */
+  stossFrei?: number;
 };
 
 export type Ballon = {
@@ -139,6 +155,12 @@ export type Welt = {
   boden: number;
   /** Nur im Endlos-Lauf: woraus die Nadeln entstehen (siehe endlos.ts). */
   endlos?: Endlos;
+  /** Ist dieser Lauf schon einmal weitergeflogen? (weiterfliegen.ts) */
+  weitergeflogen?: boolean;
+  /** Indizes der eingesammelten Muenzen (level.muenzen). */
+  gesammelt?: number[];
+  /** Bis zu welcher Spielzeit der Ballon nicht platzen kann (weiterfliegen.ts). */
+  unverwundbarBis?: number;
 };
 
 export type EndlosArt = 'hoch' | 'strecke';

@@ -39,7 +39,10 @@ def freistellen(bild: Image.Image, art: str) -> Image.Image:
         schluessel = np.array([0, 255, 0], np.float32)
     else:
         abstand = np.minimum(r, b) - g
-        schluessel = np.array([255, 0, 255], np.float32)
+        # Gemini trifft #FF00FF nie genau (23.11.2026: etwa 240/10/230). Mit
+        # der Idealfarbe gerechnet blieb an den Kanten ein lila Saum. Die
+        # echte Farbe steht in der linken oberen Ecke.
+        schluessel = np.median(a[:20, :20].reshape(-1, 3), axis=0)
     # Ab 30 Abstand beginnt der Hintergrund, ab 120 ist es nur noch Hintergrund.
     alpha = 1 - np.clip((abstand - 30) / 90, 0, 1)
     # Vordergrund zurueckrechnen: beobachtet = a·vorne + (1−a)·schluessel.
@@ -54,6 +57,23 @@ def freistellen(bild: Image.Image, art: str) -> Image.Image:
         vorne[..., 0] -= stich
         vorne[..., 2] -= stich
     alpha[alpha < 0.04] = 0
+    if art != 'gruen':
+        # Rosa Saum an Grashalmen (23.11.2026): an halb durchsichtigen Kanten
+        # Rot und Blau nicht ueber Gruen kommen lassen.
+        # Gemini malt den Schein auch in deckende Pixel nahe der Kante — deshalb
+        # alles bis 4 px vom durchsichtigen Grund, nicht nur halbdurchsichtige.
+        from PIL import ImageFilter as _F
+        nah = np.asarray(Image.fromarray((alpha * 255).astype(np.uint8)).filter(_F.MinFilter(9))) < 247
+        kante = (alpha > 0) & nah
+        g = vorne[..., 1]
+        vorne[..., 0] = np.where(kante, np.minimum(vorne[..., 0], g * 1.15 + 10), vorne[..., 0])
+        vorne[..., 2] = np.where(kante, np.minimum(vorne[..., 2], g), vorne[..., 2])
+        raus_kante = True
+        # Gemini malt um Natur-Motive einen weichen lila Schein in den
+        # Hintergrund. Den Rand deshalb um ein Pixel einziehen (23.11.2026).
+        from PIL import ImageFilter
+        a8 = Image.fromarray((alpha * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(3))
+        alpha = np.asarray(a8).astype(np.float32) / 255
     raus = np.dstack([vorne, alpha * 255]).astype(np.uint8)
     return Image.fromarray(raus, 'RGBA')
 
@@ -72,7 +92,15 @@ def main() -> None:
     ZIEL.mkdir(parents=True, exist_ok=True)
 
     ballon = zuschneiden(freistellen(Image.open(QUELLEN / 'ballon.jpg'), 'gruen'))
-    auf_breite(ballon, 200).save(ZIEL / 'ballon.png', optimize=True)
+    # Das Bild vom 23.11.2026 bringt eine Schnur mit; die zeichnet das Spiel
+    # selbst (sie schwingt mit). Abgeschnitten wird ab der untersten Zeile, die
+    # noch breiter als 4 % des Ballons ist — darunter ist nur noch Schnur.
+    breite = (np.asarray(ballon.getchannel('A')) > 128).sum(axis=1)
+    unten = max(i for i, b in enumerate(breite) if b > 0.04 * breite.max())
+    ballon = zuschneiden(ballon.crop((0, 0, ballon.width, unten + 1)))
+    # Volle Auflösung (23.11.2026): auf 200 px verkleinert wirkte er auf
+    # iPhones weich.
+    ballon.save(ZIEL / 'ballon.png', optimize=True)
     print('ballon', ballon.size, 'Seitenverhaeltnis', round(ballon.width / ballon.height, 4))
 
     # Das Geblaese: Die Trichteroeffnung bestimmt, wo der Strahl beginnt.
@@ -121,7 +149,45 @@ def main() -> None:
         ZIEL / 'menue-himmel.jpg', quality=85)
 
     himmel = Image.open(QUELLEN / 'himmel.jpg').convert('RGB')
-    himmel.resize((360, 728), Image.LANCZOS).save(ZIEL / 'himmel.jpg', quality=88)
+    # Seit 23.11.2026 in voller Breite: Mit 360 px wurde der Himmel auf dem
+    # ganzen Schirm sichtbar unscharf.
+    breite = min(1080, himmel.width)
+    himmel.resize((breite, round(himmel.height * breite / himmel.width)), Image.LANCZOS).save(
+        ZIEL / 'himmel.jpg', quality=85)
+
+    # Neugestaltung 23.11.2026: Welt-, Skin-, Muenz- und Sternbilder, sobald
+    # Josef sie aus Gemini liefert. Fehlt eine Quelle, wird sie uebersprungen —
+    # das Spiel faerbt dann die Wiese ein bzw. malt selbst (zeichnen.ts).
+    for welt in ['stadt', 'wueste', 'nacht']:
+        q = QUELLEN / f'{welt}-himmel.jpg'
+        if q.exists():
+            h = Image.open(q).convert('RGB')
+            b = min(1080, h.width)
+            h.resize((b, round(h.height * b / h.width)), Image.LANCZOS).save(ZIEL / f'{welt}-himmel.jpg', quality=85)
+        for teil in ['fern', 'nah', 'boden']:
+            q = QUELLEN / f'{welt}-{teil}.jpg'
+            if not q.exists():
+                continue
+            roh = freistellen(Image.open(q), 'magenta')
+            oben = roh.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()[1]
+            auf_breite(roh.crop((0, oben, roh.width, roh.height)), 1200).save(ZIEL / f'{welt}-{teil}.png', optimize=True)
+    for skin in ['blau', 'gelb', 'gruen', 'lila', 'stern', 'herz', 'heissluft', 'gold']:
+        q = QUELLEN / f'ballon-{skin}.jpg'
+        if not q.exists():
+            continue
+        # Gruener Ballon auf Magenta, alle anderen auf Gruen (PROMPTS.md).
+        b = zuschneiden(freistellen(Image.open(q), 'magenta' if skin == 'gruen' else 'gruen'))
+        breite = (np.asarray(b.getchannel('A')) > 128).sum(axis=1)
+        unten = max(i for i, w in enumerate(breite) if w > 0.04 * breite.max())
+        b = zuschneiden(b.crop((0, 0, b.width, unten + 1)))
+        # Gleiche Hoehe wie der rote Ballon (368 px), sonst je 250 KB.
+        b = b.resize((round(b.width * 368 / b.height), 368), Image.LANCZOS)
+        b.save(ZIEL / f'ballon-{skin}.png', optimize=True)
+    for name in ['muenze', 'stern']:
+        q = QUELLEN / f'{name}.jpg'
+        if q.exists():
+            # Stern 256: er steht im Ende-Fenster bis 56 px gross (×3 Pixeldichte).
+            auf_breite(zuschneiden(freistellen(Image.open(q), 'gruen')), 256 if name == 'stern' else 128).save(ZIEL / f'{name}.png', optimize=True)
 
     for p in sorted(ZIEL.iterdir()):
         print(p.name, Image.open(p).size, p.stat().st_size // 1024, 'KB')

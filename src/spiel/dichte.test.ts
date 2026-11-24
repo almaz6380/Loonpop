@@ -15,8 +15,9 @@ test('zu langsame Bilder senken die Dichte stufenweise bis zur Untergrenze', () 
   assert.equal(naechsteDichte(2, 60), 1.5);
 });
 
-test('die Startdichte ist hoechstens 2 und mindestens 1', () => {
-  assert.equal(startDichte(3), 2);
+test('die Startdichte ist hoechstens 3 und mindestens 1', () => {
+  assert.equal(startDichte(3), 3);
+  assert.equal(startDichte(4), 3);
   assert.equal(startDichte(0), 1);
   assert.equal(startDichte(1.5), 1.5);
 });

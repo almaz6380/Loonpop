@@ -13,9 +13,10 @@
 // ein Screenshot liesse sich nie wiederholen.
 
 import type { Welt, Punkt } from './typen.ts';
-import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe } from './physik.ts';
+import { nadelJetzt, DUESE_HOEHE, MUND, AUFWEITUNG, bodenHoehe, MUENZ_RADIUS } from './physik.ts';
 import { nadelnIn, meter } from './endlos.ts';
 import { ballonform, KNOTEN, BALLON_BILD_SEITEN } from './ballonform.ts';
+import { unverwundbar } from './weiterfliegen.ts';
 import { geblaeseMass, GEBLAESE_BILD } from './bildmasse.ts';
 
 /**
@@ -28,6 +29,66 @@ import { geblaeseMass, GEBLAESE_BILD } from './bildmasse.ts';
  * frei, alles unter /bilder/ scripts/bilder-freistellen.py.
  */
 const bilder = new Map<string, HTMLImageElement>();
+
+/** Ordnernamen der Welten fuer eigene Bilder (z. B. /bilder/stadt-himmel.jpg). */
+const WELT_NAME = ['', 'wiese', 'stadt', 'wueste', 'nacht'];
+
+/**
+ * Das Bild einer Welt, wenn es sie gibt, sonst das der Wiese. Fehlt die Datei,
+ * liefert `bild` null (404 = naturalWidth 0) und es bleibt beim Wiesenbild.
+ */
+function weltBild(sicht: { welt?: number }, eigenes: string, wiese: string): HTMLImageElement | HTMLCanvasElement | null {
+  const w = sicht.welt ?? 1;
+  if (w > 1) {
+    const b = bild(`/bilder/${WELT_NAME[w]}-${eigenes}`);
+    if (b) return b;
+  }
+  const basis = bild(wiese);
+  if (!basis || w === 1) return basis;
+  return getoent(basis, w, eigenes === 'himmel.jpg');
+}
+
+/**
+ * Faerbung je Welt, solange ihre eigenen Bilder fehlen (23.11.2026): das
+ * Wiesenbild, einmal in ein eigenes Canvas umgefaerbt. Nur die Pixel des Bildes
+ * (source-atop), sonst entstuenden am durchsichtigen Rand der Huegel Kanten.
+ */
+const WELT_TOENUNG: Record<number, { farbe: string; mischung: GlobalCompositeOperation; staerke: number; himmel?: [string, string] }> = {
+  2: { farbe: '#ff8a3d', mischung: 'soft-light', staerke: 0.8 },
+  3: { farbe: '#f0a23c', mischung: 'color', staerke: 0.55, himmel: ['rgba(226,112,48,0.78)', 'rgba(252,214,140,0.85)'] },
+  4: { farbe: '#0d1a4a', mischung: 'multiply', staerke: 0.85 },
+};
+const toenCache = new Map<string, HTMLCanvasElement>();
+function getoent(basis: HTMLImageElement, w: number, himmel: boolean): HTMLCanvasElement {
+  const schluessel = `${basis.src}|${w}`;
+  let c = toenCache.get(schluessel);
+  if (c) return c;
+  const t = WELT_TOENUNG[w];
+  c = document.createElement('canvas');
+  c.width = basis.naturalWidth;
+  c.height = basis.naturalHeight;
+  const g = c.getContext('2d')!;
+  g.drawImage(basis, 0, 0);
+  if (himmel && t.himmel) {
+    // Wuestenhimmel: ein warmer Verlauf — jede Mischart machte aus Blau Grau.
+    const v = g.createLinearGradient(0, 0, 0, c.height);
+    v.addColorStop(0, t.himmel[0]);
+    v.addColorStop(1, t.himmel[1]);
+    g.fillStyle = v;
+    g.fillRect(0, 0, c.width, c.height);
+  } else {
+    g.globalCompositeOperation = t.mischung;
+    g.globalAlpha = t.staerke;
+    g.fillStyle = t.farbe;
+    g.fillRect(0, 0, c.width, c.height);
+    // Durchsichtigkeit des Originals wiederherstellen.
+    g.globalCompositeOperation = 'destination-in';
+    g.globalAlpha = 1;
+    g.drawImage(basis, 0, 0);
+  }
+  toenCache.set(schluessel, c);
+  return c;
+}
 function bild(pfad: string): HTMLImageElement | null {
   let b = bilder.get(pfad);
   if (!b) {
@@ -44,10 +105,10 @@ function bild(pfad: string): HTMLImageElement | null {
  * gespiegelt passen die Raender immer. Ein Ueberblenden ergab doppelte Kanten.
  */
 function kacheln(
-  ctx: CanvasRenderingContext2D, b: HTMLImageElement,
+  ctx: CanvasRenderingContext2D, b: HTMLImageElement | HTMLCanvasElement,
   von: number, bis: number, versatz: number, y: number, hoehe: number,
 ) {
-  const breite = hoehe * (b.naturalWidth / b.naturalHeight);
+  const breite = hoehe * (b.width / b.height);
   const erste = Math.floor((von - versatz) / breite);
   const letzte = Math.ceil((bis - versatz) / breite);
   for (let n = erste; n <= letzte; n++) {
@@ -126,6 +187,10 @@ export type Sicht = {
    * hoeher). Nur im Endlos-Lauf nach oben, sonst 0.
    */
   kameraY?: number;
+  /** Welt 1–4 (Wiese, Stadt, Wueste, Nacht) — nur Aussehen. */
+  welt?: number;
+  /** Gewaehlter Ballon-Skin (fortschritt.SKINS) — nur Aussehen. */
+  skin?: string;
 };
 
 /**
@@ -159,12 +224,16 @@ export function sichtBerechnen(
   // ⚠ Auf Strecken bestimmt allein die HOEHE die Skala. Wuerde hier wie bei
   // `hoch` das Minimum genommen, schrumpfte eine 2400 px breite Strecke auf
   // Briefmarkengroesse.
+  // Hoch-Level (seit 23.11.2026): die HOEHE fuellt den Schirm, keine dunklen
+  // Balken mehr. Ist das Level dann breiter als der Schirm, folgt die Kamera
+  // dem Ballon seitlich (kameraMitte). Hoechstens ein Viertel darf fehlen,
+  // sonst sieht man die Nadeln nicht mehr kommen.
   const skala = art === 'strecke'
     ? hoehe / levelHoehe
-    : Math.min(breite / levelBreite, hoehe / levelHoehe);
+    : Math.min(hoehe / levelHoehe, breite / (levelBreite * 0.75));
   return {
     skala,
-    randX: art === 'strecke' ? 0 : (breite - levelBreite * skala) / 2,
+    randX: art === 'strecke' ? 0 : Math.max(0, (breite - levelBreite * skala) / 2),
     randY: (hoehe - levelHoehe * skala) / 2,
     breite,
     hoehe,
@@ -183,6 +252,13 @@ export function kameraFuer(sicht: Sicht, ballonX: number, levelBreite: number): 
   const sichtbar = sicht.breite / sicht.skala;
   const wunsch = ballonX - sichtbar * 0.38;
   return Math.max(0, Math.min(levelBreite - sichtbar, wunsch));
+}
+
+/** Hoch-Level breiter als der Schirm: Ballon mittig halten, nie ueber den Rand. */
+export function kameraMitte(sicht: Sicht, ballonX: number, levelBreite: number): number {
+  const sichtbar = sicht.breite / sicht.skala;
+  if (sichtbar >= levelBreite) return 0;
+  return Math.max(0, Math.min(levelBreite - sichtbar, ballonX - sichtbar / 2));
 }
 
 /** Bildschirmpunkt → Levelkoordinate. Fuer die Fingereingabe. */
@@ -219,9 +295,20 @@ function hintergrund(
 
   // Der Himmel selbst steht fest — er fuellt immer den ganzen Ausschnitt.
   // Das Bild bringt seine Sonne mit; nur der gemalte Rueckfall braucht eine.
-  const himmelBild = bild('/bilder/himmel.jpg');
+  const himmelBild = weltBild(sicht, 'himmel.jpg', '/bilder/himmel.jpg');
   if (himmelBild) {
     ctx.drawImage(himmelBild, sicht.kameraX - 20, oben, sichtbar + 40, hoehe);
+    // Die Nacht bekommt Sterne, solange ihr eigener Himmel fehlt.
+    if ((sicht.welt ?? 1) === 4 && !bild('/bilder/nacht-himmel.jpg')) {
+      for (let i = 0; i < 70; i++) {
+        const x = sicht.kameraX + streu(i) * sichtbar;
+        const y = oben + streu(i + 100) * hoehe * 0.7;
+        ctx.fillStyle = `rgba(255,255,240,${0.35 + 0.5 * Math.abs(Math.sin(welt.zeit * 1.5 + i))})`;
+        ctx.beginPath();
+        ctx.arc(x, y, 1 + streu(i + 200) * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
   } else {
     const himmel = ctx.createLinearGradient(0, oben, 0, oben + hoehe);
     himmel.addColorStop(0, '#152364');
@@ -260,7 +347,8 @@ function hintergrund(
     if (b) {
       const breite = gr * 3.6;
       const hoch = breite * (b.naturalHeight / b.naturalWidth);
-      ctx.globalAlpha = Math.min(1, deckung * 3.6);
+      // Nachts nur ein Hauch: helle Tageswolken leuchteten vor dem Mondhimmel.
+      ctx.globalAlpha = Math.min(1, deckung * 3.6) * (sicht.welt === 4 ? 0.3 : 1);
       ctx.drawImage(b, x - breite / 2, y - hoch / 2, breite, hoch);
       ctx.globalAlpha = 1;
       return;
@@ -309,8 +397,8 @@ function hintergrund(
   // --- Huegel, zwei Schichten ---------------------------------------------
   // Mit Bild: ferne Huegel wandern auf dem Schirm mit einem Viertel, nahe mit
   // der Haelfte des Tempos — wie die gemalten Schichten.
-  const fern = bild('/bilder/huegel-fern.png');
-  const nah = bild('/bilder/huegel-nah.png');
+  const fern = weltBild(sicht, 'fern.png', '/bilder/huegel-fern.png');
+  const nah = weltBild(sicht, 'nah.png', '/bilder/huegel-nah.png');
   if (fern && nah) {
     const von = sicht.kameraX - 40;
     const bis = sicht.kameraX + sichtbar + 40;
@@ -335,6 +423,19 @@ function hintergrund(
   }
 }
 
+/**
+ * Bodenbilder je Welt (23.11.2026): `kante` = Anteil der Bildhoehe, ab dem der
+ * Boden geschlossen ist (gemessen: erste Zeile mit > 60 % deckenden Pixeln),
+ * `hoehe` = gezeichnete Hoehe, `oben`/`unten` = Farbe des Bodens darunter.
+ * ⚠ Neues Bodenbild → kante neu messen, sonst steht ein Streifen Grund frei.
+ */
+const BODEN_BILD: Record<number, { kante: number; hoehe: number; oben: string; unten: string }> = {
+  1: { kante: 0.199, hoehe: 176, oben: '#5da046', unten: '#3e6a3a' },
+  2: { kante: 0.45, hoehe: 210, oben: '#a8806a', unten: '#79604f' },
+  3: { kante: 0.054, hoehe: 170, oben: '#ecc171', unten: '#e8b967' },
+  4: { kante: 0.276, hoehe: 190, oben: '#1d313c', unten: '#05101a' },
+};
+
 /** Wiese mit Halmen und ein paar Blumen. */
 function wiese(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: number, unten: number) {
   const hoehe = unten > bodenY ? unten : bodenY + 120;
@@ -342,20 +443,25 @@ function wiese(ctx: CanvasRenderingContext2D, welt: Welt, sicht: Sicht, bodenY: 
   const von = sicht.kameraX - 30;
   const bis = sicht.kameraX + sichtbar + 30;
 
+  // Mit Bild: ein Streifen Boden, Grasbueschel bzw. Laternen ragen ueber
+  // bodenY hinaus. Eigene Weltbilder haben ihre Bodenkante woanders als die
+  // Wiese (BODEN_BILD), deshalb wird an der Kante ausgerichtet, nicht oben.
+  const wiesenBild = weltBild(sicht, 'boden.png', '/bilder/wiese.png');
+  const eigen = wiesenBild instanceof HTMLImageElement && !wiesenBild.src.endsWith('/bilder/wiese.png');
+  const masse = (eigen && BODEN_BILD[sicht.welt ?? 1]) || BODEN_BILD[1];
+
   const gras = ctx.createLinearGradient(0, bodenY, 0, hoehe);
-  gras.addColorStop(0, '#7dc25e');
-  gras.addColorStop(0.3, '#5da046');
-  gras.addColorStop(1, '#3d6e30');
+  gras.addColorStop(0, masse.oben);
+  gras.addColorStop(1, masse.unten);
   ctx.fillStyle = gras;
   ctx.fillRect(von, bodenY, bis - von, hoehe - bodenY);
 
-  // Mit Bild: ein Streifen Wiese, die Grasbueschel ragen ueber bodenY hinaus.
-  // Darunter bleibt der Verlauf sichtbar, wo das Bild nicht hinreicht.
-  const wiesenBild = bild('/bilder/wiese.png');
   if (wiesenBild) {
-    ctx.fillStyle = '#3e6a3a';
-    ctx.fillRect(von, bodenY + 60, bis - von, hoehe - bodenY - 60);
-    kacheln(ctx, wiesenBild, von, bis, 0, bodenY - 46, 136);
+    // Kante des Bodens im Bild 17 px ueber bodenY (wie die Wiese seit 23.11.).
+    const y = bodenY - 17 - masse.kante * masse.hoehe;
+    ctx.fillStyle = masse.unten;
+    ctx.fillRect(von, y + masse.hoehe - 2, bis - von, hoehe - y - masse.hoehe + 2);
+    kacheln(ctx, wiesenBild, von, bis, 0, y, masse.hoehe);
     return;
   }
 
@@ -396,6 +502,20 @@ function zeichneGeblaese(ctx: CanvasRenderingContext2D, welt: Welt, gy: number, 
   ctx.ellipse(gx, bodenY + 62, 46, 10, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // Staubwoelkchen am Boden, solange es blaest — das Geraet arbeitet sichtbar.
+  if (st > 0.1) {
+    for (let i = 0; i < 6; i++) {
+      const p = (welt.zeit * 1.6 + i / 6) % 1;
+      const seite = i % 2 === 0 ? -1 : 1;
+      const x = gx + seite * (30 + p * 46 + streu(i) * 10);
+      const y = bodenY + 58 - p * 18;
+      ctx.fillStyle = `rgba(235,240,225,${0.35 * st * (1 - p)})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 5 + p * 9, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
   // Mit Bild: Die Trichteroeffnung sitzt genau an der Duese, dort beginnt der
   // gezeichnete und der gerechnete Strahl. Beim Blasen zittert es ein wenig —
   // das gemalte Laufrad, das sich dreht, gibt es im Bild nicht.
@@ -403,12 +523,18 @@ function zeichneGeblaese(ctx: CanvasRenderingContext2D, welt: Welt, gy: number, 
   if (geblaeseBild) {
     const { breite, hoehe } = geblaeseMass();
     const zittern = Math.sin(welt.zeit * 70) * 0.8 * st;
-    ctx.drawImage(geblaeseBild, gx - GEBLAESE_BILD.oeffnungMitte * breite + zittern, gy - 3, breite, hoehe);
+    // Um die Duese gedreht, damit Strahl und Trichter zusammenpassen.
+    ctx.save();
+    ctx.translate(gx, gy);
+    ctx.rotate(welt.geblaese.neigung ?? 0);
+    ctx.drawImage(geblaeseBild, -GEBLAESE_BILD.oeffnungMitte * breite + zittern, -3, breite, hoehe);
+    ctx.restore();
     return;
   }
 
   ctx.save();
   ctx.translate(gx, gy);
+  ctx.rotate(welt.geblaese.neigung ?? 0);
 
   // Duese
   const duese = ctx.createLinearGradient(-30, -14, 30, 6);
@@ -463,7 +589,37 @@ function zeichneGeblaese(ctx: CanvasRenderingContext2D, welt: Welt, gy: number, 
   ctx.restore();
 }
 
-function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bodenY: number) {
+/**
+ * Farbtoene der Skins, solange ihr eigenes Gemini-Bild fehlt: der rote Ballon,
+ * einmal umgefaerbt in ein eigenes Canvas (nicht in jedem Bild — Falle 18).
+ */
+export const SKIN_FILTER: Record<string, string> = {
+  blau: 'hue-rotate(215deg) saturate(1.1)', gelb: 'hue-rotate(58deg) saturate(1.7) brightness(1.55)',
+  gruen: 'hue-rotate(115deg) brightness(1.05)', lila: 'hue-rotate(275deg)',
+  stern: 'hue-rotate(185deg) saturate(.8) brightness(1.5)', herz: 'hue-rotate(320deg) saturate(.85) brightness(1.5)',
+  heissluft: 'hue-rotate(22deg) saturate(1.6) brightness(1.35)', gold: 'sepia(1) saturate(2.6) hue-rotate(-8deg) brightness(1.15) contrast(1.1)',
+};
+const skinCache = new Map<string, HTMLCanvasElement>();
+function skinBild(skin: string | undefined): CanvasImageSource | null {
+  const basis = bild('/bilder/ballon.png');
+  if (!skin || skin === 'rot') return basis;
+  const eigenes = bild(`/bilder/ballon-${skin}.png`);
+  if (eigenes) return eigenes;
+  if (!basis) return null;
+  let c = skinCache.get(skin);
+  if (!c) {
+    c = document.createElement('canvas');
+    c.width = basis.naturalWidth;
+    c.height = basis.naturalHeight;
+    const g = c.getContext('2d')!;
+    g.filter = SKIN_FILTER[skin] ?? 'none';
+    g.drawImage(basis, 0, 0);
+    skinCache.set(skin, c);
+  }
+  return c;
+}
+
+function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bodenY: number, skin?: string) {
   const { ballon } = welt;
   const r = ballon.radius;
   const form = ballonform(pos, ballon.geschw, r);
@@ -485,12 +641,15 @@ function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bo
   // ⚠ Am KNOTEN beginnen, nicht fest unter der Mitte — sonst passt die
   // Schnur nicht mehr zum Ballon, sobald er sich neigt (siehe ballonform.ts).
   const k = form.knoten;
-  ctx.moveTo(k.x, k.y);
-  ctx.quadraticCurveTo(
-    k.x - ballon.geschw.x * 0.03, k.y + 14,
-    k.x - ballon.geschw.x * 0.05, k.y + 30,
-  );
-  ctx.stroke();
+  // Der Heissluftballon hat einen Korb statt eines Knotens: keine Schnur.
+  if (skin !== 'heissluft') {
+    ctx.moveTo(k.x, k.y);
+    ctx.quadraticCurveTo(
+      k.x - ballon.geschw.x * 0.03, k.y + 14,
+      k.x - ballon.geschw.x * 0.05, k.y + 30,
+    );
+    ctx.stroke();
+  }
 
   ctx.save();
   ctx.translate(pos.x, pos.y);
@@ -498,10 +657,14 @@ function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bo
   ctx.scale(1 / form.dehnung, form.dehnung);
   // Das Bild reicht von der Oberkante (−r) bis zur Knotenspitze (r + KNOTEN) —
   // genau dort, wo die Schnur ansetzt und wo der gemalte Ballon lag.
-  const ballonBild = bild('/bilder/ballon.png');
+  const ballonBild = skinBild(skin);
   if (ballonBild) {
     const hoch = 2 * r + KNOTEN;
-    const breit = hoch * BALLON_BILD_SEITEN;
+    // Eigene Skin-Bilder haben ihr eigenes Seitenverhaeltnis (Heissluftballon
+    // mit Korb ist schmaler), sonst wuerden sie gestaucht.
+    const bw = ballonBild instanceof HTMLImageElement ? ballonBild.naturalWidth : (ballonBild as HTMLCanvasElement).width;
+    const bh = ballonBild instanceof HTMLImageElement ? ballonBild.naturalHeight : (ballonBild as HTMLCanvasElement).height;
+    const breit = bw && bh && skin && skin !== 'rot' ? hoch * (bw / bh) : hoch * BALLON_BILD_SEITEN;
     ctx.drawImage(ballonBild, -breit / 2, -r, breit, hoch);
     ctx.restore();
     return;
@@ -527,38 +690,87 @@ function zeichneBallon(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt, bo
   ctx.restore();
 }
 
-/** Der Nachklang: Fetzen beim Platzen, Funken beim Ankommen. */
+/** Der Nachklang: Fetzen beim Platzen, Konfetti beim Ankommen (Neugestaltung 23.11.2026). */
 function nachklang(ctx: CanvasRenderingContext2D, welt: Welt, pos: Punkt) {
   const t = welt.nachher;
-  if (t > 1.2) return;
   const r = welt.ballon.radius;
 
   if (welt.ausgang === 'geplatzt') {
-    for (let i = 0; i < 14; i++) {
-      const w = (i / 14) * Math.PI * 2 + streu(i) * 0.6;
-      const tempo = 180 + streu(i * 5) * 260;
-      const x = pos.x + Math.cos(w) * tempo * t;
-      const y = pos.y + Math.sin(w) * tempo * t + 420 * t * t;
-      ctx.fillStyle = `rgba(230,60,88,${Math.max(0, 1 - t / 1.2)})`;
+    if (t > 1.4) return;
+    // Weisser Blitzring: der Knall, den man sieht.
+    if (t < 0.22) {
+      const p = t / 0.22;
+      ctx.strokeStyle = `rgba(255,255,255,${0.9 * (1 - p)})`;
+      ctx.lineWidth = 10 * (1 - p) + 1;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, r * (0.8 + p * 2.4), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(255,250,235,${0.55 * (1 - p)})`;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, r * (1 - p * 0.6), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Gummifetzen: gewellte Streifen in Ballonrot, flattern und fallen.
+    const deck = Math.max(0, 1 - t / 1.4);
+    for (let i = 0; i < 18; i++) {
+      const w = (i / 18) * Math.PI * 2 + streu(i) * 0.7;
+      const tempo = 160 + streu(i * 5) * 300;
+      const bremse = 1 - Math.min(0.6, t * 0.6);
+      const x = pos.x + Math.cos(w) * tempo * t * bremse + Math.sin(t * 9 + i) * 6;
+      const y = pos.y + Math.sin(w) * tempo * t * bremse + 380 * t * t;
+      const gr = 5 + streu(i * 3) * 7;
       ctx.save();
       ctx.translate(x, y);
-      ctx.rotate(w + t * 7);
+      ctx.rotate(w + t * (6 + streu(i * 7) * 8));
+      // Flattern: die Breite pumpt, wie ein Blatt, das sich dreht.
+      ctx.scale(1, 0.35 + Math.abs(Math.sin(t * 14 + i)) * 0.65);
+      ctx.fillStyle = i % 3 === 0 ? `rgba(255,120,135,${deck})` : `rgba(214,38,58,${deck})`;
       ctx.beginPath();
-      ctx.moveTo(-6, -4); ctx.lineTo(7, 0); ctx.lineTo(-4, 6);
+      ctx.moveTo(-gr, -gr * 0.5);
+      ctx.quadraticCurveTo(0, -gr * 1.1, gr, -gr * 0.3);
+      ctx.quadraticCurveTo(gr * 0.4, gr * 0.6, -gr * 0.8, gr * 0.5);
       ctx.closePath();
       ctx.fill();
       ctx.restore();
     }
   } else if (welt.ausgang === 'geschafft') {
-    for (let i = 0; i < 16; i++) {
-      const w = (i / 16) * Math.PI * 2;
-      const d = r + t * 200;
-      ctx.fillStyle = `rgba(255,226,120,${Math.max(0, 1 - t / 1.2)})`;
+    if (t > 2.2) return;
+    // Lichtring wie bisher, nur kraeftiger.
+    if (t < 0.6) {
+      const p = t / 0.6;
+      ctx.strokeStyle = `rgba(255,226,120,${1 - p})`;
+      ctx.lineWidth = 6;
       ctx.beginPath();
-      ctx.arc(pos.x + Math.cos(w) * d, pos.y + Math.sin(w) * d, 4 - t * 2, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(pos.x, pos.y, r + p * 160, 0, Math.PI * 2);
+      ctx.stroke();
     }
+    // Konfetti: schiesst hoch, faellt flatternd. Farben aus streu, nie Math.random.
+    const farben = ['#ff4d6d', '#ffd75e', '#4cc9f0', '#80ed99', '#c77dff'];
+    const deck = Math.max(0, 1 - Math.max(0, t - 1.4) / 0.8);
+    for (let i = 0; i < 40; i++) {
+      const w = -Math.PI / 2 + (streu(i) - 0.5) * 2.4;
+      const tempo = 260 + streu(i * 3) * 340;
+      const x = pos.x + Math.cos(w) * tempo * t * 0.8 + Math.sin(t * 6 + i) * 10;
+      const y = pos.y + Math.sin(w) * tempo * t + 520 * t * t;
+      ctx.save();
+      ctx.globalAlpha = deck;
+      ctx.translate(x, y);
+      ctx.rotate(t * (5 + streu(i * 9) * 8) + i);
+      ctx.scale(1, Math.abs(Math.cos(t * 11 + i)) + 0.15);
+      ctx.fillStyle = farben[i % farben.length];
+      ctx.fillRect(-4, -2.5, 8, 5);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
   }
+}
+
+/** Kurzes Ruetteln nach dem Platzen (Spielzeit-unabhaengig, aus welt.nachher). */
+export function ruetteln(welt: Welt): Punkt {
+  const t = welt.nachher;
+  if (welt.ausgang !== 'geplatzt' || t > 0.28) return { x: 0, y: 0 };
+  const staerke = 7 * (1 - t / 0.28);
+  return { x: Math.sin(t * 95) * staerke, y: Math.cos(t * 77) * staerke * 0.7 };
 }
 
 // ---------------------------------------------------------------------- Bild
@@ -584,7 +796,8 @@ export function zeichne(
   // die Spielseite gesetzt hat. Gerechnet wird ab hier in CSS-Pixeln.
   ctx.save();
   ctx.clearRect(0, 0, sicht.breite, sicht.hoehe);
-  ctx.translate(sicht.randX, sicht.randY);
+  const zittern = ruetteln(welt);
+  ctx.translate(sicht.randX + zittern.x, sicht.randY + zittern.y);
   ctx.scale(sicht.skala, sicht.skala);
   ctx.translate(-sicht.kameraX, -kameraY);
   // Nichts unter den Boden zeichnen: Das Geblaesebild reicht ein Stueck unter
@@ -675,6 +888,40 @@ export function zeichne(
   }
   }
 
+  // --- Muenzen ------------------------------------------------------------
+  // Gemalt, bis Josefs Gemini-Muenze da ist (muenze.png). Sie dreht sich, indem
+  // sie in der Breite pulsiert — ein billiger, aber glaubhafter 3D-Eindruck.
+  if (level.muenzen) {
+    const muenzBild = bild('/bilder/muenze.png');
+    level.muenzen.forEach((m, i) => {
+      if (welt.gesammelt?.includes(i)) return;
+      const dreh = Math.cos(welt.zeit * 3.2 + i * 1.3);
+      const schweben = Math.sin(welt.zeit * 2.4 + i) * 4;
+      ctx.save();
+      ctx.translate(m.x, m.y + schweben);
+      ctx.scale(Math.max(0.18, Math.abs(dreh)), 1);
+      const R = MUENZ_RADIUS;
+      if (muenzBild) {
+        ctx.drawImage(muenzBild, -R * 1.15, -R * 1.15, R * 2.3, R * 2.3);
+      } else {
+        const g = ctx.createLinearGradient(-R, -R, R, R);
+        g.addColorStop(0, '#fff3a8');
+        g.addColorStop(0.45, '#ffc93c');
+        g.addColorStop(1, '#d9860b');
+        ctx.fillStyle = '#a8650a';
+        ctx.beginPath(); ctx.arc(0, 2, R, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(0, 0, R * 0.68, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.beginPath(); ctx.ellipse(-R * 0.35, -R * 0.4, R * 0.18, R * 0.3, -0.5, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    });
+  }
+
   // --- Nadeln -------------------------------------------------------------
   // Im Endlos-Lauf nur die im Bild — es gibt unendlich viele.
   const nadeln = !welt.endlos ? level.nadeln
@@ -744,16 +991,22 @@ export function zeichne(
   const gy = welt.boden - DUESE_HOEHE;
   const st = welt.geblaese.staerke;
   if (st > 0.02) {
-    const kegel = ctx.createLinearGradient(0, gy, 0, oben);
+    // Gedreht um die Duese — genau wie strahlKraft rechnet (steuerung.ts).
+    const neigung = welt.geblaese.neigung ?? 0;
+    const laenge = (gy - oben) / Math.max(0.6, Math.cos(neigung));
+    ctx.save();
+    ctx.translate(gx, gy);
+    ctx.rotate(neigung);
+    const kegel = ctx.createLinearGradient(0, 0, 0, -laenge);
     kegel.addColorStop(0, `rgba(255,255,255,${0.4 * st})`);
     kegel.addColorStop(0.5, `rgba(226,244,255,${0.17 * st})`);
     kegel.addColorStop(1, 'rgba(226,244,255,0)');
     ctx.fillStyle = kegel;
     ctx.beginPath();
-    ctx.moveTo(gx - MUND, gy);
-    ctx.lineTo(gx - (MUND + (gy - oben) * AUFWEITUNG), oben);
-    ctx.lineTo(gx + (MUND + (gy - oben) * AUFWEITUNG), oben);
-    ctx.lineTo(gx + MUND, gy);
+    ctx.moveTo(-MUND, 0);
+    ctx.lineTo(-(MUND + laenge * AUFWEITUNG), -laenge);
+    ctx.lineTo(MUND + laenge * AUFWEITUNG, -laenge);
+    ctx.lineTo(MUND, 0);
     ctx.closePath();
     ctx.fill();
 
@@ -761,20 +1014,27 @@ export function zeichne(
     // der Strahl noch traegt.
     for (let i = 0; i < 16; i++) {
       const p = ((welt.zeit * (0.55 + (i % 4) * 0.12) + i / 16) % 1);
-      const y = gy - p * (gy - oben);
-      const seit = Math.sin(i * 12.9898 + welt.zeit * 0.8) * (MUND + (gy - y) * AUFWEITUNG) * 0.7;
+      const y = -p * laenge;
+      const seit = Math.sin(i * 12.9898 + welt.zeit * 0.8) * (MUND - y * AUFWEITUNG) * 0.7;
       ctx.fillStyle = `rgba(255,248,214,${(1 - p) * 0.8 * st})`;
       ctx.beginPath();
-      ctx.ellipse(gx + seit, y, 5, 3, p * 9, 0, Math.PI * 2);
+      ctx.ellipse(seit, y, 5, 3, p * 9, 0, Math.PI * 2);
       ctx.fill();
     }
+    ctx.restore();
   }
 
   zeichneGeblaese(ctx, welt, gy, bodenY);
 
   const pos = zwischen(ballon.vorher, ballon.pos, blende);
   if (welt.ausgang === 'laeuft' || welt.nachher < 0.06) {
-    zeichneBallon(ctx, welt, pos, bodenY);
+    // Nach dem Weiterfliegen blinkt der Ballon, solange er geschuetzt ist.
+    // ⚠ Aus der Spielzeit gerechnet, nicht aus Math.random (siehe streu).
+    const blinkt = unverwundbar(welt) && Math.floor(welt.zeit * 10) % 2 === 1;
+    ctx.save();
+    if (blinkt) ctx.globalAlpha = 0.3;
+    zeichneBallon(ctx, welt, pos, bodenY, sicht.skin);
+    ctx.restore();
   }
   nachklang(ctx, welt, pos);
 

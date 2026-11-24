@@ -193,7 +193,78 @@ Antwort an die Prüfung (Englisch, zum Einfügen):
 > Best regards,
 > Josef Gallab
 
-## Antworten für die Formulare
+## Version 1.1: Werbung und „Werbung entfernen“ (ab 04.10.2026)
+
+Im Code ist alles drin (`src/lib/werbung.ts`, `src/lib/kauf.ts`, Menü, ATT in
+`SceneDelegate.swift`). **Seit 22.11.2026 (Apple hat 1.0 freigegeben) steht
+`MIT_TESTANZEIGEN = false`**, Banner und Vollbild laufen mit den echten IDs. Neu
+in 1.1: Video „Weiterfliegen“ (Belohnt-Block, IDs fehlen noch, siehe A.7) und die
+Bewertungsbitte (`src/lib/bewertung.ts`). `ios-release.yml`
+und `android-release.yml` brechen beim Upload ab, bis alles unten erledigt ist
+(`scripts/werbung-bereit.mjs`). ⚠ Erst einreichen, wenn 1.0 freigegeben ist.
+
+**A. AdMob** (admob.google.com, dasselbe Konto wie Anigosha, `pub-8860791993288062`)
+1. Apps → App hinzufügen → iOS → „Ist die App in einem Store?“ Nein → Name
+   `LoonPop` → App-ID kopieren (`ca-app-pub-…~…`).
+2. In dieser App zwei Anzeigenblöcke: **Banner** und **Interstitial**, je die ID
+   kopieren (`ca-app-pub-…/…`).
+3. Dasselbe für **Android**.
+4. Die sechs IDs an Claude schicken. Sie gehören nach `LIVE` in `werbung.ts`, in
+   `Info.plist` (`GADApplicationIdentifier`) und `AndroidManifest.xml`; dann
+   `MIT_TESTANZEIGEN = false`.
+5. Datenschutz & Mitteilungen → DSGVO-Nachricht für LoonPop (beide Apps)
+   anlegen und **veröffentlichen**. ⚠ Ohne sie erscheint kein Einwilligungsdialog.
+6. `app-ads.txt` liegt in `public/` und ist unter der Website erreichbar, sobald
+   der Stand in `main` ist.
+7. **Neu 22.11.2026:** In beiden AdMob-Apps je einen Anzeigenblock **Belohnt**
+   („Weiterfliegen“) anlegen und die IDs an Claude schicken (`LIVE.*.rewarded` in
+   `werbung.ts`). Ohne sie fehlt nur der Knopf; `werbung-bereit.mjs` warnt dann,
+   bricht aber nicht ab.
+
+**Stand 04.10.2026:** AdMob-IDs, DSGVO-Nachricht, RevenueCat (Apps, Schlüssel,
+Produkt) erledigt. Apple-Kauf eingerichtet (`app-store.yml` `kauf`: Preis,
+Texte, Länder, Prüfungsbild). Google-Kauf wartet, siehe unten.
+
+⚠ **Google legt den Kauf erst an, wenn ein Build mit Kauf-Berechtigung
+hochgeladen ist** („Can't create product. To fix, request billing permission“).
+Und dieser Build enthält die Werbe-ID (`AD_ID`), was Google nur annimmt, wenn
+unter App-Inhalte → **Werbe-ID: Ja** steht. Das geht erst nach der Freigabe von
+1.0, sonst passt die Angabe nicht zur Version in der Prüfung. Reihenfolge danach:
+1. App-Inhalte: Werbe-ID **Ja**, Werbung **Ja**, Datensicherheit neu (Teil D).
+2. `Android Release`, Track `internal`, upload an (Testanzeigen sind dort erlaubt).
+3. `Play-Eintrag` → `kauf` (neue `onetimeproducts`-Schnittstelle; die alte
+   `inappproducts` antwortet mit 403 „Please migrate to the new publishing API“).
+
+**B. Produkt „Werbung entfernen“ in beiden Stores**
+- Apple: App Store Connect → LoonPop → Monetarisierung → In-App-Käufe → **Nicht
+  verbrauchbar**, Referenzname `Werbung entfernen`, Produkt-ID `loonpop_no_ads`,
+  Preis 2,99 €. ⚠ Der Vertrag für kostenpflichtige Apps muss aktiv sein. Das
+  Produkt wird MIT Version 1.1 eingereicht.
+- Google: Play Console → LoonPop → Monetarisieren → In-App-Produkte → Produkt-ID
+  `loonpop_no_ads`, Preis 2,49 € netto (= 2,99 € brutto, Google rechnet netto).
+
+**C. RevenueCat** (app.revenuecat.com)
+1. Projekt `LoonPop` anlegen, Apps hinzufügen: App Store (`at.gallab.loonpop`)
+   und Play Store (`at.gallab.loonpop`, mit dem Dienstkonto wie bei Anigosha).
+2. Entitlement `no_ads`, Produkt `loonpop_no_ads` (beide Stores) daran hängen.
+3. Offering `default` (aktuell), Paket **Lifetime** mit beiden Produkten.
+   ⚠ Fehlt das Android-Produkt im Offering, meldet die App `CONFIGURATION_ERROR`.
+4. Die beiden öffentlichen SDK-Schlüssel (`appl_…`, `goog_…`) als Repo-Secrets
+   `REVENUECAT_IOS_KEY` und `REVENUECAT_ANDROID_KEY` anlegen.
+
+**D. Formulare (neu, weil jetzt Werbung)**
+- Apple App-Datenschutz: Tracking **ja**. Erfasst: Kennungen → Geräte-ID
+  (Werbung von Drittanbietern, Tracking), Nutzungsdaten → Werbedaten und
+  Produktinteraktion (Werbung von Drittanbietern), Standort → Ungefährer Standort
+  (Werbung von Drittanbietern), Käufe → Kaufverlauf (App-Funktionalität, nicht
+  verknüpft). ⚠ Muss zum Build passen, sonst lehnt Apple ab (2.1, Anigosha).
+- Google Play: App-Inhalte → Werbung **ja**; Werbe-ID **ja** (Werbung oder
+  Marketing); Datensicherheit: erhebt Daten → Geräte-IDs, App-Interaktionen,
+  ungefährer Standort (Werbung, geteilt mit Google), Kaufverlauf
+  (App-Funktionalität); verschlüsselt übertragen ja; Löschung anfordern: nein
+  (keine Konten).
+
+## Antworten für die Formulare (Version 1.0, ohne Werbung)
 
 loonpop hat kein Konto, keine Werbung, keine Käufe und keine Analyse, und es
 baut keine Internetverbindung auf. Der Fortschritt liegt nur im Speicher des

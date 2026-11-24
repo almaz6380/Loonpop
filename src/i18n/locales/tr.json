@@ -3,7 +3,7 @@
     "titel": "LoonPop",
     "untertitel": "Yaprak üfleyiciyi balonun altında tut ve bas. İğneler affetmez.",
     "level": "Bölüm {{n}}",
-    "hinweis": "Üfleyiciyi yana kaydır, üflemek için basılı tut. Balonun yanında durursan onu yana itersin.",
+    "hinweis": "Üflemek için basılı tut. Yana kaydır: üfleyici eğilir ve balonu iter. Hızlı kaydırma bir rüzgâr esintisi verir.",
     "hoch": "yukarı",
     "strecke": "parkur",
     "gesperrt": "kilitli",
@@ -18,7 +18,14 @@
     "spielen": "Oyna",
     "alleLevel": "Tüm bölümler",
     "tonAn": "Ses açık",
-    "tonAus": "Ses kapalı"
+    "tonAus": "Ses kapalı",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "“{{welt}}” içinde {{n}} ★ daha topla",
+    "tagesflug": "Günün uçuşu",
+    "tagesflugText": "Her gün yeni, herkes için aynı",
+    "serie": "{{n}} günlük seri",
+    "ballons": "Balonlar",
+    "gewaehlt": "Seçili"
   },
   "spiel": {
     "zurueck": "Geri",
@@ -42,8 +49,10 @@
     "bestweite": "Rekor: {{m}} m",
     "tipp": {
       "halten": "Parmağını basılı tut – üfleyici dümdüz yukarı üfler.",
-      "versetzt": "Şimdi balonun biraz yanına geç: hava akımının kenarı onu yana iter."
-    }
+      "versetzt": "Parmağını yana kaydır: üfleyici eğilir ve balonu o yöne iter. Hızlı bir kaydırma rüzgâr esintisi verir."
+    },
+    "weiterfliegen": "Uçmaya devam · Video",
+    "videoFehlt": "Şu anda video yok. Daha sonra tekrar dene."
   },
   "levelname": {
     "1": "İlk nefes",
@@ -61,5 +70,35 @@
     "19": "Sürgülü kapı",
     "20": "Karşı yön",
     "21": "Değirmen"
+  },
+  "werbung": {
+    "entfernen": "Reklamları kaldır",
+    "entfernenText": "Bir kez satın al, sonsuza dek reklamsız.",
+    "wiederherstellen": "Satın alımları geri yükle",
+    "werbefrei": "Reklamsız – desteğin için teşekkürler!",
+    "einstellungen": "Reklam ayarları",
+    "wiederhergestellt": "Satın alım geri yüklendi.",
+    "nichtsGefunden": "Satın alım bulunamadı.",
+    "fehler": {
+      "kein_angebot": "Şu anda kullanılamıyor. Lütfen daha sonra tekrar dene.",
+      "fehler": "Olmadı. Lütfen daha sonra tekrar dene."
+    }
+  },
+  "welt": {
+    "1": "Çayır",
+    "2": "Şehir",
+    "3": "Çöl",
+    "4": "Gece"
+  },
+  "skin": {
+    "rot": "Kırmızı",
+    "blau": "Mavi",
+    "gelb": "Sarı",
+    "gruen": "Yeşil",
+    "lila": "Mor",
+    "stern": "Yıldızlar",
+    "herz": "Kalp",
+    "heissluft": "Sıcak hava",
+    "gold": "Altın"
   }
 }

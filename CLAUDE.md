@@ -34,8 +34,10 @@ Board (docs/store.md).
 ⚠ Eine abgelehnte Einreichung (UNRESOLVED_ISSUES) nicht per `aufraeumen`
 zurückziehen. Neu einreichen über Antwort und „Prüfung aktualisieren“ in ASC,
 sonst geht der Zusammenhang mit der Ablehnung verloren.
-⚠ `werbung` hat ebenfalls Build/versionCode 2 (nie hochgeladen). Beim
-Zusammenführen auf 3 erhöhen.
+**22.11.2026: Apple hat 1.0 freigegeben.** `werbung` ist auf
+`claude/optimistic-darwin-k01rmb` mit `main` zusammengeführt, Version **1.1**
+(Android versionCode 3, iOS Build 3). Stand und offene Schritte: Abschnitt
+„Version 1.1“ unten.
 **Bedienung:** Josef arbeitet meist vom Handy. Kein Deploy, kein Release, kein
 Löschen ohne ausdrückliches „ja" im Chat.
 **Testversion im Browser:** https://loonpop.almaz6380.workers.dev (seit 01.10.2026,
@@ -51,12 +53,17 @@ weiter das ausdrückliche „ja".
 nach dem Loslassen weiter. Wer das „schwammig" findet und die Dämpfung hochdreht,
 baut ein anderes Spiel — das Vorausdenken IST die Aufgabe.
 
-**1a. Das Gebläse lässt sich NICHT drehen.** Es bläst senkrecht nach oben; der
-Strahl wird nach oben breiter und schwächer. Seitlich gesteuert wird über die
-**eigene Position**: Am Strahlrand getroffen, wird der Ballon zur Seite gedrückt.
-⚠ Wer hier eine Neigung einbaut, nimmt dem Spiel seine einzige Idee. Die
-Steuerung war bis zum 27.09.2026 falsch gebaut (tippen, wohin der Wind soll) —
-das war ein anderes Spiel.
+**1a. Das Gebläse KIPPT (seit 23.11.2026, Josefs Entscheidung).** Bis dahin blies
+es nur senkrecht, seitlich ging es allein über den Strahlrand — Josef: zu träge,
+„was ist, wenn ich schnell nach links oder rechts will?“. Jetzt (`steuerung.ts`):
+Das Gebläse fährt dem Finger auf einer Schiene nach (höchstens `FAHRT_MAX`),
+kippt je nach Vorsprung des Fingers bis 40°, und ein kurzer Wisch gibt einen
+Windstoß (Abklingzeit 1,5 s). Still stehend bläst es senkrecht, der Strahlrand
+drückt weiter zur Seite. Gerechnet wird in der Physik (`schritt` → `steuern`),
+nicht im Zeichnen; `strahlKraft` rechnet im gedrehten Kegel, `zeichnen.ts` dreht
+denselben Kegel (Falle 7). Ohne `ziel` (Bot, alte Tests) verhält es sich wie vorher.
+**Bildausschnitt:** Hoch-Level füllen seit 23.11.2026 die Bildschirmhöhe, die
+Kamera folgt dem Ballon seitlich (`kameraMitte`), keine dunklen Balken mehr.
 
 **2. Tempo kommt über den Level, nie über die Physik.** Schneller wird ein Level
 durch engere Gassen, stärkeren Wind (`tempo.windKraft`) und Zeitlimits. Ein
@@ -403,9 +410,9 @@ selbst tun muss (Konten, Profile, Secrets) und die Antworten für die Formulare.
   aus, Store-Workflows starten als Trockenlauf. Vorlage war `almaz6380/anigosha`.
 - Nur **Hochformat** und nur **iPhone** (`TARGETED_DEVICE_FAMILY = 1`). Sonst
   verlangt Apple iPad-Screenshots.
-- ⚠ **Was die Texte versprechen, muss stimmen:** „ohne Werbung, ohne Käufe,
-  ohne Konto, keine Daten“. Kommt M5 oder M6, ändern sich Store-Texte,
-  `scripts/rechtstexte.py` und beide Datenschutz-Formulare mit.
+- ⚠ **Was die Texte versprechen, muss stimmen.** Seit 1.1 gibt es Werbung und
+  einen Kauf; versprochen wird nur noch „kein Konto“. Kommt M5, ändern sich
+  Store-Texte, `scripts/rechtstexte.py` und beide Datenschutz-Formulare mit.
 - Bilder und Texte werden **erzeugt**, nicht von Hand gepflegt:
   `npm run app:bilder`, `npm run store:texte`, `npm run store:bilder` (braucht
   `vite preview` auf Port 4173), `npm run rechtstexte`.
@@ -428,6 +435,145 @@ selbst tun muss (Konten, Profile, Secrets) und die Antworten für die Formulare.
   `meta.associatedErrors` (`fehler_text()` in `asc.py` gibt es aus). Google
   antwortet zwischendurch mit 503; `play-upload.py` versucht es dann bis zu
   dreimal erneut.
+
+## Werbung und Kauf (1.1, seit 04.10.2026)
+
+Vorlage ist Anigosha, dort seit August 2026 im Store.
+
+- **Wann Werbung kommt**, steht in `werbetakt.ts` (rein, mit Tests): Vollbild
+  nur nach jedem 3. Platzen, frühestens 90 s nach der letzten, und erst beim
+  Tippen auf „Nochmal“/„Level“, nie im Moment des Platzens. Banner nur im Menü,
+  nie über dem Spielfeld, wo der Finger das Gebläse schiebt. Im Browser keine
+  Werbung und kein Kauf.
+- ⚠ **Testanzeigen bis kurz vor dem Einreichen** (`MIT_TESTANZEIGEN` in
+  `werbung.ts`). Die echten IDs (`LIVE`, `Info.plist`, `AndroidManifest.xml`) und
+  die öffentlichen RevenueCat-Schlüssel (`kauf.ts`) stehen schon drin.
+  `scripts/werbung-bereit.mjs` lässt keinen Upload zu Apple bzw. in die
+  Play-Produktion mit Testanzeigen durch; der interne Play-Test darf sie zeigen. Eigene Live-Anzeigen
+  nie ansehen oder anklicken: Das AdMob-Konto teilen sich Anigosha, MyPeak und
+  WELLbooked.
+- ⚠ **ATT nativ, im `SceneDelegate`** (`sceneDidBecomeActive`). LoonPop arbeitet
+  mit Szenen, `applicationDidBecomeActive` kommt hier nicht. Über das
+  AdMob-Plugin gefragt, zeigt iOS nichts (Anigosha, Ablehnung 2.1 am 12.08.2026).
+  `NSUserTrackingUsageDescription`, diese Abfrage und „Tracking: ja“ in ASC
+  müssen zusammen stimmen.
+- ⚠ **Capacitor-Plugins nie aus async-Funktionen zurückgeben oder `await`en**,
+  nur in einer Hülle `{ Purchases }`/`{ AdMob }` weiterreichen: Ihr `.then` löst
+  nie auf (Anigosha, „Kauf hängt“, Build 1–10).
+- ⚠ **Google legt einen Kauf erst an, wenn ein Build mit Kauf-Berechtigung
+  hochgeladen ist**, und dieser Build (mit `AD_ID`) geht nur durch, wenn in der
+  Play Console „Werbe-ID: Ja“ steht (04.10.2026). Die alte `inappproducts`-API
+  antwortet mit 403; `play-upload.py --kauf` nutzt `onetimeproducts`.
+- Das Prüfungsbild für Apples Kauf macht `scripts/kauf-bild.mjs` aus
+  `?kaufvorschau` (zeigt die Kauf-Karte im Browser, ohne Funktion).
+- Kein Konto: RevenueCat vergibt eine anonyme Kennung, „Käufe wiederherstellen“
+  holt den Kauf über das Store-Konto zurück (Apple verlangt den Knopf, 3.1.1).
+
+## Version 1.1 (22.11.2026): Werbung, Kauf, Weiterfliegen, Bewertung
+
+Branch `claude/optimistic-darwin-k01rmb` (= `main` + `werbung`). ⚠ Erst nach
+`main`, wenn 1.1 eingereicht wird: `main` deployt die Browser-Version samt neuer
+Datenschutzerklärung automatisch.
+**23.11.2026 gebaut und hochgeladen:** Android versionCode 3 (1.1) im **internen Test**
+(`android-release` 45260881721, Edit `00397539210800141604`), iOS Build 3 (1.1) in App Store
+Connect (`ios-release` 45260887146, Delivery `f3612da4-…`), noch NICHT eingereicht.
+Apple warnt (90725): ab April 2027 nur noch mit iOS-27-SDK (Xcode 27).
+**24.11.2026 vorbereitet:** Google-Kauf `loonpop_no_ads` angelegt und aktiv (⚠ Aktivieren
+geht nur über den Pfad `oneTimeProducts`, klein geschrieben HTML-404). Play-Texte und neue
+Screenshots in 16 Store-Sprachen committet. ASC: Version 1.1 angelegt (`app-store.yml`
+`version-anlegen`, neu), Texte samt „Neu in dieser Version“ (`appstore.whatsNew` in
+`store-assets/texte/*.json`), Build 3 zugewiesen, 64 Screenshots, Kauf READY_TO_SUBMIT.
+Store-Bilder neu (`store-bilder.mjs`): Neigung, Welten, Nacht, Endlos — die alte erste Zeile
+„Gebläse, das nur nach oben bläst“ war seit 1a falsch.
+**24.11.2026 ausgeliefert:** Prüfnotiz auf 1.1 umgeschrieben (`app-store.yml` `pflicht` — in ASC
+stand noch der 1.0-Text „no in-app purchases and no ads“). Josef hat in ASC 1.1 (Build 3) **zusammen
+mit** dem Kauf „Werbung entfernen“ eingereicht, Einreichung `82fd219f-97be-4652-808d-917a5375bd65`,
+`WAITING_FOR_REVIEW`. ⚠ Der Kauf allein im Übermittlungsentwurf → „erster IAP muss mit neuer
+App-Version“: erst auf der Versionsseite „Zur Prüfung hinzufügen“, dann beides übermitteln.
+RevenueCat: Android-Produkt am Entitlement `no_ads`, Offering `default` in beiden Zeilen.
+Android **vc3 (1.1) in Produktion an alle** (`play-eintrag.yml` `produktion`, Edit
+`06560752481628269219` committet). Danach Merge nach `main`.
+Offen in ASC: neue Altersfreigabe-Fragen (Pflicht bis 15.01.2027).
+
+- **Werbung** (`src/lib/werbung.ts`): `MIT_TESTANZEIGEN = false`, echte IDs.
+  Banner nur im Menü, Vollbild nach jedem dritten Platzen beim Tippen auf
+  „Nochmal“/„Level“ (`werbetakt.ts`), nie bei „Weiter“ nach einem Sieg.
+  ⚠ Eigene Live-Anzeigen nie ansehen oder antippen.
+- **Kauf** „Werbung entfernen“ (`kauf.ts`, Karte `Werbefrei` im Menü) nimmt
+  Banner und Vollbild weg, das freiwillige Video bleibt.
+- **Weiterfliegen**: Nach dem Platzen bietet das Ende-Fenster einmal je Versuch
+  (auch im Endlos-Modus) „Weiterfliegen · Video“ an. Nach `earned` setzt
+  `weiterfliegen()` (`src/spiel/weiterfliegen.ts`, getestet) den Ballon auf
+  `ballon.vorher` (die Stelle vor dem Schritt, der platzte), Tempo 0, und
+  `unverwundbarBis = zeit + 1` (Physik prüft dann keine Nadeln, der Ballon
+  blinkt aus der Spielzeit). ⚠ Die Zeit läuft weiter und wird nie zurückgedreht:
+  Nadeln kommen aus `nadelJetzt(…, zeit)`, Bestzeit zählt normal.
+  `schleife.ts` meldet nach dem Weiterfliegen das nächste Ende wieder.
+  Nach einem Video entfällt eine fällige Vollbild-Anzeige, der Abstand läuft neu
+  (`videoGesehen` in `werbetakt.ts`).
+  ⚠ Das Plugin löst `showRewardVideoAd()` nur bei verdienter Belohnung auf. Deshalb
+  hört `zeigeBelohnungsvideo()` auf Showed/Dismissed/FailedToShow, hat eine harte
+  Zeitgrenze und eine Doppeltipp-Sperre (Muster Mahjong `requestReward`).
+  `LIVE.*.rewarded` seit 23.11.2026 gesetzt (iOS `…/2400589471`, Android
+  `…/3111035912`). Fehlt eine ID, fehlt nur der Knopf (kein Fehler).
+- **Bewertungsbitte** (`src/lib/bewertung.ts`, `@capacitor-community/in-app-review`):
+  nach einem geschafften Level beim Verlassen des Ende-Fensters, ab 5 geschafften
+  Leveln, höchstens alle 90 Tage, nie zugleich mit einer Vollbild-Anzeige, nur
+  nativ, ohne Belohnung.
+- Store-Texte (13 Sprachen) versprechen nicht mehr „keine Werbung / keine Käufe /
+  keine Daten“; Prüfnotiz (`PRUEF_NOTIZ` in `scripts/asc.py`) nennt Werbung,
+  Video und Kauf; Datenschutzerklärung (Stand 22.11.2026) um Video, Bewertung und
+  „offline spielbar, für Werbung und Kauf online“ ergänzt.
+
+**Was Josef noch tun muss (je mit eigenem „ja“):**
+1. ✅ (23.11.2026) AdMob: Block **Belohnt** in beiden Apps, IDs in `werbung.ts`.
+2. ✅ (23.11.2026) Play Console → App-Inhalte: Werbe-ID **Ja**, „Anzeigen“ (so heißt
+   „Werbung“ dort) **Ja**, Datensicherheit neu (docs/store.md, Teil D). Steht auf „Bereit
+   für die Überprüfung“, geht mit dem 1.1-Build an Google.
+3. ✅ (23.11.2026) Apple App-Datenschutz: **Tracking ja** usw. (docs/store.md, Teil D).
+4. ✅ (24.11.2026) Google-Kauf `loonpop_no_ads` angelegt und aktiv.
+5. ✅ (24.11.2026) RevenueCat Android verknüpft, Offering `default` in beiden Zeilen.
+6. ✅ (24.11.2026) 1.1 samt Kauf bei Apple eingereicht, Android an alle, Merge nach `main`.
+7. Bis 15.01.2027: Altersfreigabe-Fragen in ASC beantworten (App-Informationen).
+
+## Neugestaltung (23.11.2026, Teil von Version 1.1)
+
+Josef: „sieht billig aus und funktioniert nicht gut“. Umgebaut auf dem Zweig
+`claude/optimistic-darwin-k01rmb`, ausgeliefert zusammen mit Werbung/Kauf als 1.1.
+
+- **Steuerung:** Gebläse kippt (Regel 1a oben), Wisch = Windstoß.
+- **Bilder 2.5D aus Gemini** (Josef erzeugt sie, Aufträge in
+  `scripts/bild-quellen/PROMPTS.md`). Neu da: Ballon, Gebläse, Himmel, Hügel fern/nah.
+  `bilder-freistellen.py` verarbeitet auch Welt-, Skin-, Münz- und Sternbilder,
+  sobald ihre Quelle (`stadt-himmel.jpg`, `ballon-blau.jpg`, `muenze.jpg` …) liegt.
+  ⚠ Magenta wird mit der **echten** Hintergrundfarbe (Ecke oben links) gerechnet und
+  die Kante um 1 px eingezogen — Gemini trifft #FF00FF nie und malt einen lila Schein.
+  ⚠ Bilder, die Josef nur als Vorschau mitten in einem Lauf schickt, kommen nicht als
+  Datei an; er muss sie als eigene Nachricht schicken.
+- **Alle Bilder da (23.11.2026):** 4 Welten je Himmel/fern/nah/Boden, 9 Ballon-Skins, Logo,
+  Münze, Stern. ⚠ Bodenbilder haben ihre Bodenkante an verschiedener Höhe: `BODEN_BILD` in
+  `zeichnen.ts` (kante gemessen = erste Zeile mit > 60 % deckenden Pixeln). Neues Bodenbild →
+  neu messen, sonst steht ein Streifen Grundfarbe frei (so lag in der Stadt erst ein grüner
+  Wiesenstreifen über dem Pflaster). Skins werden auf 368 px Höhe verkleinert und mit ihrem
+  eigenen Seitenverhältnis gezeichnet (Heißluftballon mit Korb, ohne Schnur).
+- **Schärfe:** Pixeldichte bis 3 (`dichte.ts`), Ballon in voller Auflösung.
+- **Effekte** (`zeichnen.ts`): Knall-Ring, flatternde Fetzen, Rütteln (`ruetteln`),
+  Konfetti, Staubwölkchen — alles aus `streu`/`welt.nachher`, kein Math.random.
+- **Sterne + Münzen** (`sterne.ts`, `Level.muenzen`, `Level.sterneZeit`): 1 Stern Ziel,
+  +1 unter Sternzeit, +1 alle Münzen. Münzen liegen auf dem kürzesten freien Weg
+  (`wegPunkte` in `pruefung.ts`, gesetzt von `scripts/muenzen-setzen.ts`). Konto zählt
+  nur Verbesserungen je Level (`mitSternen`). Sternzeit = Weglänge/80 + 2 s, noch
+  nicht von Josef nachgespielt.
+- **Welten** 1 Wiese (alte 15 Level), 2 Stadt (101–112), 3 Wüste (201–212), 4 Nacht
+  (301–312). Die neuen 36 Level schneidet `scripts/welten-bauen.ts` aus dem
+  Endlos-Generator und prüft jedes mit `pruefeLevel`. Welt w öffnet mit 1,5 ★ je Level
+  der vorigen (`weltOffen`). Ohne eigene Bilder färbt `toenen()` die Wiese ein.
+  Namen der Level ab Welt 2: „<Weltname> <n>“ (`menue.weltLevel`).
+- **Ballon-Skins** (`SKINS` in `fortschritt.ts`, 9 Stück, 30–250 Münzen). Ohne eigenes
+  Bild wird der rote Ballon einmal per Canvas-Filter umgefärbt (`SKIN_FILTER`).
+- **Tagesflug:** Endlos ↑ mit Seed aus dem lokalen Datum, Tagesbestweite + Serie
+  (`mitTageslauf`), Abend-Optik (Welt 2).
+- `store-bilder.mjs` klickt Level über `data-level`, nicht mehr nach Position.
 
 ## Konventionen
 

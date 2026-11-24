@@ -3,7 +3,7 @@
     "titel": "LoonPop",
     "untertitel": "把吹叶机放在气球下方，按住吹气。碰到针就完了。",
     "level": "第 {{n}} 关",
-    "hinweis": "左右滑动吹叶机，按住即可吹风。站偏一点，气球就会被吹向一侧。",
+    "hinweis": "按住即可吹风。往旁边拖动，吹风机会倾斜并推动气球。快速一划会吹出一阵风。",
     "hoch": "向上",
     "strecke": "赛道",
     "gesperrt": "未解锁",
@@ -18,7 +18,14 @@
     "spielen": "开始游戏",
     "alleLevel": "全部关卡",
     "tonAn": "声音开",
-    "tonAus": "声音关"
+    "tonAus": "声音关",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "在“{{welt}}”再收集 {{n}} 颗★",
+    "tagesflug": "每日飞行",
+    "tagesflugText": "每天更新，人人相同",
+    "serie": "连续 {{n}} 天",
+    "ballons": "气球",
+    "gewaehlt": "已选"
   },
   "spiel": {
     "zurueck": "返回",
@@ -42,8 +49,10 @@
     "bestweite": "纪录：{{m}} 米",
     "tipp": {
       "halten": "按住手指，吹叶机就会垂直向上吹。",
-      "versetzt": "现在站到气球下方稍偏一点的位置：气流的边缘会把它推向侧面。"
-    }
+      "versetzt": "把手指往旁边拖：吹风机会倾斜，把气球推向那边。快速一划会吹出一阵风。"
+    },
+    "weiterfliegen": "继续飞 · 视频",
+    "videoFehlt": "现在没有可用的视频，请稍后再试。"
   },
   "levelname": {
     "1": "第一口气",
@@ -61,5 +70,35 @@
     "19": "推拉门",
     "20": "逆行",
     "21": "磨坊"
+  },
+  "werbung": {
+    "entfernen": "移除广告",
+    "entfernenText": "一次购买，永久无广告。",
+    "wiederherstellen": "恢复购买",
+    "werbefrei": "已无广告 – 感谢你的支持！",
+    "einstellungen": "广告设置",
+    "wiederhergestellt": "购买已恢复。",
+    "nichtsGefunden": "未找到购买记录。",
+    "fehler": {
+      "kein_angebot": "暂时不可用，请稍后再试。",
+      "fehler": "没有成功，请稍后再试。"
+    }
+  },
+  "welt": {
+    "1": "草地",
+    "2": "城市",
+    "3": "沙漠",
+    "4": "夜晚"
+  },
+  "skin": {
+    "rot": "红色",
+    "blau": "蓝色",
+    "gelb": "黄色",
+    "gruen": "绿色",
+    "lila": "紫色",
+    "stern": "星星",
+    "herz": "爱心",
+    "heissluft": "热气球",
+    "gold": "金色"
   }
 }

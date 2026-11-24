@@ -3,7 +3,7 @@
     "titel": "LoonPop",
     "untertitel": "Tieni il soffiatore sotto il palloncino e premi. Gli aghi non perdonano.",
     "level": "Livello {{n}}",
-    "hinweis": "Fai scorrere il soffiatore di lato e tieni premuto per soffiare. Se ti sposti di lato, spingi il palloncino di fianco.",
+    "hinweis": "Tieni premuto per soffiare. Trascina di lato: il soffiatore si inclina e spinge il palloncino. Uno scorrimento rapido dà una folata.",
     "hoch": "su",
     "strecke": "percorso",
     "gesperrt": "bloccato",
@@ -18,7 +18,14 @@
     "spielen": "Gioca",
     "alleLevel": "Tutti i livelli",
     "tonAn": "Audio sì",
-    "tonAus": "Audio no"
+    "tonAus": "Audio no",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "Raccogli altre {{n}} ★ in «{{welt}}»",
+    "tagesflug": "Volo del giorno",
+    "tagesflugText": "Nuovo ogni giorno, uguale per tutti",
+    "serie": "Serie di {{n}} giorni",
+    "ballons": "Palloncini",
+    "gewaehlt": "Scelto"
   },
   "spiel": {
     "zurueck": "Indietro",
@@ -42,8 +49,10 @@
     "bestweite": "Record: {{m}} m",
     "tipp": {
       "halten": "Tieni premuto: il soffiatore soffia dritto verso l’alto.",
-      "versetzt": "Ora mettiti un po’ di lato sotto il palloncino: il bordo del getto d’aria lo spinge di fianco."
-    }
+      "versetzt": "Trascina il dito di lato: il soffiatore si inclina e spinge il palloncino da quella parte. Uno scorrimento rapido dà una folata di vento."
+    },
+    "weiterfliegen": "Continua a volare · Video",
+    "videoFehlt": "Al momento non c’è nessun video. Riprova più tardi."
   },
   "levelname": {
     "1": "Primo soffio",
@@ -61,5 +70,35 @@
     "19": "Porta scorrevole",
     "20": "Controsenso",
     "21": "Il mulino"
+  },
+  "werbung": {
+    "entfernen": "Rimuovi pubblicità",
+    "entfernenText": "Acquista una volta, senza pubblicità per sempre.",
+    "wiederherstellen": "Ripristina acquisti",
+    "werbefrei": "Senza pubblicità – grazie per il supporto!",
+    "einstellungen": "Impostazioni pubblicità",
+    "wiederhergestellt": "Acquisto ripristinato.",
+    "nichtsGefunden": "Nessun acquisto trovato.",
+    "fehler": {
+      "kein_angebot": "Non disponibile ora. Riprova più tardi.",
+      "fehler": "Non ha funzionato. Riprova più tardi."
+    }
+  },
+  "welt": {
+    "1": "Prato",
+    "2": "Città",
+    "3": "Deserto",
+    "4": "Notte"
+  },
+  "skin": {
+    "rot": "Rosso",
+    "blau": "Blu",
+    "gelb": "Giallo",
+    "gruen": "Verde",
+    "lila": "Viola",
+    "stern": "Stelle",
+    "herz": "Cuore",
+    "heissluft": "Mongolfiera",
+    "gold": "Oro"
   }
 }

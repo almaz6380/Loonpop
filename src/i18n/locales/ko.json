@@ -3,7 +3,7 @@
     "titel": "LoonPop",
     "untertitel": "송풍기를 풍선 아래에 대고 누르세요. 바늘에 닿으면 끝이에요.",
     "level": "레벨 {{n}}",
-    "hinweis": "송풍기를 옆으로 밀고, 꾹 누르면 바람이 나와요. 비켜 서면 풍선이 옆으로 밀려요.",
+    "hinweis": "길게 눌러 바람을 불어요. 옆으로 끌면 송풍기가 기울어 풍선을 밀어요. 빠르게 쓸면 돌풍이 불어요.",
     "hoch": "위로",
     "strecke": "코스",
     "gesperrt": "잠김",
@@ -18,7 +18,14 @@
     "spielen": "플레이",
     "alleLevel": "전체 레벨",
     "tonAn": "소리 켜짐",
-    "tonAus": "소리 꺼짐"
+    "tonAus": "소리 꺼짐",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "「{{welt}}」에서 ★ {{n}}개 더 모으세요",
+    "tagesflug": "오늘의 비행",
+    "tagesflugText": "매일 새롭게, 모두에게 같은 코스",
+    "serie": "{{n}}일 연속",
+    "ballons": "풍선",
+    "gewaehlt": "선택됨"
   },
   "spiel": {
     "zurueck": "뒤로",
@@ -42,8 +49,10 @@
     "bestweite": "기록: {{m}}m",
     "tipp": {
       "halten": "손가락을 누르고 있으면 송풍기가 똑바로 위로 바람을 불어요.",
-      "versetzt": "이제 풍선 아래에서 살짝 옆으로 서 보세요. 바람의 가장자리가 풍선을 옆으로 밀어 줘요."
-    }
+      "versetzt": "손가락을 옆으로 끌어 보세요: 송풍기가 기울어 풍선을 그쪽으로 밀어요. 빠르게 쓸면 돌풍이 불어요."
+    },
+    "weiterfliegen": "계속 날기 · 동영상",
+    "videoFehlt": "지금은 동영상이 없어요. 나중에 다시 시도해 주세요."
   },
   "levelname": {
     "1": "첫 바람",
@@ -61,5 +70,35 @@
     "19": "미닫이문",
     "20": "엇갈림",
     "21": "방앗간"
+  },
+  "werbung": {
+    "entfernen": "광고 제거",
+    "entfernenText": "한 번 구매로 영원히 광고 없이.",
+    "wiederherstellen": "구매 복원",
+    "werbefrei": "광고 없음 – 응원해 주셔서 감사합니다!",
+    "einstellungen": "광고 설정",
+    "wiederhergestellt": "구매가 복원되었습니다.",
+    "nichtsGefunden": "구매 내역이 없습니다.",
+    "fehler": {
+      "kein_angebot": "지금은 이용할 수 없습니다. 나중에 다시 시도해 주세요.",
+      "fehler": "실패했습니다. 나중에 다시 시도해 주세요."
+    }
+  },
+  "welt": {
+    "1": "초원",
+    "2": "도시",
+    "3": "사막",
+    "4": "밤"
+  },
+  "skin": {
+    "rot": "빨강",
+    "blau": "파랑",
+    "gelb": "노랑",
+    "gruen": "초록",
+    "lila": "보라",
+    "stern": "별",
+    "herz": "하트",
+    "heissluft": "열기구",
+    "gold": "금"
   }
 }

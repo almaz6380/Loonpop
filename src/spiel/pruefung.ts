@@ -176,6 +176,15 @@ export type Befund = {
  * nie lange genug Zeit laesst (siehe `bewegteSperren`).
  */
 function wegFrei(level: Level): boolean {
+  return wegPunkte(level) !== null;
+}
+
+/**
+ * Der kuerzeste freie Weg vom Start ins Ziel als Punktfolge (Zellmitten), oder
+ * null. Breitensuche, damit der Weg kurz ist — darauf setzt `muenzen-setzen`
+ * die Muenzen (23.11.2026).
+ */
+export function wegPunkte(level: Level): Punkt[] | null {
   const { breite, hoehe } = level.groesse;
   const r = BALLON_RADIUS;
   const spalten = Math.ceil(breite / ZELLE);
@@ -214,7 +223,7 @@ function wegFrei(level: Level): boolean {
     return sy * spalten + sx;
   };
   const start = zelle(level.start);
-  if (!frei[start]) return false;
+  if (!frei[start]) return null;
 
   const imZiel = (i: number) => {
     const x = mitte(i % spalten);
@@ -223,11 +232,16 @@ function wegFrei(level: Level): boolean {
   };
 
   const gesehen = new Uint8Array(spalten * zeilen);
+  const vorgaenger = new Int32Array(spalten * zeilen).fill(-1);
   const warteschlange = [start];
   gesehen[start] = 1;
-  while (warteschlange.length) {
-    const i = warteschlange.pop()!;
-    if (imZiel(i)) return true;
+  for (let kopf = 0; kopf < warteschlange.length; kopf++) {
+    const i = warteschlange[kopf];
+    if (imZiel(i)) {
+      const weg: Punkt[] = [];
+      for (let k = i; k >= 0; k = vorgaenger[k]) weg.push({ x: mitte(k % spalten), y: mitte(Math.floor(k / spalten)) });
+      return weg.reverse();
+    }
     const sx = i % spalten;
     const nachbarn = [
       sx > 0 ? i - 1 : -1,
@@ -238,10 +252,11 @@ function wegFrei(level: Level): boolean {
     for (const n of nachbarn) {
       if (n < 0 || n >= frei.length || gesehen[n] || !frei[n]) continue;
       gesehen[n] = 1;
+      vorgaenger[n] = i;
       warteschlange.push(n);
     }
   }
-  return false;
+  return null;
 }
 
 /** Die erste feste Nadelgruppe in Flugrichtung und ihr Abstand zum Start. */

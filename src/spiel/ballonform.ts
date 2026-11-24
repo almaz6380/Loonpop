@@ -22,7 +22,7 @@ export const KNOTEN = 8;
  * Oberkante bis zur Knotenspitze. Gemessen von scripts/bilder-freistellen.py.
  * ⚠ Neues Bild → neu messen, sonst wird der Ballon verzerrt gezeichnet.
  */
-export const BALLON_BILD_SEITEN = 0.7527;
+export const BALLON_BILD_SEITEN = 0.7446;
 
 export type Ballonform = {
   /** Drehung im Uhrzeigersinn (rad). Positiv = Knoten schwingt nach links. */

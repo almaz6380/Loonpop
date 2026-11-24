@@ -15,16 +15,20 @@
 // Das Vorausdenken IST die Aufgabe. Schneller wird ein Level ueber engere
 // Gassen und Zeitlimits (Level.tempo), nicht ueber andere Physik.
 //
-// ⚠ DAS LAUBGEBLAESE LAESST SICH NICHT DREHEN. Es blaest senkrecht nach oben,
-// und genau daraus entsteht das Spiel: Der Strahl wird nach oben hin breiter
-// und schwaecher, und wer den Ballon am RAND des Strahls trifft, schiebt ihn
-// zur Seite. Seitlich gesteuert wird also ueber die eigene Position, nicht
-// ueber eine Richtung. Wer hier eine Neigung einbaut, nimmt dem Spiel seine
-// einzige Idee.
+// DAS LAUBGEBLAESE KIPPT (seit 23.11.2026, Josefs Entscheidung). Bis dahin
+// blies es nur senkrecht, und seitlich ging es allein ueber den Strahlrand —
+// fuer schnelles Ausweichen zu traege. Jetzt kippt es in Fahrtrichtung
+// (steuerung.ts). Der Strahl bleibt derselbe Kegel, nur gedreht; still stehend
+// blaest es weiterhin senkrecht, und der Strahlrand drueckt weiter zur Seite.
 
 import type { Punkt, Welt, Nadel } from './typen.ts';
 import { streckeTrifftNadel, laenge, minus } from './kollision.ts';
 import { nadelnIn, bodenNachziehen, endlosWind } from './endlos.ts';
+import { unverwundbar } from './weiterfliegen.ts';
+import { steuern, STOSS, STOSS_PAUSE } from './steuerung.ts';
+
+/** Wie gross eine Muenze rechnet (px). Exportiert fuers Zeichnen (Falle 7). */
+export const MUENZ_RADIUS = 16;
 
 /** Ein Physikschritt = 1/120 Sekunde. */
 export const DT = 1 / 120;
@@ -107,10 +111,15 @@ export const bodenHoehe = (levelHoehe: number) =>
  */
 export function strahlKraft(
   geblaeseX: number, dueseY: number, ballon: Punkt,
-  blaskraft: number, staerke: number, levelHoehe: number,
+  blaskraft: number, staerke: number, levelHoehe: number, neigung = 0,
 ): Punkt {
-  const dy = dueseY - ballon.y;             // Hoehe ueber der Duese
-  const dx = ballon.x - geblaeseX;          // seitlicher Versatz
+  // Im gedrehten Strahl rechnen: `ux,uy` zeigt die Strahlachse entlang,
+  // `nx,ny` quer dazu. Bei Neigung 0 ist das genau das alte Modell.
+  const ux = Math.sin(neigung), uy = -Math.cos(neigung);
+  const nx = Math.cos(neigung), ny = Math.sin(neigung);
+  const rx = ballon.x - geblaeseX, ry = ballon.y - dueseY;
+  const dy = rx * ux + ry * uy;             // Abstand entlang des Strahls
+  const dx = rx * nx + ry * ny;             // seitlicher Versatz im Strahl
 
   // Unterhalb der Duese passiert nichts — ein Geblaese saugt nicht.
   if (dy <= 0 || staerke <= 0) return { x: 0, y: 0 };
@@ -124,10 +133,8 @@ export function strahlKraft(
   const mittenAbfall = 1 - (ab / radius) * 0.55;
   const k = blaskraft * staerke * hoehenAbfall * mittenAbfall;
 
-  return {
-    x: (dx === 0 ? 0 : Math.sign(dx)) * k * SEITENSCHUB * (ab / radius),
-    y: -k,
-  };
+  const quer = (dx === 0 ? 0 : Math.sign(dx)) * k * SEITENSCHUB * (ab / radius);
+  return { x: ux * k + nx * quer, y: uy * k + ny * quer };
 }
 
 /** Wie viel Schwung eine Wand zurueckgibt. 0 = klebt, 1 = springt ungebremst. */
@@ -192,6 +199,7 @@ export function schritt(welt: Welt): void {
   const tempo = geblaese.an ? DT / WIND_AN : DT / WIND_AUS;
   geblaese.staerke += Math.max(-tempo, Math.min(tempo, ziel - geblaese.staerke));
   geblaese.staerke = Math.max(0, Math.min(1, geblaese.staerke));
+  steuern(geblaese, DT, level.groesse.breite);
 
   // --- Kraefte sammeln ----------------------------------------------------
   let ax = 0;
@@ -199,7 +207,7 @@ export function schritt(welt: Welt): void {
 
   const strahl = strahlKraft(
     geblaese.x, welt.boden - DUESE_HOEHE, ballon.pos,
-    blaskraft, geblaese.staerke, BEZUGSHOEHE,
+    blaskraft, geblaese.staerke, BEZUGSHOEHE, geblaese.neigung ?? 0,
   );
   ax += strahl.x;
   ay += strahl.y;
@@ -230,6 +238,17 @@ export function schritt(welt: Welt): void {
   ax -= ballon.geschw.x * daempfung;
   ay -= ballon.geschw.y * daempfung;
 
+  // --- Windstoss -----------------------------------------------------------
+  // Ein einmaliger Schub zur Seite, fuer den Notfall. Abklingzeit, sonst
+  // waere Wischen die bessere Steuerung als das Geblaese.
+  if (geblaese.stoss) {
+    if (welt.zeit >= (geblaese.stossFrei ?? 0)) {
+      ballon.geschw.x += geblaese.stoss * STOSS;
+      geblaese.stossFrei = welt.zeit + STOSS_PAUSE;
+    }
+    geblaese.stoss = 0;
+  }
+
   // --- Integrieren --------------------------------------------------------
   ballon.vorher = { ...ballon.pos };
   ballon.geschw.x += ax * DT;
@@ -255,11 +274,23 @@ export function schritt(welt: Welt): void {
     : welt.endlos.art === 'hoch'
       ? nadelnIn(welt, ballon.pos.y - 200, ballon.pos.y + 200)
       : nadelnIn(welt, ballon.pos.x - 200, ballon.pos.x + 200);
-  for (const nadel of nadeln) {
+  // Nach dem Weiterfliegen eine Sekunde Schutz (weiterfliegen.ts).
+  if (!unverwundbar(welt)) for (const nadel of nadeln) {
     const n = nadelJetzt(nadel, welt.zeit, level.groesse.hoehe);
     if (streckeTrifftNadel(ballon.vorher, ballon.pos, r, n.von, n.bis)) {
       welt.ausgang = 'geplatzt';
       return;
+    }
+  }
+
+  // --- Muenzen ------------------------------------------------------------
+  const muenzen = level.muenzen;
+  if (muenzen) {
+    for (let i = 0; i < muenzen.length; i++) {
+      if (welt.gesammelt?.includes(i)) continue;
+      if (laenge(minus(muenzen[i], ballon.pos)) < r + MUENZ_RADIUS) {
+        (welt.gesammelt ??= []).push(i);
+      }
     }
   }
 

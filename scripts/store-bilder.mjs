@@ -30,33 +30,36 @@ const FORMATE = {
   ios: { breite: 1320, hoehe: 2868, geraet: { width: 402, height: 744 } },
 };
 
-// ⚠ 30.10.2026 (Apple 4.3(a)): Die ersten beiden Bilder nennen, was es so nur
-// hier gibt. „Fünfzehn Level“ und „durch die Nadeln“ sagen viele Spiele.
+// ⚠ 24.11.2026 (Neugestaltung 1.1): Das Gebläse kippt jetzt. Die alte erste
+// Zeile „Ein Gebläse, das nur nach oben bläst“ wäre falsch gewesen (Apple 2.3).
+// Das erste Bild zeigt die Steuerung, das zweite die Welten (Apple 4.3(a)).
 const UEBERSCHRIFT = {
-  de: ['Ein Gebläse, das nur nach oben bläst', 'Lenke mit dem Rand des Luftstrahls', 'Wie hoch kommst du?', 'Nadelreihen, die wandern'],
-  en: ['A blower that only blows straight up', 'Steer with the edge of the air stream', 'How high can you go?', 'Rows of needles on the move'],
-  es: ['Un soplador que solo sopla hacia arriba', 'Dirige con el borde del chorro de aire', '¿Hasta dónde llegarás?', 'Filas de agujas en movimiento'],
-  fr: ['Un souffleur qui ne souffle que vers le haut', 'Dirige avec le bord du jet d’air', 'Jusqu’où monteras-tu ?', 'Des rangées d’aiguilles qui bougent'],
-  it: ['Un soffiatore che soffia solo verso l’alto', 'Guida con il bordo del getto d’aria', 'Fin dove arriverai?', 'File di aghi in movimento'],
-  pt: ['Um soprador que só sopra para cima', 'Guie com a borda do jato de ar', 'Até onde você consegue subir?', 'Fileiras de agulhas em movimento'],
-  tr: ['Sadece yukarı üfleyen bir üfleyici', 'Hava akımının kenarıyla yön ver', 'Ne kadar yükseğe çıkabilirsin?', 'Hareket eden iğne sıraları'],
-  pl: ['Dmuchawa, która dmucha tylko w górę', 'Steruj krawędzią strumienia powietrza', 'Jak wysoko dolecisz?', 'Ruchome rzędy igieł'],
-  ru: ['Воздуходувка дует только вверх', 'Управляй краем воздушной струи', 'Как высоко ты поднимешься?', 'Движущиеся ряды игл'],
-  ja: ['真上にしか吹かないブロワー', '風の端で風船を操ろう', 'どこまで高く行ける？', '動く針の列'],
-  ko: ['위로만 부는 송풍기', '바람의 가장자리로 조종하세요', '얼마나 높이 갈 수 있을까요?', '움직이는 바늘 줄'],
-  zh: ['只能向上吹的吹叶机', '用气流的边缘来引导', '你能飞多高？', '移动的针排'],
-  ar: ['منفاخ لا ينفخ إلا إلى الأعلى', 'وجّه بحافة تيار الهواء', 'إلى أي ارتفاع ستصل؟', 'صفوف إبر متحركة'],
+  de: ['Kippe das Gebläse mit dem Finger', 'Vier Welten, 51 Level', 'Sammle Münzen und Sterne', 'Wie hoch kommst du?'],
+  en: ['Tilt the blower with your finger', 'Four worlds, 51 levels', 'Collect coins and stars', 'How high can you go?'],
+  es: ['Inclina el soplador con el dedo', 'Cuatro mundos, 51 niveles', 'Reúne monedas y estrellas', '¿Hasta dónde llegarás?'],
+  fr: ['Incline le souffleur du doigt', 'Quatre mondes, 51 niveaux', 'Ramasse pièces et étoiles', 'Jusqu’où monteras-tu ?'],
+  it: ['Inclina il soffiatore con il dito', 'Quattro mondi, 51 livelli', 'Raccogli monete e stelle', 'Fin dove arriverai?'],
+  pt: ['Incline o soprador com o dedo', 'Quatro mundos, 51 fases', 'Junte moedas e estrelas', 'Até onde você consegue subir?'],
+  tr: ['Üfleyiciyi parmağınla eğ', 'Dört dünya, 51 seviye', 'Jeton ve yıldız topla', 'Ne kadar yükseğe çıkabilirsin?'],
+  pl: ['Przechylaj dmuchawę palcem', 'Cztery światy, 51 poziomów', 'Zbieraj monety i gwiazdki', 'Jak wysoko dolecisz?'],
+  ru: ['Наклоняй воздуходувку пальцем', 'Четыре мира, 51 уровень', 'Собирай монеты и звёзды', 'Как высоко ты поднимешься?'],
+  ja: ['指でブロワーを傾けよう', '4つの世界、51ステージ', 'コインと星を集めよう', 'どこまで高く行ける？'],
+  ko: ['손가락으로 송풍기를 기울이세요', '4개의 세계, 51개 레벨', '코인과 별을 모으세요', '얼마나 높이 갈 수 있을까요?'],
+  zh: ['用手指倾斜吹叶机', '四个世界，51 个关卡', '收集金币和星星', '你能飞多高？'],
+  ar: ['أمِل المنفاخ بإصبعك', 'أربعة عوالم و51 مرحلة', 'اجمع العملات والنجوم', 'إلى أي ارتفاع ستصل؟'],
 };
 
-// ⚠ Die Nummer vorn legt die Reihenfolge im Store fest, und play-upload.py
-// nimmt nur Dateien der Form 1-name.jpg (Nummer, Trenner, Name).
-const NAMEN = ['menue', 'level', 'endlos', 'reihen'];
+const NAMEN = ['steuern', 'welten', 'nacht', 'endlos'];
 
-const FORTSCHRITT = {
-  v: 1,
-  bestzeit: { 1: 6.2, 2: 9.8, 3: 11.4, 6: 14.1, 8: 12.7, 10: 13.9, 13: 10.3, 14: 8.8, 15: 12.1, 16: 19.4, 17: 30.2, 18: 33.5 },
-  endlos: { hoch: 137 },
-};
+// Wiese, Stadt und Wüste geschafft: Das Menü zeigt Sterne und offene
+// Welten, Nacht 1 ist frei (Level öffnen der Reihe nach, über Welten hinweg).
+const FORTSCHRITT = (() => {
+  const bestzeit = {}, sterne = {};
+  const ids = [1, 2, 3, 6, 8, 10, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+    101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212];
+  ids.forEach((id, i) => { bestzeit[id] = 8 + (i % 7) * 1.7; sterne[id] = i % 4 === 3 && id < 100 ? 2 : 3; });
+  return { v: 1, bestzeit, sterne, muenzen: 185, skins: ['rot', 'blau'], skin: 'rot', endlos: { hoch: 137 } };
+})();
 
 /**
  * Wo der Ballon gerade ist, in CSS-Pixeln: die roten Pixel im Canvas.
@@ -115,12 +118,16 @@ async function versuche(lauf, dauer) {
   throw new Error('Ballon platzt in jedem Versuch');
 }
 
-async function imFlug(seite, geraet, menuePos, dauer, versatz = 0) {
+async function imFlug(seite, geraet, welt, levelId, dauer, versatz = 0) {
   return versuche(async (d) => {
     await seite.goto(URL_APP);
     await seite.waitForTimeout(400);
-    // Die Levelkacheln im Raster des Menues (MenuePage). menuePos zaehlt ab 1.
-    await seite.locator('section button').nth(menuePos - 1).click();
+    // Die Levelkachel im Raster des Menues (MenuePage, data-level = Level-ID).
+    // ⚠ Seit den Welten (23.11.2026) stehen im Raster auch Welt-Reiter und
+    // Ballon-Skins — nach Position gezaehlt, traefe man das falsche.
+    await seite.locator(`[data-welt="${welt}"]`).click();
+    await seite.waitForTimeout(200);
+    await seite.locator(`[data-level="${levelId}"]`).click();
     await seite.waitForTimeout(700);
     return fliegen(seite, geraet, d, versatz);
   }, dauer);
@@ -203,11 +210,21 @@ for (const [name, format] of Object.entries(FORMATE)) {
     // ⚠ Das Menue blendet seine Teile nacheinander ein (knapp 1 s). Frueher
     // fotografiert, ist das Level-Raster noch halb durchsichtig.
     await seite.waitForTimeout(1500);
+    // Welt-Reiter und Level-Raster mit Sternen ins Bild, sonst sagt das Bild
+    // nichts zu „Vier Welten“.
+    await seite.locator('[data-welt="2"]').click();
+    await seite.evaluate(() => {
+      const el = document.querySelector('[data-welt="1"]');
+      if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 24);
+    });
+    await seite.waitForTimeout(300);
+    const menue = await seite.screenshot({ type: 'png' });
     const bilder = [
-      await seite.screenshot({ type: 'png' }),
-      await imFlug(seite, format.geraet, 8, 1500, 6),     // 9  Zickzack
+      // Finger vor dem Ballon: Das Gebläse kippt sichtbar (Regel 1a).
+      await imFlug(seite, format.geraet, 1, 15, 1500, 14),
+      menue,
+      await imFlug(seite, format.geraet, 4, 301, 450),
       await endlos(seite, format.geraet),
-      await imFlug(seite, format.geraet, 13, 1500),       // Schiebetür (Index 0 ist der Endlos-Knopf)
     ];
     const ordner = new URL(`../store-assets/${name}/${code}/`, import.meta.url);
     mkdirSync(ordner, { recursive: true });

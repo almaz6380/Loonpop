@@ -3,7 +3,7 @@
     "titel": "LoonPop",
     "untertitel": "Trzymaj dmuchawę pod balonem i naciskaj. Igły nie wybaczają.",
     "level": "Poziom {{n}}",
-    "hinweis": "Przesuwaj dmuchawę na boki, przytrzymaj, aby dmuchać. Stojąc z boku, spychasz balon w bok.",
+    "hinweis": "Przytrzymaj, aby dmuchać. Przesuń w bok – dmuchawa się przechyla i pcha balon. Szybkie machnięcie daje podmuch.",
     "hoch": "w górę",
     "strecke": "trasa",
     "gesperrt": "zablokowany",
@@ -18,7 +18,14 @@
     "spielen": "Graj",
     "alleLevel": "Wszystkie poziomy",
     "tonAn": "Dźwięk wł.",
-    "tonAus": "Dźwięk wył."
+    "tonAus": "Dźwięk wył.",
+    "weltLevel": "{{welt}} {{n}}",
+    "weltGesperrt": "Zbierz jeszcze {{n}} ★ w „{{welt}}”",
+    "tagesflug": "Lot dnia",
+    "tagesflugText": "Codziennie nowy, ten sam dla wszystkich",
+    "serie": "Seria: {{n}}",
+    "ballons": "Balony",
+    "gewaehlt": "Wybrany"
   },
   "spiel": {
     "zurueck": "Wstecz",
@@ -42,8 +49,10 @@
     "bestweite": "Rekord: {{m}} m",
     "tipp": {
       "halten": "Przytrzymaj palec – dmuchawa dmucha pionowo w górę.",
-      "versetzt": "Teraz stań trochę z boku pod balonem: krawędź strumienia powietrza zepchnie go w bok."
-    }
+      "versetzt": "Przesuń palec w bok: dmuchawa się przechyla i pcha balon w tę stronę. Szybkie machnięcie daje podmuch wiatru."
+    },
+    "weiterfliegen": "Leć dalej · Wideo",
+    "videoFehlt": "Teraz nie ma żadnego wideo. Spróbuj ponownie później."
   },
   "levelname": {
     "1": "Pierwszy podmuch",
@@ -61,5 +70,35 @@
     "19": "Drzwi przesuwne",
     "20": "Pod prąd",
     "21": "Młyn"
+  },
+  "werbung": {
+    "entfernen": "Usuń reklamy",
+    "entfernenText": "Kup raz i graj bez reklam na zawsze.",
+    "wiederherstellen": "Przywróć zakupy",
+    "werbefrei": "Bez reklam – dzięki za wsparcie!",
+    "einstellungen": "Ustawienia reklam",
+    "wiederhergestellt": "Zakup przywrócony.",
+    "nichtsGefunden": "Nie znaleziono zakupu.",
+    "fehler": {
+      "kein_angebot": "Teraz niedostępne. Spróbuj później.",
+      "fehler": "Nie udało się. Spróbuj później."
+    }
+  },
+  "welt": {
+    "1": "Łąka",
+    "2": "Miasto",
+    "3": "Pustynia",
+    "4": "Noc"
+  },
+  "skin": {
+    "rot": "Czerwony",
+    "blau": "Niebieski",
+    "gelb": "Żółty",
+    "gruen": "Zielony",
+    "lila": "Fioletowy",
+    "stern": "Gwiazdki",
+    "herz": "Serce",
+    "heissluft": "Balon na ogrzane powietrze",
+    "gold": "Złoty"
   }
 }

@@ -193,13 +193,17 @@ def setze_texte(tok):
                     {'appInfo': {'data': {'type': 'appInfos', 'id': info['id']}}}, lc)
 
     print('\n── Version ──')
+    erstes = v['attributes']['versionString'] in ('1.0', '1.0.0')
     da = {l['attributes']['locale']: l for l in
           api(tok, f'appStoreVersions/{v["id"]}/appStoreVersionLocalizations').get('data', [])}
     for lc, t in texte.items():
         _abgleichen(tok, 'appStoreVersionLocalizations', da.get(lc),
                     {'locale': lc, 'description': t['description'], 'keywords': t['keywords'],
                      'promotionalText': t['promotionalText'], 'supportUrl': SUPPORT_URL,
-                     'marketingUrl': SEITE},
+                     'marketingUrl': SEITE,
+                     # „Neu in dieser Version“ ist ab dem ersten Update Pflicht, je Sprache;
+                     # bei 1.0 weist Apple das Feld ab.
+                     **({'whatsNew': t['whatsNew']} if t.get('whatsNew') and erstes is False else {})},
                     {'appStoreVersion': {'data': {'type': 'appStoreVersions', 'id': v['id']}}}, lc)
 
 
@@ -688,6 +692,33 @@ def vervollstaendigen(tok):
     print('  App-Datenschutz („Keine Daten“) geht nicht ueber die API — in ASC von Hand.')
 
 
+def version_anlegen(tok, nummer):
+    """Neue App-Store-Version anlegen (24.11.2026, fuer 1.1).
+
+    ⚠ Ein hochgeladener Build legt KEINE Version an (Lehre aus MyPeak). Ohne offene
+    Version scheitern texte, screenshots, build und einreichen. Gibt es schon eine
+    offene Version, wird nichts angelegt — Apple erlaubt nur eine in Arbeit.
+    """
+    aid = app_id(tok)
+    fertig = {'READY_FOR_SALE', 'REPLACED_BY_NEW_VERSION', 'REMOVED_FROM_SALE',
+              'DEVELOPER_REMOVED_FROM_SALE'}
+    for v in api(tok, f'apps/{aid}/appStoreVersions?limit=10').get('data', []):
+        a = v['attributes']
+        if a.get('appStoreState') not in fertig:
+            print(f'  Offene Version {a["versionString"]} ({a.get("appStoreState")}) existiert schon — nichts angelegt.')
+            return
+    if TROCKEN:
+        print(f'  [trocken] Version {nummer} wuerde angelegt')
+        return
+    res = api(tok, 'appStoreVersions', 'POST', {'data': {
+        'type': 'appStoreVersions',
+        'attributes': {'platform': 'IOS', 'versionString': nummer, 'releaseType': 'AFTER_APPROVAL'},
+        'relationships': {'app': {'data': {'type': 'apps', 'id': aid}}}}}, fatal=False)
+    if res.get('_fehler'):
+        sys.exit(f'  Version {nummer} nicht anlegbar: {fehler_text(res)}')
+    print(f'  Version {nummer} angelegt ({res["data"]["attributes"].get("appStoreState")})')
+
+
 def einreichen(tok):
     aid = app_id(tok)
     v = offene_version(tok, aid)
@@ -768,6 +799,7 @@ def main():
                  'alter-setzen', 'vervollstaendigen', 'kauf', 'einreichen', 'aufraeumen'):
         p.add_argument(f'--{name}', action='store_true')
     p.add_argument('--build', metavar='NUMMER')
+    p.add_argument('--version-anlegen', metavar='VERSION')
     p.add_argument('--dry-run', action='store_true')
     a = p.parse_args()
     TROCKEN = a.dry_run
@@ -776,6 +808,8 @@ def main():
     tok = token()
     if a.status:
         zeige_status(tok)
+    if a.version_anlegen:
+        version_anlegen(tok, a.version_anlegen)
     if a.texte:
         setze_texte(tok)
     if a.screenshots:

@@ -4,8 +4,9 @@
 # sprache = alle  → jede Sprache aus store-assets/texte/*.json, mit all ihren
 #                   Play-Codes (es → es-ES und es-419 usw.)
 # kauf           → Kauf „Werbung entfernen“ (loonpop_no_ads) anlegen
-# produktion     → versionCode 1 aus dem internen Test an alle (Produktion);
-#                   im Trockenlauf nur den internen Track anzeigen
+# produktion     → versionCode <version_code> aus dem internen Test an alle (Produktion);
+#                   im Trockenlauf nur den internen Track anzeigen. Nur versionCode 1
+#                   ging als Entwurf (erste Produktion einer neuen App).
 # ⚠ Neue Sprachen muessen in der Play Console EINMAL als Uebersetzung angelegt
 # sein, sonst antwortet die API mit 404 fuer diese Sprache.
 name: Play-Eintrag
@@ -22,6 +23,12 @@ on:
         description: 'alle, oder ein Play-Code wie de-DE'
         default: 'alle'
         required: true
+      version_code:
+        description: 'versionCode fuer produktion'
+        default: '3'
+      notes:
+        description: 'Was-ist-neu-Text (de-DE) fuer produktion, hoechstens 500 Zeichen'
+        default: 'Komplett neu gestaltet: kippbares Gebläse mit Windstoß, vier Welten mit 51 Leveln, Sterne und Münzen, neun Ballons, täglicher Tagesflug. Neu: Weiterfliegen per Video und „Werbung entfernen“.'
       dry_run:
         description: 'Trockenlauf (nur anzeigen, nichts aendern)'
         type: boolean
@@ -42,6 +49,8 @@ jobs:
           MODE: ${{ inputs.mode }}
           SPRACHE: ${{ inputs.sprache }}
           DRY_RUN: ${{ inputs.dry_run }}
+          VC: ${{ inputs.version_code }}
+          NOTES: ${{ inputs.notes }}
         run: |
           set -euo pipefail
           if [ -z "${PLAY_KEY_JSON:-}" ]; then
@@ -74,8 +83,10 @@ jobs:
             if [ "$DRY_RUN" = "true" ]; then
               python3 scripts/play-upload.py --status --track internal
             else
-              python3 scripts/play-upload.py --promote 1 --track production --complete --entwurf \
-                --notes "Erste Version von LoonPop."
+              ENTWURF=()
+              [ "$VC" = "1" ] && ENTWURF=(--entwurf)
+              python3 scripts/play-upload.py --promote "$VC" --track production --complete "${ENTWURF[@]}" \
+                --notes "$NOTES"
             fi
             exit 0
           fi

@@ -297,7 +297,7 @@ export default function MenuePage({ fortschritt, werbefrei, setWerbefrei, spiele
               const ids = WELT_IDS[w - 1];
               const auf = weltOffen(fortschritt, WELT_IDS, w);
               return (
-                <button key={w} onClick={() => setWeltWahl(w)} aria-pressed={weltWahl === w}
+                <button key={w} data-welt={w} onClick={() => setWeltWahl(w)} aria-pressed={weltWahl === w}
                   className={`schrift-rund rounded-2xl px-1 py-2 text-center transition active:scale-95
                               ${weltWahl === w ? 'bg-white text-[#12204f]' : 'bg-white/10 text-white'}`}>
                   <span className="block text-sm font-bold truncate">{t(`welt.${w}`)}</span>

@@ -2,6 +2,7 @@
 # ASC-API braucht keinen Mac. Nur von Hand, Trockenlauf ist Vorgabe.
 #
 #   status          liest nur
+#   version-anlegen neue Version <nummer> (z. B. 1.1) anlegen, wenn keine offen ist
 #   texte           Name, Untertitel, Beschreibung, Stichworte … in allen 13 Sprachen
 #   screenshots     iPhone-Bilder je Sprache ersetzen (store-assets/ios/<code>)
 #   build           Build <nummer> der offenen Version zuweisen
@@ -18,10 +19,10 @@ on:
       mode:
         description: 'Was getan wird'
         type: choice
-        options: [status, profil, texte, screenshots, build, pflicht, kauf, einreichen, aufraeumen]
+        options: [status, version-anlegen, profil, texte, screenshots, build, pflicht, kauf, einreichen, aufraeumen]
         default: status
       nummer:
-        description: 'Build-Nummer (nur fuer build)'
+        description: 'Build-Nummer (build) bzw. Versionsnummer (version-anlegen, z. B. 1.1)'
         type: string
         default: '1'
       dry_run:
@@ -54,6 +55,7 @@ jobs:
           [ "$DRY_RUN" = "true" ] && [ "$MODE" != "status" ] && TROCKEN=(--dry-run)
           case "$MODE" in
             build)   python3 scripts/asc.py --build "$NUMMER" "${TROCKEN[@]}" ;;
+            version-anlegen) python3 scripts/asc.py --version-anlegen "$NUMMER" "${TROCKEN[@]}" ;;
             profil)  python3 scripts/profil-holen.py "loonpop AppStore" "$RUNNER_TEMP/p.mobileprovision" && rm -f "$RUNNER_TEMP/p.mobileprovision"* ;;
             pflicht) python3 scripts/asc.py --exportfrage --inhaberrechte --alter-setzen --vervollstaendigen "${TROCKEN[@]}" ;;
             *)       python3 scripts/asc.py "--$MODE" "${TROCKEN[@]}" ;;

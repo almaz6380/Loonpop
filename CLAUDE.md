@@ -493,7 +493,7 @@ App-Version“: erst auf der Versionsseite „Zur Prüfung hinzufügen“, dann 
 RevenueCat: Android-Produkt am Entitlement `no_ads`, Offering `default` in beiden Zeilen.
 Android **vc3 (1.1) in Produktion an alle** (`play-eintrag.yml` `produktion`, Edit
 `06560752481628269219` committet). Danach Merge nach `main`.
-Offen in ASC: neue Altersfreigabe-Fragen (Pflicht bis 15.01.2027).
+Altersfreigabe-Fragen am 24.11.2026 beantwortet (4+).
 
 - **Werbung** (`src/lib/werbung.ts`): `MIT_TESTANZEIGEN = false`, echte IDs.
   Banner nur im Menü, Vollbild nach jedem dritten Platzen beim Tippen auf
@@ -534,7 +534,7 @@ Offen in ASC: neue Altersfreigabe-Fragen (Pflicht bis 15.01.2027).
 4. ✅ (24.11.2026) Google-Kauf `loonpop_no_ads` angelegt und aktiv.
 5. ✅ (24.11.2026) RevenueCat Android verknüpft, Offering `default` in beiden Zeilen.
 6. ✅ (24.11.2026) 1.1 samt Kauf bei Apple eingereicht, Android an alle, Merge nach `main`.
-7. Bis 15.01.2027: Altersfreigabe-Fragen in ASC beantworten (App-Informationen).
+7. ✅ (24.11.2026) Altersfreigabe-Fragen beantwortet (nur „Werbung: Ja“), Ergebnis 4+.
 
 ## Neugestaltung (23.11.2026, Teil von Version 1.1)
 

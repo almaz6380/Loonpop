@@ -25,10 +25,10 @@ on:
         required: true
       version_code:
         description: 'versionCode fuer produktion'
-        default: '3'
+        default: '4'
       notes:
         description: 'Was-ist-neu-Text (de-DE) fuer produktion, hoechstens 500 Zeichen'
-        default: 'Komplett neu gestaltet: kippbares Gebläse mit Windstoß, vier Welten mit 51 Leveln, Sterne und Münzen, neun Ballons, täglicher Tagesflug. Neu: Weiterfliegen per Video und „Werbung entfernen“.'
+        default: 'Neue Steuerung: Der Ballon folgt deinem Finger – das Gebläse fährt hinter ihn und bläst ihn schnell nach links oder rechts. Kleine Verbesserungen.'
       dry_run:
         description: 'Trockenlauf (nur anzeigen, nichts aendern)'
         type: boolean

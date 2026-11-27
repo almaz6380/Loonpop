@@ -483,6 +483,10 @@ Vorlage ist Anigosha, dort seit August 2026 im Store.
 Android versionCode 4, iOS Build 4. Inhalt: Regel 1b (der Ballon folgt dem Finger, das Gebläse
 schiebt ihn hin). „Neu in dieser Version“ in `store-assets/texte/*.json` (13 Sprachen), Play-Notiz
 als Standard in `play-eintrag.yml`. 1.1 war vorher bei Apple freigegeben (READY_FOR_SALE).
+**27.11.2026 ausgeliefert:** Android **vc4 in Produktion an alle** (`android-release` 45990373786,
+committet). iOS Build 4 hochgeladen (`ios-release` 45990377909) → `version-anlegen 1.1.1` → `texte` →
+`build 4` (erster Versuch vor Apples Verarbeitung: „nicht gefunden“, nach 10 min ok) → `einreichen`:
+**WAITING_FOR_REVIEW**.
 
 ## Version 1.1 (22.11.2026): Werbung, Kauf, Weiterfliegen, Bewertung
 

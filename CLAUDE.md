@@ -478,6 +478,12 @@ Vorlage ist Anigosha, dort seit August 2026 im Store.
 - Kein Konto: RevenueCat vergibt eine anonyme Kennung, „Käufe wiederherstellen“
   holt den Kauf über das Store-Konto zurück (Apple verlangt den Knopf, 3.1.1).
 
+## Version 1.1.1 (27.11.2026): neue Steuerung
+
+Android versionCode 4, iOS Build 4. Inhalt: Regel 1b (der Ballon folgt dem Finger, das Gebläse
+schiebt ihn hin). „Neu in dieser Version“ in `store-assets/texte/*.json` (13 Sprachen), Play-Notiz
+als Standard in `play-eintrag.yml`. 1.1 war vorher bei Apple freigegeben (READY_FOR_SALE).
+
 ## Version 1.1 (22.11.2026): Werbung, Kauf, Weiterfliegen, Bewertung
 
 Branch `claude/optimistic-darwin-k01rmb` (= `main` + `werbung`). ⚠ Erst nach

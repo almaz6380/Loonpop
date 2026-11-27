@@ -58,3 +58,43 @@ test('Windstoss wirkt einmal, dann Abklingzeit', () => {
   w.geblaese.stoss = 1; schritt(w);
   assert.ok(w.ballon.geschw.x <= v1, 'zweiter Stoss gesperrt');
 });
+
+// Seit 27.11.2026: Der Ballon folgt dem Finger, das Geblaese schiebt ihn hin.
+const leer = (): Level => ({
+  id: 98, name: 't', art: 'hoch', groesse: { breite: 720, hoehe: 1280 },
+  start: { x: 520, y: 800 }, geblaeseStart: 520, ziel: { pos: { x: 360, y: 40 }, radius: 40 },
+  nadeln: [], zonen: [], tempo: { blaskraft: 620, daempfung: 1.6, zeitlimit: 0 },
+} as Level);
+
+test('Ballon folgt dem Finger schnell und ohne grosses Pendeln', () => {
+  const w = neueWelt(leer());
+  w.geblaese.an = true;
+  w.geblaese.ziel = 220; // 300 px nach links
+  let minX = Infinity, hinter = 0, schritte = 0, spitze = 0;
+  for (let i = 0; i < 120 * 1.5; i++) {
+    schritt(w);
+    if (w.ausgang !== 'laeuft') break;
+    minX = Math.min(minX, w.ballon.pos.x);
+    spitze = Math.max(spitze, Math.abs(w.ballon.geschw.x));
+    if (i < 48) { schritte++; if (w.geblaese.x > w.ballon.pos.x) hinter++; }
+    if (i === 96) assert.ok(Math.abs(w.ballon.pos.x - 220) < 20, `nach 0,8 s bei ${w.ballon.pos.x.toFixed(0)}`);
+  }
+  assert.ok(220 - minX < 40, `ueberschwingt ${(220 - minX).toFixed(0)} px`);
+  assert.ok(spitze > 450, `Spitzentempo ${spitze.toFixed(0)} px/s`);
+  assert.ok(hinter / schritte > 0.8, 'Geblaese steht auf der Gegenseite und schiebt');
+});
+
+test('ohne Blasen kein Seitenzug', () => {
+  const w = neueWelt(leer());
+  w.geblaese.an = false; w.geblaese.staerke = 0;
+  w.geblaese.ziel = 220;
+  for (let i = 0; i < 30; i++) schritt(w);
+  assert.ok(Math.abs(w.ballon.pos.x - 520) < 2, `bewegt ${w.ballon.pos.x}`);
+});
+
+test('mit Ballon: Geblaese faehrt hinter ihn und kippt zum Ziel', () => {
+  const b = g(520, 220);
+  for (let i = 0; i < 30; i++) steuern(b, 1 / 120, 720, { x: 520, dy: 400 });
+  assert.ok(b.x > 520, 'steht rechts vom Ballon, wenn er nach links soll');
+  assert.ok(b.neigung! < 0, 'kippt nach links');
+});

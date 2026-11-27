@@ -30,6 +30,17 @@ const NEIGUNG_TEMPO = 10;
 export const STOSS = 320;
 /** Abklingzeit des Windstosses (Spielsekunden). */
 export const STOSS_PAUSE = 1.5;
+/** Seit 27.11.2026: so schnell faehrt das Geblaese hinter den Ballon (px/s). */
+export const SCHIEB_FAHRT = 1100;
+/** Wie weit es hinter dem Ballon steht, wenn er weit weg soll (px). */
+export const VERSATZ = 220;
+/** Groesste Neigung beim Hinschieben — 35°. */
+export const SCHIEB_NEIGUNG = (35 * Math.PI) / 180;
+/** Federkonstante des Seitenzugs (1/s²) und Bremse (1/s), zusammen fast kritisch gedaempft. */
+export const ZUG_FEDER = 55;
+export const ZUG_BREMSE = 11;
+/** Hoechster Seitenschub (px/s²). */
+export const ZUG_MAX = 3200;
 /** Rand, den das Geblaese zur Levelwand haelt (px). */
 const RAND = 40;
 
@@ -37,11 +48,33 @@ const RAND = 40;
  * Faehrt das Geblaese einen Schritt `dt` auf sein Ziel zu und stellt die
  * Neigung nach. Ohne `ziel` (Finger weg, Bot, alte Tests) bleibt es stehen
  * und richtet sich wieder auf.
+ *
+ * Mit `ballon` (so ruft es die Physik seit 27.11.2026) zeigt `ziel`, wohin
+ * der BALLON soll, nicht das Geblaese: Es faehrt auf die Gegenseite des
+ * Ballons und kippt zum Ziel, damit man sieht, wer schiebt. Den eigentlichen
+ * Seitenschub rechnet `seitenZug`.
  */
-export function steuern(g: Geblaese, dt: number, breite: number): void {
+export function steuern(
+  g: Geblaese, dt: number, breite: number, ballon?: { x: number; dy: number },
+): void {
   const neigungJetzt = g.neigung ?? 0;
   let wunsch = 0;
-  if (g.ziel !== undefined) {
+  if (g.ziel !== undefined && ballon) {
+    // Wie schraeg das Geblaese von hinten auf den Ballon zielen soll: je weiter
+    // das Ziel, desto schraeger. Daraus folgt, wie weit es hinter ihm steht.
+    // ⚠ Es zielt immer AUF den Ballon (atan2 unten), nicht aufs Ziel — sonst
+    // verfehlt der gekippte Strahl ihn und schiebt gar nicht (so am 27.11.
+    // im ersten Entwurf: 50° Richtung Ziel, Ballon lag neben dem Kegel).
+    const e = Math.max(RAND, Math.min(breite - RAND, g.ziel)) - ballon.x;
+    const dy = Math.max(40, ballon.dy);
+    const winkel = Math.max(-1, Math.min(1, e / NEIGUNG_WEG)) * SCHIEB_NEIGUNG;
+    const versatz = Math.max(-VERSATZ, Math.min(VERSATZ, dy * Math.tan(winkel)));
+    const soll = Math.max(RAND, Math.min(breite - RAND, ballon.x - versatz));
+    const fahrt = SCHIEB_FAHRT * dt;
+    g.x += Math.max(-fahrt, Math.min(fahrt, soll - g.x));
+    const ziel = Math.atan2(ballon.x - g.x, dy);
+    wunsch = Math.max(-SCHIEB_NEIGUNG, Math.min(SCHIEB_NEIGUNG, ziel));
+  } else if (g.ziel !== undefined) {
     const ziel = Math.max(RAND, Math.min(breite - RAND, g.ziel));
     const d = ziel - g.x;
     const weg = Math.max(-FAHRT_MAX * dt, Math.min(FAHRT_MAX * dt, d));
@@ -52,6 +85,21 @@ export function steuern(g: Geblaese, dt: number, breite: number): void {
     wunsch = Math.max(-1, Math.min(1, vorsprung / NEIGUNG_WEG)) * NEIGUNG_MAX;
   }
   g.neigung = neigungJetzt + (wunsch - neigungJetzt) * (1 - Math.exp(-dt * NEIGUNG_TEMPO));
+}
+
+/**
+ * Seitlicher Schub des Geblaeses zum Ziel (px/s²), seit 27.11.2026.
+ *
+ * Josef: „was, wenn ich den Ballon schnell nach links oder rechts will?“ Ueber
+ * die Neigung allein kam der Ballon auf hoechstens ~175 px/s, nach ~0,6 s.
+ * Jetzt zieht ein gedaempfter Regler (Feder + Bremse) ihn zum Finger: schnell,
+ * aber ohne Pendeln. Er wirkt nur, solange der Ballon im Strahl ist und das
+ * Geblaese blaest — wer nicht blaest, steuert nicht. Senkrecht bleibt die
+ * Traegheit (Regel 1).
+ */
+export function seitenZug(e: number, vx: number, staerke: number): number {
+  const a = ZUG_FEDER * e - ZUG_BREMSE * vx;
+  return Math.max(-ZUG_MAX, Math.min(ZUG_MAX, a)) * Math.max(0, Math.min(1, staerke));
 }
 
 /**

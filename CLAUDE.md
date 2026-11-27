@@ -62,6 +62,15 @@ Windstoß (Abklingzeit 1,5 s). Still stehend bläst es senkrecht, der Strahlrand
 drückt weiter zur Seite. Gerechnet wird in der Physik (`schritt` → `steuern`),
 nicht im Zeichnen; `strahlKraft` rechnet im gedrehten Kegel, `zeichnen.ts` dreht
 denselben Kegel (Falle 7). Ohne `ziel` (Bot, alte Tests) verhält es sich wie vorher.
+**1b. Der Ballon folgt dem Finger (seit 27.11.2026, Josefs Entscheidung).** Josef: „was,
+wenn ich den Ballon schnell nach links oder rechts will?“ Gemessen kam er über die Neigung
+allein auf höchstens ~175 px/s, und fuhr das Gebläse unter ihm durch, drückte der Strahlrand
+ihn sogar in die falsche Richtung. Jetzt zeigt der Finger, wohin der BALLON soll: Das Gebläse
+fährt hinter ihn (bis 1100 px/s, `VERSATZ` aus Höhe × tan(Winkel)), zielt per `atan2` AUF den
+Ballon (⚠ nicht aufs Ziel — sonst verfehlt der gekippte Kegel ihn, so im ersten Entwurf), und
+`seitenZug` (Feder 55, Bremse 11, höchstens 3200 px/s²) zieht ihn hin. Er wirkt nur im Strahl und
+nur beim Blasen. Ergebnis (`steuerung.test.ts`): 300 px in ~0,6 s, Spitze ~700 px/s, ohne
+Überschwingen. Senkrecht bleibt die Trägheit. Ohne `ziel` (Bot) wie vorher.
 **Bildausschnitt:** Hoch-Level füllen seit 23.11.2026 die Bildschirmhöhe, die
 Kamera folgt dem Ballon seitlich (`kameraMitte`), keine dunklen Balken mehr.
 

@@ -25,7 +25,7 @@ import type { Punkt, Welt, Nadel } from './typen.ts';
 import { streckeTrifftNadel, laenge, minus } from './kollision.ts';
 import { nadelnIn, bodenNachziehen, endlosWind } from './endlos.ts';
 import { unverwundbar } from './weiterfliegen.ts';
-import { steuern, STOSS, STOSS_PAUSE } from './steuerung.ts';
+import { steuern, seitenZug, STOSS, STOSS_PAUSE } from './steuerung.ts';
 
 /** Wie gross eine Muenze rechnet (px). Exportiert fuers Zeichnen (Falle 7). */
 export const MUENZ_RADIUS = 16;
@@ -199,7 +199,9 @@ export function schritt(welt: Welt): void {
   const tempo = geblaese.an ? DT / WIND_AN : DT / WIND_AUS;
   geblaese.staerke += Math.max(-tempo, Math.min(tempo, ziel - geblaese.staerke));
   geblaese.staerke = Math.max(0, Math.min(1, geblaese.staerke));
-  steuern(geblaese, DT, level.groesse.breite);
+  steuern(geblaese, DT, level.groesse.breite, {
+    x: ballon.pos.x, dy: welt.boden - DUESE_HOEHE - ballon.pos.y,
+  });
 
   // --- Kraefte sammeln ----------------------------------------------------
   let ax = 0;
@@ -211,6 +213,13 @@ export function schritt(welt: Welt): void {
   );
   ax += strahl.x;
   ay += strahl.y;
+  // Seit 27.11.2026: Mit Finger zieht das Geblaese den Ballon seitlich zum
+  // Finger (steuerung.ts). Nur wenn der Strahl ihn ueberhaupt trifft.
+  if (geblaese.ziel !== undefined && (strahl.x !== 0 || strahl.y !== 0)) {
+    const breite = level.groesse.breite;
+    const ziel = Math.max(ballon.radius, Math.min(breite - ballon.radius, geblaese.ziel));
+    ax += seitenZug(ziel - ballon.pos.x, ballon.geschw.x, geblaese.staerke);
+  }
 
   // Grundwind: treibt auf Strecken nach rechts. Im Endlos-Lauf waechst er
   // mit der Strecke (siehe endlos.ts).
